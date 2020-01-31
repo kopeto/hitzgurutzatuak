@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  h1 PUZ fitxategia kargatu
+  form(method='POST', action='/puzzles/upload')
+    #form-group
+      label Puz Fitxategia    
+      input.form-control(name='filename', type='file', enctype='multipart/form-data')
+    br
+    input.btn.btn-primary(type='submit', value='Puzlea kargatu')

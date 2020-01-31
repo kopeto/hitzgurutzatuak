@@ -1,0 +1,20 @@
+extend layout
+
+block content
+  div.fixed-left.w-25
+    h1 Erregistroa
+    form(method='POST', action='/users/register')
+      #form-group
+        label Posta elektronikoa:
+        input.form-control(name='email', type='text')
+      #form-group
+        label Erabiltzailea:
+        input.form-control(name='username', type='text')
+      #form-group
+        label Pasahitza:
+        input.form-control(name='password', type='password')
+      #form-group
+        label Pasahitza berriz:
+        input.form-control(name='password2', type='password')    
+      br
+      input.btn.btn-primary(type='submit',value='Izena eman')

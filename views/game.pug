@@ -1,0 +1,60 @@
+extends layout
+
+block scripts
+	script(src='/bower_components/jquery/dist/jquery.js')
+	script(src='/scripts/cw_scripts.js')
+	script(src='http://cdn.jsdelivr.net/jquery.scrollto/2.1.2/jquery.scrollTo.min.js')
+block styles
+	link(rel='stylesheet', href='/style/cw.css')
+
+block content
+	//input#in
+	h1 #{title}
+	a(href='/puzzles')
+		button Atzera jo
+	
+	div.puzzle
+		table.grid.unselectable#jokoa(tabindex='-1')
+			tbody
+				each row,i in puz.filled_grid
+					tr
+						each cell,j in row
+							- let id='c_'+i+'_'+j
+							if cell=='.'
+								td.black(id=id)
+							else  
+								td(id=id)
+									//span.n 
+									span.char
+										
+		div.clues.unselectable
+			strong EZKER ESKUIN
+			div.clues_across
+				each word,i in puz.words
+					if word.dir=='right'
+						- let id = 'clueacross_'+i+'_'+word.x+'_'+word.y;
+						div(id=id) #{i+1} #{puz.clues[i]}
+			strong GOITIK BEHERA
+			div.clues_down
+				each word,i in puz.words
+					if word.dir=='down'
+						- let id = 'cluedown_'+i+'_'+word.x+'_'+word.y;
+						div(id=id) #{i+1} #{puz.clues[i]}
+						
+	nav.buttons
+		button#check_cell.btn.btn-primary(type='button') Hizkia zuzendu
+		button#check_word.btn.btn-primary(type='button') Hitza zuzendu
+		button#check_grid.btn.btn-primary(type='button') Koadroa zuzendu
+		button#solve_cell.btn.btn-primary(type='button') Hizkia bete
+		button#solve_word.btn.btn-primary(type='button') Hiztza bete
+		button#solve_grid.btn.btn-primary(type='button') Koadroa bete
+		button#delete_all.btn.btn-primary(type='button') Koadroa garbitu
+				
+	div.answer#hidden_grid
+		each row,i in puz.filled_grid
+			each cell,j in row
+				- let id='c_answer_'+i+'_'+j
+				div.answer(id=id) #{cell}
+			
+block footer
+	p #{puz.author} - #{puz.filename}

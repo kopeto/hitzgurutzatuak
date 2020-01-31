@@ -1,0 +1,10 @@
+.messages
+  each type in Object.keys(messages)
+    each message in messages[type]
+      div.w-50(class='alert alert-' + type + ' alert-dismissible') 
+        button.close( data-dismiss='alert', aria-label='close') &times;
+        strong #{message}
+
+        
+        //- button.close(type='button', aria-label='close')
+        //-   span(aria-hidden='true')&times;

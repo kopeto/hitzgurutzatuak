@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  h1 #{title}
+  ul.list-group
+    each puz, i in puzzles
+      li.list-group-item
+        if user && user.username=='ander'
+          - let id=puz._id
+          button.btn.btn-danger.deletePUZ(data-id=id) Ezabatu
+        a(href='puzzles/game/' +puz.id)   [#{puz.width}x#{puz.height}] #{puz.filename}
+  br
+  //- if user && user.username=='ander'
+  //-   a(href='puzzles/upload')
+  //-     button.btn.btn-primary Puzlea Kargatu Databasean
+  if user && user.username=='ander'
+    br

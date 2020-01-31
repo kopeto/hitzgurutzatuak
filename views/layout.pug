@@ -1,0 +1,58 @@
+doctype html
+html
+  head
+    title #{title}
+    
+    link(rel='stylesheet' href='/style/style.css')
+    script(src='/bower_components/jquery/dist/jquery.js')
+    link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
+    script(src='../scripts/some_scripts.js')
+    block scripts
+    block styles
+  body
+    .container-fluid
+      nav.navbar.navbar-expand-md.navbar-dark.bg-dark.fixed-top
+        a.navbar-brand(href='/puzzles') Puzleak
+
+        #navbarsExampleDefault.collapse.navbar-collapse
+          ul.navbar-nav.mr-auto
+            li.nav-item.active
+              a.nav-link(href='/puzzles')
+                | Home 
+                span.sr-only (current)
+                if user && user.username=='ander'
+                  li.nav-item.active
+                    a.nav-link(href='/puzzles/upload') Puzleak Kargatu
+
+          ul.nav.navbar-nav.navbar-right
+            if user
+              li.nav-item.active
+                a.nav-link(href='#') 
+                 strong #{user.username}
+              li.nav-item.active 
+                a.nav-link(href='/users/logout') Logout
+
+            else  
+              li.nav-item.active
+                a.nav-link(href='/users/register') Erregistratu
+              li.nav-item.active
+                //a.nav-link(href='/users/login') Login
+                form.form-inline(method='POST', action='/users/login')
+                  .form-row
+                    input.form-control(placeholder='Erabiltzailea',name='username', type='text') 
+                    input.form-control(placeholder='Pasahitza',name='password', type='password') 
+                    input.btn.btn-primary(type='submit',value='Sartu')
+      .container
+        br
+        br
+        br
+        != messages('message', locals)
+        if errors
+          each error, i in errors
+            div(class='alert alert-danger') #{error.msg}
+        block content
+        br
+        hr
+        footer
+          block footer
+          p &copy; 2020 
