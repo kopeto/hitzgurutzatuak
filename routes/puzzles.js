@@ -2,6 +2,7 @@ const {logDate, logError} = require('../utils.js');
 const express = require('express');
 const router = express.Router();
 const path = require('path');
+const multipart = require('connect-multiparty');
 
 // Crossword Class
 const Crossword = require('../cw/crossword.js');
@@ -13,6 +14,8 @@ const flash = require('connect-flash');
 
 const upload = require('../config/uploadconfig');
 
+// Multiparty middleware
+const multipartMiddleware = multipart();
 router.get('/',(req,res)=>{
 	CrosswordModel.find({},(err, puzzles)=>{
 		if(err){
@@ -57,43 +60,62 @@ const checkValidations = (req,res,next)=>{
 		res.render('upload',errors);
 	}
 		else{
-
 		next()
 	}
 };
 
-router.post('/upload',validator, checkValidations, upload.single('filename'),(req,res,next)=>{
-	let filePath = path.join(path.join(__dirname, '../puz'), req.body.filename );
-	let crossword = new Crossword(filePath);
-	let cw = new CrosswordModel();
-	cw.filename=req.body.filename;
-	cw.width=crossword.width;
-	cw.height=crossword.height;
-	cw.words=crossword.words;
-	cw.clues=crossword.clues;
-	cw.void_grid=crossword.void_grid;
-	cw.filled_grid=crossword.filled_grid;
-	if(crossword.cw_name=='Unknown'){cw.name='noname';}
-	else cw.name=crossword.cw_name;
-	if(crossword.cw_author=='Unknown'){cw.author='Joxan Elosegi';}
-	else cw.author=crossword.cw_author;
-	//crossword.print_grid();
-	cw.save((err)=>{
-		if(err){
-			if(err.name == 'MongoError' && err.code == 11000){
-				logError({message: err.name+': Key duplicate error'});
-				req.flash('danger', err.name+': \''+req.body.filename+'\' errepikatuta dago.');
+//router.post('/upload',validator,checkValidations);
+
+// router.post('/upload',multipartMiddleware, (req,res,next)=>{
+// 	console.log(req.file);
+// 	//req.originalName=req.files.filename.originalFilename;
+// 	next();
+// });
+
+
+
+
+router.post('/upload', upload.single('filename'),(req,res,next)=>{
+	if(req.file === undefined){
+		req.uploadErrors.forEach((err, index)=>{
+			req.flash('danger','\''+err.filename+'\' '+err.message  );
+		});
+		//req.flash('danger','Erroreren bat izan da');
+		res.redirect('/puzzles');
+	}else{
+		let filePath = path.join(path.join(__dirname, '../uploads'), req.file.originalname );
+		let crossword = new Crossword(filePath);
+		let cw = new CrosswordModel();
+		cw.filename=req.file.originalname ;
+		cw.width=crossword.width;
+		cw.height=crossword.height;
+		cw.words=crossword.words;
+		cw.clues=crossword.clues;
+		cw.void_grid=crossword.void_grid;
+		cw.filled_grid=crossword.filled_grid;
+		if(crossword.cw_name=='Unknown'){cw.name='noname';}
+		else cw.name=crossword.cw_name;
+		if(crossword.cw_author=='Unknown'){cw.author='Joxan Elosegi';}
+		else cw.author=crossword.cw_author;
+		//crossword.print_grid();
+		cw.save((err)=>{
+			if(err){
+				if(err.name == 'MongoError' && err.code == 11000){
+					logError({message: err.name+': Key duplicate error'});
+					req.flash('danger', err.name+': \''+req.file.filename+'\' errepikatuta dago.');
+				}else{
+					logError(err);
+					req.flash('danger', 'Erroreren bat izan da');
+				}
+				res.redirect('/puzzles');
+				//return;
 			}else{
-				logError(err);
-				req.flash('danger', 'Erroreren bat izan da');
+				req.flash('success', 'Puzlea Kargatuta');
+				res.redirect('/puzzles');
 			}
-			res.redirect('/puzzles');
-			//return;
-		}else{
-			req.flash('success', 'Puzlea Kargatuta');
-			res.redirect('/puzzles');
-		}
-	});
+		});
+	}
+
 });
 
 router.get('/game/:id',(req,res)=>{

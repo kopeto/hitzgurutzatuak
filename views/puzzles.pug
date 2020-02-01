@@ -10,6 +10,13 @@ block content
           button.btn.btn-danger.deletePUZ(data-id=id) Ezabatu
         a(href='puzzles/game/' +puz.id)   [#{puz.width}x#{puz.height}] #{puz.filename}
   br
+
+  if user && user.username=='ander'
+    form.form-inline(method='POST', action='/puzzles/upload', enctype='multipart/form-data')
+      .form-row
+        input.form-control(name='filename', type='file', required)
+        input.btn.btn-primary(type='submit', value='Puzlea kargatu')
+
   //- if user && user.username=='ander'
   //-   a(href='puzzles/upload')
   //-     button.btn.btn-primary Puzlea Kargatu Databasean
