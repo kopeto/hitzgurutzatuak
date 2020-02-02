@@ -1,4 +1,5 @@
 const {logDate, logError} = require('../utils.js');
+const checkAuth = require('../auth/authenticate.js');
 const express = require('express');
 const router = express.Router();
 const path = require('path');
@@ -16,6 +17,7 @@ const upload = require('../config/uploadconfig');
 
 // Multiparty middleware
 const multipartMiddleware = multipart();
+
 router.get('/',(req,res)=>{
 	CrosswordModel.find({},(err, puzzles)=>{
 		if(err){
@@ -30,59 +32,23 @@ router.get('/',(req,res)=>{
 	});
 });
 
-router.get('/upload',(req,res)=>{
-	if(!req.user || req.user.username!=='ander'){
-		req.flash('warning', 'Erabiltzaile honek ezin du helbide horretan muturra sartu.');
-		res.redirect('/');
-	}
-	else{
-		res.render('upload',{
-			title: 'Puz fitxategia kargatu',
-			errors: {}
-		});
-	}
+router.get('/upload',checkAuth,(req,res)=>{
+	res.render('upload',{
+		title: 'Puz fitxategia kargatu',
+		errors: {}
+	});
 });
 
-const validator = [
-		check('filename','Ez duzu fitxategirik hautatu').notEmpty(),
-		check('filename').custom(value=>{
-			if(value && value.split('.').pop().toLowerCase()!=='puz'){
-				throw new Error('Ez da puz fitxategia.');
-			}
-			// Indicates the success of this synchronous custom validator
-			return true;
-		})
-	];
-
-const checkValidations = (req,res,next)=>{
-	const errors = validationResult(req);
-	if (!errors.isEmpty()) {
-		res.render('upload',errors);
-	}
-		else{
-		next()
-	}
-};
-
-//router.post('/upload',validator,checkValidations);
-
-// router.post('/upload',multipartMiddleware, (req,res,next)=>{
-// 	console.log(req.file);
-// 	//req.originalName=req.files.filename.originalFilename;
-// 	next();
-// });
-
-
-
-
-router.post('/upload', upload.single('filename'),(req,res,next)=>{
-	if(req.file === undefined){
+router.post('/upload',checkAuth, upload.single('filename'),(req,res,next)=>{
+	if(req.uploadErrors !== undefined){
 		req.uploadErrors.forEach((err, index)=>{
 			req.flash('danger','\''+err.filename+'\' '+err.message  );
 		});
 		//req.flash('danger','Erroreren bat izan da');
 		res.redirect('/puzzles');
-	}else{
+	}
+	else
+	{
 		let filePath = path.join(path.join(__dirname, '../uploads'), req.file.originalname );
 		let crossword = new Crossword(filePath);
 		let cw = new CrosswordModel();
@@ -135,7 +101,7 @@ router.get('/game/:id',(req,res)=>{
 	});
 });
 
-router.delete('/game/:id',(req,res)=>{
+router.delete('/game/:id',checkAuth,(req,res)=>{
 	CrosswordModel.deleteOne({_id: req.params.id},(err)=>{
 		if(err){
 			req.flash('danger','Erroreren bat izan da');

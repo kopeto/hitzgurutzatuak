@@ -13,7 +13,12 @@ const UserSchema = mongoose.Schema({
   password:{
     type: String,
     required: true
+  },
+  master:{
+    type: Boolean,
+    required: true
   }
+
 });
 
 const User = module.exports = mongoose.model('User', UserSchema);

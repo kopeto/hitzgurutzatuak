@@ -3,9 +3,10 @@ const UserModel = require('../models/user');
 const config = require('../config/database');
 const bcrypt = require('bcryptjs');
 const {logDate, logError, logInfo} = require('../utils.js');
+require('dotenv/config');
 
 
-module.exports = function(passport){
+module.exports = (passport)=>{
   // Local strategy
   passport.use(new LocalStrategy((username, password, done)=>{
     // Match username
@@ -20,6 +21,8 @@ module.exports = function(passport){
         if(err) throw err;
         if(isMatch){
           logInfo('User \''+username+'\' logged in.');
+          //user.master=process.env.MASTERS.split(' ').includes(username);
+          console.log(user);
           return done(null,user, {message: 'Ongi etorri '+username+'!'});
         }else{
           return done(null, false, {message: 'Wrong password'});

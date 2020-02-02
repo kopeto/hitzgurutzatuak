@@ -7,6 +7,8 @@ const router = express.Router();
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
+require('dotenv/config');
+
 // Models
 const UserModel = require('../models/user');
 
@@ -39,7 +41,8 @@ router.post('/register',[
     let newUser = new UserModel({
       email:req.body.email,
       username:req.body.username,
-      password:req.body.password
+      password:req.body.password,
+      master:process.env.MASTERS.split(' ').includes(req.body.username)
     });
 
     bcrypt.genSalt(10,(err, salt)=>{
@@ -76,8 +79,8 @@ router.post('/login', (req,res,next)=>{
   passport.authenticate('local', {
     successRedirect: '/',
     failureRedirect: '/users/login',
-    failureFlash: true,
-    successFlash: true
+    failureFlash: 'Erabiltzaile edo pasahitz okerra',
+    successFlash:true
   })(req,res,next);
 });
 
