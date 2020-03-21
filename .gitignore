@@ -1,5 +1,3 @@
 node_modules/
-puz/*
-uploads/*
-.env
+uploads/*.puz
 .npm-debug.log
