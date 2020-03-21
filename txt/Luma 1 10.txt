@@ -1,0 +1,30 @@
+<ACROSS PUZZLE>
+<TITLE>
+Goitik behera eta ezker-eskuin, hitz bat eta bera
+<AUTHOR>
+Joxan Elosegi, Ander Elosegi
+<COPYRIGHT>
+1995 Literate Software Systems
+<SIZE>
+6x6
+<GRID>
+EPELAK
+PIRATA
+ERABAT
+LABORE
+ATARIA
+KATEAK
+<ACROSS>
+Ez hotzak, ez beroak.
+Itsas lapurra.
+Guztiz. 
+Ale.
+Atea.
+Burdinazko lokarriak.
+<DOWN>
+Ez hotzak, ez beroak.
+Itsas lapurra.
+Guztiz. 
+Ale.
+Atea.
+Burdinazko lokarriak.

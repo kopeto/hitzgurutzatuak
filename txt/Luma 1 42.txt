@@ -1,0 +1,30 @@
+<ACROSS PUZZLE>
+<TITLE>
+Goitik behera eta ezker-eskuin, hitz bat eta bera
+<AUTHOR>
+Joxan Elosegi, Ander Elosegi
+<COPYRIGHT>
+1995 Literate Software Systems
+<SIZE>
+6x6
+<GRID>
+AMAITU
+MARRAK
+ARRABA
+IRAKIN
+TABIRA
+UKANAK
+<ACROSS>
+Bukatu.
+Lerroak.
+Arrain arrautza. 
+Egosi.
+Durangoko auzoa.
+Izanak, edukiak.
+<DOWN>
+Bukatu.
+Lerroak.
+Arrain arrautza. 
+Egosi.
+Durangoko auzoa.
+Izanak, edukiak.

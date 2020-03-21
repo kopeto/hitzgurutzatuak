@@ -1,0 +1,30 @@
+<ACROSS PUZZLE>
+<TITLE>
+Goitik behera eta ezker-eskuin, hitz bat eta bera
+<AUTHOR>
+Joxan Elosegi, Ander Elosegi
+<COPYRIGHT>
+1995 Literate Software Systems
+<SIZE>
+6x6
+<GRID>
+ZALIAK
+APARRA
+LAKARI
+IRAKAS
+ARRATE
+KAISER
+<ACROSS>
+Koilara handiak.
+Bitsa.
+Ale neurri txiki. 
+Erakus.
+Eibarko baserri auzoa.
+Enperadore germaniar.
+<DOWN>
+Koilara handiak.
+Bitsa.
+Ale neurri txiki. 
+Erakus.
+Eibarko baserri auzoa.
+Enperadore germaniar.

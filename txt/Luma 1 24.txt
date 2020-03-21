@@ -1,0 +1,30 @@
+<ACROSS PUZZLE>
+<TITLE>
+Goitik behera eta ezker-eskuin, hitz bat eta bera
+<AUTHOR>
+Joxan Elosegi, Ander Elosegi
+<COPYRIGHT>
+1995 Literate Software Systems
+<SIZE>
+6x6
+<GRID>
+LABANA
+ARALAR
+BATERA
+ALEMAN
+NARAMA
+ARANAK
+<ACROSS>
+Aiztoa.
+Mendialde ezaguna.
+Batean. 
+Alemaniar.
+Naroa.
+Aranondoaren fruituak.
+<DOWN>
+Aiztoa.
+Mendialde ezaguna.
+Batean. 
+Alemaniar.
+Naroa.
+Aranondoaren fruituak.
