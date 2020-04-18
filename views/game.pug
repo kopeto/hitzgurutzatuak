@@ -25,6 +25,14 @@ block content
 							else  
 								td(id=id)
 									//span.n 
+									- let item = ''
+									for word,n in puz.words
+										if word.x == i && word.y == j
+											if item == ''
+												- item+=n+1;
+											else
+												- item+='/'+(n+1)
+											span.i_words #{item}
 									span.char
 										
 		div.clues.unselectable

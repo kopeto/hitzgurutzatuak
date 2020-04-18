@@ -11,7 +11,7 @@
 body
 {
 	/*overflow: hidden;*/
-	#background-color: cyan;
+	/* background-color: cyan; */
 }
 
 input
@@ -20,7 +20,7 @@ input
 
 footer
 {
-	#position:fixed;
+	/* position:fixed; */
 	bottom:2em;
 	font-size: 0.8em;
 }
@@ -51,6 +51,19 @@ td span.n
 	height: 8px;
 	font-size: .8em;
 	font-weight: 600;
+
+}
+
+td span.i_words
+{
+	position: absolute;
+	top: -10px;
+	left: 0px;
+	width: 1px;
+	height: 1px;
+	font-size: .35em;
+	font-weight: 400;
+	color: black;
 
 }
 

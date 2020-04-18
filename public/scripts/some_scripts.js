@@ -17,4 +17,5 @@ $(document).ready(()=>{
   $('.close').on('click',()=>{
     $('.close').parent().parent().remove();
   });
+
 });
