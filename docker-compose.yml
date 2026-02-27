@@ -1,0 +1,32 @@
+services:
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_CONNECTION=mongodb://mongo:27017/CW
+      - PORT=3000
+      - MY_SECRET=changeme_in_production
+      - MASTERS=master
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mongodata:
+  uploads:
