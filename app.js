@@ -32,6 +32,10 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.use(express.static('public'));
+// Serve jQuery and Bootstrap from node_modules (replaces bower_components)
+app.use('/vendor/jquery', express.static(path.join(__dirname, 'node_modules/jquery/dist')));
+app.use('/vendor/bootstrap/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')));
+app.use('/vendor/bootstrap/js', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/js')));
 app.use(bodyparser.urlencoded({extended: false}));
 app.use(bodyparser.json());
 
