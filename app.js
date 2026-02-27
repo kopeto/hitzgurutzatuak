@@ -19,7 +19,10 @@ const api = require('./routes/api');
 // MONGO DB setup
 //************************************************
 const mongoose = require('mongoose');
-mongoose.connect(config.database);
+mongoose.connect(config.database, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
 const db = mongoose.connection;
 db.once('open',()=>{logInfo('Connected to mongodb');});
 db.on('error',(err)=>{logError(err); process.exit(1);});
