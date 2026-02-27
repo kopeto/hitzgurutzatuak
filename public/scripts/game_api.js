@@ -446,16 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         GameUI.showProgress(result.progress, result.correctCells, result.totalCells);
 
-        if (result.complete) {
-          GameUI.showVictory({
-            checks: result.checkCount || 0,
-            hints: result.hintCount || 0
-          });
-        } else if (result.hasErrors) {
-          GameUI.showNotification(`${result.errorCount} akats daude koadroan`, 'warning');
-        } else {
-          GameUI.showNotification(`Aurrerapena: ${result.progress}% - Segi horrela!`, 'info');
-        }
+
       }
     });
   }
@@ -486,10 +477,6 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         });
         GameUI.showNotification('Puzlea erabat ebatzi da', 'info');
-        GameUI.showVictory({
-          checks: 0,
-          hints: result.solvedLetters.length
-        });
       }
     });
   }

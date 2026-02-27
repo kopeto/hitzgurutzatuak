@@ -49,13 +49,15 @@ block content
 						div(id=id) #{i+1} #{puz.clues[i]}
 						
 	nav.buttons
-		button#check_cell.btn.btn-primary(type='button') Hizkia zuzendu
-		button#check_word.btn.btn-primary(type='button') Hitza zuzendu
-		button#check_grid.btn.btn-primary(type='button') Koadroa zuzendu
-		button#solve_cell.btn.btn-primary(type='button') Hizkia bete
-		button#solve_word.btn.btn-primary(type='button') Hiztza bete
-		button#solve_grid.btn.btn-primary(type='button') Koadroa bete
-		button#delete_all.btn.btn-primary(type='button') Koadroa garbitu
+		button#check_cell.btn.btn-outline-secondary(type='button') Hizkia zuzendu
+		button#check_word.btn.btn-outline-secondary(type='button') Hitza zuzendu
+		button#check_grid.btn.btn-outline-secondary(type='button') Koadroa zuzendu
+		|  &nbsp;
+		button#solve_cell.btn.btn-outline-secondary(type='button') Hizkia bete
+		button#solve_word.btn.btn-outline-secondary(type='button') Hitza bete
+		button#solve_grid.btn.btn-outline-secondary(type='button') Koadroa bete
+		|  &nbsp;
+		button#delete_all.btn.btn-outline-danger(type='button') Koadroa garbitu
 			
 block footer
 	p #{puz.author} - #{puz.name}
