@@ -78,9 +78,9 @@ router.post('/login', (req,res,next)=>{
 
 // Logout
 router.get('/logout',(req,res,next)=>{
-  req.logout((err) => {
+  req.logout();
+  req.session.regenerate((err) => {
     if (err) return next(err);
-    req.flash('success', 'Saioa itxi duzu.');
     res.redirect('/');
   });
 });

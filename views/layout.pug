@@ -6,6 +6,7 @@ html
     link(rel='stylesheet' href='/style/style.css')
     script(src='/vendor/jquery/jquery.min.js')
     link(rel='stylesheet' href='/vendor/bootstrap/css/bootstrap.min.css')
+    script(src='/vendor/bootstrap/js/bootstrap.bundle.min.js')
     script(src='/scripts/some_scripts.js')
     block scripts
     block styles
@@ -14,34 +15,31 @@ html
       nav.navbar.navbar-expand-md.navbar-dark.bg-dark.fixed-top
         a.navbar-brand(href='/puzzles') Puzleak
 
+        button.navbar-toggler(type='button' data-toggle='collapse' data-target='#navbarsExampleDefault' aria-controls='navbarsExampleDefault' aria-expanded='false' aria-label='Toggle navigation')
+          span.navbar-toggler-icon
+
         #navbarsExampleDefault.collapse.navbar-collapse
           ul.navbar-nav.mr-auto
             li.nav-item.active
               a.nav-link(href='/puzzles')
-                | Home 
+                | Home
                 span.sr-only (current)
-                //- if user && user.username=='ander'
-                //-   li.nav-item.active
-                //-     a.nav-link(href='/puzzles/upload') Puzleak Kargatu
 
-          ul.nav.navbar-nav.navbar-right
-            if user
-              li.nav-item.active
-                a.nav-link(href='#') 
-                 strong #{user.username}
-              li.nav-item.active 
-                a.nav-link(href='/users/logout') Logout
-
-            else  
-              li.nav-item.active
-                a.nav-link(href='/users/register') Erregistratu
-              li.nav-item.active
-                //a.nav-link(href='/users/login') Login
-                form.form-inline(method='POST', action='/users/login')
-                  .form-row
-                    input.form-control(placeholder='Erabiltzailea',name='username', type='text') 
-                    input.form-control(placeholder='Pasahitza',name='password', type='password') 
-                    input.btn.btn-primary(type='submit',value='Sartu')
+        ul.navbar-nav.ml-auto.flex-row
+          if user
+            li.nav-item
+              a.nav-link.px-2(href='#')
+                strong #{user.username}
+            li.nav-item
+              a.nav-link.px-2(href='/users/logout') Logout
+          else
+            li.nav-item
+              a.nav-link.px-2(href='/users/register') Erregistratu
+            li.nav-item
+              form.form-inline(method='POST' action='/users/login')
+                input.form-control.form-control-sm.mr-1(placeholder='Erabiltzailea' name='username' type='text')
+                input.form-control.form-control-sm.mr-1(placeholder='Pasahitza' name='password' type='password')
+                input.btn.btn-sm.btn-primary(type='submit' value='Sartu')
       .container
         br
         br
