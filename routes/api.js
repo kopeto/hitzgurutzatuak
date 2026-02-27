@@ -1,0 +1,443 @@
+const express = require('express');
+const router = express.Router();
+const CrosswordModel = require('../models/crosswords');
+const {logError, logInfo} = require('../utils.js');
+
+// Middleware to verify user has an active game session
+const requireGameSession = (req, res, next) => {
+  if (!req.session.currentGame) {
+    return res.status(400).json({
+      error: true,
+      message: 'Ez dago joko aktiborik saioan' // No active game in session
+    });
+  }
+  next();
+};
+
+/**
+ * POST /api/game/start/:id
+ * Starts a new game session
+ */
+router.post('/start/:id', async (req, res) => {
+  try {
+    const puzzle = await CrosswordModel.findById(req.params.id);
+    
+    if (!puzzle) {
+      return res.status(404).json({
+        error: true,
+        message: 'Puzlea ez da aurkitu'
+      });
+    }
+
+    // Create game state in session
+    req.session.currentGame = {
+      puzzleId: puzzle._id.toString(),
+      startedAt: new Date(),
+      userGrid: createEmptyGrid(puzzle.void_grid),
+      checkCount: 0,
+      hintCount: 0
+    };
+
+    // Send only public data to client
+    res.json({
+      success: true,
+      game: {
+        id: puzzle._id,
+        name: puzzle.name,
+        author: puzzle.author,
+        width: puzzle.width,
+        height: puzzle.height,
+        void_grid: puzzle.void_grid,  // Only black cells
+        words: sanitizeWords(puzzle.words), // Without answers
+        clues: puzzle.clues
+      }
+    });
+
+    logInfo(`User ${req.user?.username || 'anon'} started game: ${puzzle.name}`);
+
+  } catch (err) {
+    logError(err);
+    res.status(500).json({
+      error: true,
+      message: 'Errorea jokoa hastean'
+    });
+  }
+});
+
+/**
+ * POST /api/game/check-cell
+ * Verifies an individual cell
+ */
+router.post('/check-cell', requireGameSession, async (req, res) => {
+  try {
+    const { row, col, value } = req.body;
+
+    if (row === undefined || col === undefined || !value) {
+      return res.status(400).json({
+        error: true,
+        message: 'Datu osatugabeak'
+      });
+    }
+
+    const puzzle = await CrosswordModel.findById(req.session.currentGame.puzzleId);
+    
+    if (!puzzle) {
+      return res.status(404).json({
+        error: true,
+        message: 'Puzlea ez da aurkitu'
+      });
+    }
+
+    const correctValue = puzzle.filled_grid[row][col];
+    const userValue = value.toUpperCase().trim();
+    const correctValueUpper = correctValue.toUpperCase().trim();
+    const isCorrect = userValue === correctValueUpper;
+
+    // Debug logging
+    logInfo(`Check cell [${row}][${col}]: user="${userValue}" (${userValue.charCodeAt(0)}) vs correct="${correctValueUpper}" (${correctValueUpper.charCodeAt(0)}) => ${isCorrect}`);
+
+    // Update user grid if correct
+    if (isCorrect) {
+      req.session.currentGame.userGrid[row][col] = userValue;
+    }
+
+    req.session.currentGame.checkCount++;
+
+    res.json({
+      success: true,
+      correct: isCorrect,
+      // No enviar la respuesta correcta
+    });
+
+  } catch (err) {
+    logError(err);
+    res.status(500).json({
+      error: true,
+      message: 'Errorea zelula egiaztatzean'
+    });
+  }
+});
+
+/**
+ * POST /api/game/check-word
+ * Verifies a complete word — receives cell values from client DOM
+ */
+router.post('/check-word', requireGameSession, async (req, res) => {
+  try {
+    const { wordIndex, cells } = req.body;
+
+    if (wordIndex === undefined || !Array.isArray(cells)) {
+      return res.status(400).json({
+        error: true,
+        message: 'Datu osatugabeak'
+      });
+    }
+
+    const puzzle = await CrosswordModel.findById(req.session.currentGame.puzzleId);
+    
+    if (!puzzle || !puzzle.words[wordIndex]) {
+      return res.status(404).json({
+        error: true,
+        message: 'Hitza ez da aurkitu'
+      });
+    }
+
+    let allCorrect = true;
+    const cellResults = cells.map(({ row, col, value }) => {
+      const correct = puzzle.filled_grid[row][col].toUpperCase() === (value || '').toUpperCase();
+      if (!correct) allCorrect = false;
+
+      // Update session userGrid only for correct cells
+      if (correct) {
+        req.session.currentGame.userGrid[row][col] = puzzle.filled_grid[row][col];
+      }
+
+      return { row, col, correct };
+    });
+
+    req.session.currentGame.checkCount++;
+
+    res.json({
+      success: true,
+      correct: allCorrect,
+      cellResults
+    });
+
+  } catch (err) {
+    logError(err);
+    res.status(500).json({
+      error: true,
+      message: 'Errorea hitza egiaztatzean'
+    });
+  }
+});
+
+/**
+ * POST /api/game/solve-cell
+ * Revela la respuesta de una celda (hint)
+ */
+router.post('/solve-cell', requireGameSession, async (req, res) => {
+  try {
+    const { row, col } = req.body;
+
+    if (row === undefined || col === undefined) {
+      return res.status(400).json({
+        error: true,
+        message: 'Zelula kokapena beharrezkoa da'
+      });
+    }
+
+    const puzzle = await CrosswordModel.findById(req.session.currentGame.puzzleId);
+    
+    if (!puzzle) {
+      return res.status(404).json({
+        error: true,
+        message: 'Puzlea ez da aurkitu'
+      });
+    }
+
+    const correctValue = puzzle.filled_grid[row][col];
+    
+    // Actualizar grid del usuario
+    req.session.currentGame.userGrid[row][col] = correctValue;
+    req.session.currentGame.hintCount++;
+
+    res.json({
+      success: true,
+      value: correctValue
+    });
+
+  } catch (err) {
+    logError(err);
+    res.status(500).json({
+      error: true,
+      message: 'Errorea zelula ebaztean'
+    });
+  }
+});
+
+/**
+ * POST /api/game/solve-word
+ * Revela todas las letras de una palabra (hint fuerte)
+ */
+router.post('/solve-word', requireGameSession, async (req, res) => {
+  try {
+    const { wordIndex } = req.body;
+
+    if (wordIndex === undefined) {
+      return res.status(400).json({
+        error: true,
+        message: 'Hitz indizea beharrezkoa da'
+      });
+    }
+
+    const puzzle = await CrosswordModel.findById(req.session.currentGame.puzzleId);
+    
+    if (!puzzle) {
+      return res.status(404).json({
+        error: true,
+        message: 'Puzlea ez da aurkitu'
+      });
+    }
+
+    const word = puzzle.words[wordIndex];
+    const solvedLetters = [];
+
+    // Revelar todas las letras de la palabra
+    if (word.dir === 'right') {
+      for (let j = 0; j < word.length; j++) {
+        const letter = puzzle.filled_grid[word.x][word.y + j];
+        req.session.currentGame.userGrid[word.x][word.y + j] = letter;
+        solvedLetters.push({ row: word.x, col: word.y + j, value: letter });
+      }
+    } else { // down
+      for (let i = 0; i < word.length; i++) {
+        const letter = puzzle.filled_grid[word.x + i][word.y];
+        req.session.currentGame.userGrid[word.x + i][word.y] = letter;
+        solvedLetters.push({ row: word.x + i, col: word.y, value: letter });
+      }
+    }
+
+    req.session.currentGame.hintCount += word.length;
+
+    res.json({
+      success: true,
+      solvedLetters: solvedLetters
+    });
+
+  } catch (err) {
+    logError(err);
+    res.status(500).json({
+      error: true,
+      message: 'Errorea hitza ebaztean'
+    });
+  }
+});
+
+/**
+ * POST /api/game/check-grid
+ * Verifies complete grid — receives all cell values from client DOM
+ */
+router.post('/check-grid', requireGameSession, async (req, res) => {
+  try {
+    const { cells } = req.body;
+
+    if (!Array.isArray(cells)) {
+      return res.status(400).json({ error: true, message: 'Datu osatugabeak' });
+    }
+
+    const puzzle = await CrosswordModel.findById(req.session.currentGame.puzzleId);
+    
+    if (!puzzle) {
+      return res.status(404).json({
+        error: true,
+        message: 'Puzlea ez da aurkitu'
+      });
+    }
+
+    let totalCells = 0;
+    let correctCells = 0;
+    let errorCount = 0;
+    const cellResults = [];
+
+    cells.forEach(({ row, col, value }) => {
+      totalCells++;
+      const correctVal = puzzle.filled_grid[row][col];
+      const empty = !value || value === '';
+      const correct = !empty && correctVal.toUpperCase() === value.toUpperCase();
+
+      if (correct) {
+        correctCells++;
+        req.session.currentGame.userGrid[row][col] = correctVal;
+      } else if (!empty) {
+        errorCount++;
+      }
+
+      cellResults.push({ row, col, correct, empty });
+    });
+
+    const isComplete = correctCells === totalCells;
+    const progress = Math.round((correctCells / totalCells) * 100);
+    req.session.currentGame.checkCount++;
+
+    res.json({
+      success: true,
+      complete: isComplete,
+      progress,
+      correctCells,
+      totalCells,
+      hasErrors: errorCount > 0,
+      errorCount,
+      cellResults
+    });
+
+  } catch (err) {
+    logError(err);
+    res.status(500).json({
+      error: true,
+      message: 'Errorea koadroa egiaztatzean'
+    });
+  }
+});
+
+/**
+ * GET /api/game/status
+ * Gets current game state
+ */
+router.get('/status', requireGameSession, (req, res) => {
+  res.json({
+    success: true,
+    game: {
+      puzzleId: req.session.currentGame.puzzleId,
+      startedAt: req.session.currentGame.startedAt,
+      checkCount: req.session.currentGame.checkCount,
+      hintCount: req.session.currentGame.hintCount,
+      userGrid: req.session.currentGame.userGrid
+    }
+  });
+});
+
+/**
+ * POST /api/game/solve-grid
+ * Revela la solución completa (rendirse)
+ */
+router.post('/solve-grid', requireGameSession, async (req, res) => {
+  try {
+    const puzzle = await CrosswordModel.findById(req.session.currentGame.puzzleId);
+    
+    if (!puzzle) {
+      return res.status(404).json({
+        error: true,
+        message: 'Puzlea ez da aurkitu'
+      });
+    }
+
+    // Copy complete solution to userGrid
+    const allLetters = [];
+    for (let i = 0; i < puzzle.height; i++) {
+      for (let j = 0; j < puzzle.width; j++) {
+        if (puzzle.void_grid[i][j] !== '.') {
+          const letter = puzzle.filled_grid[i][j];
+          req.session.currentGame.userGrid[i][j] = letter;
+          allLetters.push({ row: i, col: j, value: letter });
+        }
+      }
+    }
+
+    // Count all cells as hints
+    req.session.currentGame.hintCount += allLetters.length;
+
+    res.json({
+      success: true,
+      message: 'Puzlea erabat ebatzi da',
+      solvedLetters: allLetters
+    });
+
+  } catch (err) {
+    logError(err);
+    res.status(500).json({
+      error: true,
+      message: 'Errorea koadroa ebaztean'
+    });
+  }
+});
+
+/**
+ * POST /api/game/end
+ * Ends current game session
+ */
+router.post('/end', requireGameSession, (req, res) => {
+  const gameData = req.session.currentGame;
+  delete req.session.currentGame;
+  
+  res.json({
+    success: true,
+    message: 'Jokoa amaituta',
+    stats: {
+      duration: new Date() - new Date(gameData.startedAt),
+      checks: gameData.checkCount,
+      hints: gameData.hintCount
+    }
+  });
+});
+
+// Helper functions
+
+function createEmptyGrid(void_grid) {
+  return void_grid.map(row => 
+    row.map(cell => cell === '.' ? '.' : '')
+  );
+}
+
+function sanitizeWords(words) {
+  // Remove property 'word' que contiene la respuesta
+  return words.map(w => ({
+    dir: w.dir,
+    x: w.x,
+    y: w.y,
+    length: w.length
+    // Do NOT include w.word
+  }));
+}
+
+module.exports = router;

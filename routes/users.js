@@ -38,33 +38,25 @@ router.post('/register',[
     res.render('register',errors);
   } else {
 
-    let newUser = new UserModel({
-      email:req.body.email,
-      username:req.body.username,
-      password:req.body.password,
-      master:process.env.MASTERS.split(' ').includes(req.body.username)
-    });
+    try {
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(req.body.password, salt);
 
-    bcrypt.genSalt(10,(err, salt)=>{
-      bcrypt.hash(newUser.password, salt, (err, hash)=>{
-        if(err){
-          logError(err);
-          return;
-        }else{
-          newUser.password = hash;
-          newUser.save((err)=>{
-            if(err){
-              logError(err);
-              req.flash('danger','Erroreren bat izan da');
-              res.redirect('/users/register');
-            }else{
-              req.flash('success','Erabiltzaile berria sortu duzu');
-              res.redirect('/users/login');
-            }
-          });
-        }
+      const newUser = new UserModel({
+        email:    req.body.email,
+        username: req.body.username,
+        password: hash,
+        master:   process.env.MASTERS.split(' ').includes(req.body.username)
       });
-    });
+
+      await newUser.save();
+      req.flash('success', 'Erabiltzaile berria sortu duzu');
+      res.redirect('/users/login');
+    } catch (err) {
+      logError(err);
+      req.flash('danger', 'Erroreren bat izan da');
+      res.redirect('/users/register');
+    }
   }
 });
 
@@ -84,11 +76,13 @@ router.post('/login', (req,res,next)=>{
   })(req,res,next);
 });
 
-// logout
-router.get('/logout',(req,res)=>{
-  req.logout();
-  req.flash('success', 'Logged out.' );
-  res.redirect('/');
+// Logout
+router.get('/logout',(req,res,next)=>{
+  req.logout((err) => {
+    if (err) return next(err);
+    req.flash('success', 'Saioa itxi duzu.');
+    res.redirect('/');
+  });
 });
 
 module.exports = router;

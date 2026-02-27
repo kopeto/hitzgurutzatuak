@@ -7,38 +7,36 @@ require('dotenv/config');
 
 
 module.exports = (passport)=>{
-  // Local strategy
-  passport.use(new LocalStrategy((username, password, done)=>{
-    // Match username
-    let query = {username:username};
-    UserModel.findOne(query, (err,user)=>{
-      if(err) throw err;
-      if(!user){
-        return done(null, false, {message: 'No user found'});
+  // Local strategy — async/await, no callbacks (Mongoose 9)
+  passport.use(new LocalStrategy(async (username, password, done)=>{
+    try {
+      const user = await UserModel.findOne({ username });
+      if (!user) {
+        return done(null, false, { message: 'Ez da erabiltzailerik aurkitu' });
       }
-      //Match Password
-      bcrypt.compare(password, user.password, (err, isMatch)=>{
-        if(err) throw err;
-        if(isMatch){
-          logInfo('User \''+username+'\' logged in.');
-          //user.master=process.env.MASTERS.split(' ').includes(username);
-          console.log(user);
-          return done(null,user, {message: 'Ongi etorri '+username+'!'});
-        }else{
-          return done(null, false, {message: 'Wrong password'});
-        }
-      });
-    });
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (isMatch) {
+        logInfo('User \'' + username + '\' logged in.');
+        return done(null, user, { message: 'Ongi etorri ' + username + '!' });
+      } else {
+        return done(null, false, { message: 'Pasahitz okerra' });
+      }
+    } catch (err) {
+      return done(err);
+    }
   }));
 
   passport.serializeUser((user, done)=>{
     done(null, user.id);
   });
 
-  passport.deserializeUser((id, done)=> {
-    UserModel.findById(id, (err, user)=> {
-      done(err, user);
-    });
+  passport.deserializeUser(async (id, done)=> {
+    try {
+      const user = await UserModel.findById(id);
+      done(null, user);
+    } catch (err) {
+      done(err);
+    }
   });
 
 }

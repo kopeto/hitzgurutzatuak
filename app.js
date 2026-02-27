@@ -12,16 +12,17 @@ require('dotenv/config');
 // ROutes
 const puzzles = require('./routes/puzzles');
 const users = require('./routes/users');
+const api = require('./routes/api');
 
 
 //************************************************
 // MONGO DB setup
 //************************************************
 const mongoose = require('mongoose');
-mongoose.connect(config.database, config.db_options);
+mongoose.connect(config.database);
 const db = mongoose.connection;
 db.once('open',()=>{logInfo('Connected to mongodb');});
-db.on('error',(err)=>{logError(err); exit();});
+db.on('error',(err)=>{logError(err); process.exit(1);});
 
 //************************************************
 // APPLICATION
@@ -50,6 +51,7 @@ app.use(passport.session());
 app.use(defaultHandler);
 app.use('/puzzles', puzzles);
 app.use('/users', users);
+app.use('/api/game', api);
 app.get('/',(req,res)=>{res.redirect('/puzzles');});
 
 // Not found page handle:
