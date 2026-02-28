@@ -214,8 +214,10 @@ $(document).ready(function() {
        $('.selected_clue').removeClass('selected_clue');
        $("#"+id).addClass('selected_clue');
 
-       $(".clues_across").scrollTo("#"+id,300,{over:{top:-1}});
-       $(".clues_down").scrollTo("#"+id,300,{over:{top:-1}});
+       if ($.fn.scrollTo) {
+         $(".clues_across").scrollTo("#"+id,300,{over:{top:-1}});
+         $(".clues_down").scrollTo("#"+id,300,{over:{top:-1}});
+       }
 
    }
 
