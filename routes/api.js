@@ -471,6 +471,9 @@ router.post('/end', requireGameSession, (req, res) => {
  * Returns saved grid state for (player, puzzle)
  */
 router.get('/history/:puzzleId', async (req, res) => {
+  if (!req.user) {
+    return res.json({ success: true, cells: [] });
+  }
   try {
     const playerId = getPlayerId(req);
     const state = await GameStateModel.findOne({
@@ -492,6 +495,9 @@ router.get('/history/:puzzleId', async (req, res) => {
  * Saves (upserts) the current grid state for (player, puzzle)
  */
 router.post('/history/:puzzleId', actionLimiter, async (req, res) => {
+  if (!req.user) {
+    return res.json({ success: true });
+  }
   try {
     const { cells } = req.body;
     if (!Array.isArray(cells)) {

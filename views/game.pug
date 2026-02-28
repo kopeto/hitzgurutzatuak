@@ -2,8 +2,8 @@ extends layout
 
 block scripts
 	script(src='/vendor/jquery/jquery.min.js')
-	script(src='/scripts/cw_scripts.js')
 	script(src='/scripts/game_api.js')
+	script(src='/scripts/cw_scripts.js')
 	script(src='http://cdn.jsdelivr.net/jquery.scrollto/2.1.2/jquery.scrollTo.min.js')
 block styles
 	link(rel='stylesheet', href='/style/cw.css')
@@ -14,7 +14,7 @@ block content
 			button.btn.btn-sm.btn-outline-secondary Atzera jo
 		h2.game-title #{puz.name}
 
-	.game-wrapper
+	.game-wrapper(data-puzzle-id=puz.id)
 		div.puzzle
 			div.grid-block
 				table.grid.unselectable#jokoa(tabindex='-1')

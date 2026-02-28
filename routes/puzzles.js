@@ -111,6 +111,7 @@ router.get('/game/:id', async (req, res) => {
     res.render('game', {
       title: 'JOKOA',
       puz: {
+        id:        puzzle._id.toString(),
         name:      puzzle.name,
         author:    puzzle.author,
         width:     puzzle.width,

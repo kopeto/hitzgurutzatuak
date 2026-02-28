@@ -18,8 +18,11 @@ $(document).ready(function() {
    // UNDO / REDO STACK
    // ---------------------------------------------------------------------------
 
+   const PUZZLE_ID = $('.game-wrapper').data('puzzle-id');
    const undoStack = [];
    const redoStack = [];
+   let _isReplaying = false;  // prevents saves during history replay
+   let _saveTimer = null;
 
    function cellText(x, y) {
      return $('#c_'+x+'_'+y+' > .char').text();
@@ -33,10 +36,53 @@ $(document).ready(function() {
      }
    }
 
+   function collectCells() {
+     const cells = [];
+     $('td:not(.black)').each(function() {
+       const val = $(this).find('.char').text();
+       if (val !== '') {
+         const parts = $(this).attr('id').split('_');
+         cells.push({ row: parseInt(parts[1]), col: parseInt(parts[2]), value: val });
+       }
+     });
+     return cells;
+   }
+
+   // Immediate save — cancels any pending debounce timer
+   function saveNow() {
+     if (_isReplaying || !PUZZLE_ID) return;
+     clearTimeout(_saveTimer);
+     _saveTimer = null;
+     GameAPI.saveState(PUZZLE_ID, collectCells());
+   }
+
+   // Debounced save — waits 2s of inactivity before saving
+   function scheduleSave() {
+     if (_isReplaying || !PUZZLE_ID) return;
+     clearTimeout(_saveTimer);
+     _saveTimer = setTimeout(saveNow, 2000);
+   }
+
+   // Save immediately when user leaves, hides or closes the tab
+   document.addEventListener('visibilitychange', function() {
+     if (document.visibilityState === 'hidden') saveNow();
+   });
+   window.addEventListener('beforeunload', function() {
+     // Use sendBeacon for reliability on tab/window close
+     if (!PUZZLE_ID) return;
+     clearTimeout(_saveTimer);
+     const cells = collectCells();
+     navigator.sendBeacon(
+       '/api/game/history/' + PUZZLE_ID,
+       new Blob([JSON.stringify({ cells })], { type: 'application/json' })
+     );
+   });
+
    function pushAction(action) {
      undoStack.push(action);
      redoStack.length = 0;
      updateHistoryButtons();
+     scheduleSave();
    }
 
    function applyUndo() {
@@ -49,6 +95,7 @@ $(document).ready(function() {
      }
      redoStack.push(action);
      updateHistoryButtons();
+     scheduleSave();
    }
 
    function applyRedo() {
@@ -61,6 +108,7 @@ $(document).ready(function() {
      }
      undoStack.push(action);
      updateHistoryButtons();
+     scheduleSave();
    }
 
    function updateHistoryButtons() {
@@ -68,7 +116,20 @@ $(document).ready(function() {
      $('#redo_btn').prop('disabled', redoStack.length === 0);
    }
 
+   // Load saved grid state on page load and apply to DOM
+   async function loadAndReplay() {
+     if (!PUZZLE_ID) return;
+     const result = await GameAPI.loadState(PUZZLE_ID);
+     if (result.error || !result.cells || result.cells.length === 0) return;
+     _isReplaying = true;
+     result.cells.forEach(function({ row, col, value }) {
+       setCellText(row, col, value);
+     });
+     _isReplaying = false;
+   }
+
    updateHistoryButtons();
+   loadAndReplay();
 
    // ---------------------------------------------------------------------------
    // CHECKER
