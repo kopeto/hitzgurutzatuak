@@ -40,31 +40,37 @@ function clues_from_buffer(buf,offset,filesize){
 
 function words_from_grid(grid,w,h){
     var words = new Array();
-    var n=0;
+    var cellNumber = 0;
 
     for(let i=0; i<h;i++){
         for(let j=0;j<w;j++){
-            //Across
-            let index=j;
-            if( (index==0 || grid[i][index-1]=='.')&& grid[i][index]!='.' && index+1<w && grid[i][index+1]!='.' ){
-                words[n]={word:"",dir:'right',x:i,y:j,length:0};
-                while(index<w && grid[i][index]!='.'){
-                    words[n].word+=grid[i][index];
-                    index++;
-                }
-                words[n].length=index-j;
-                n++;
-            }
+            let startsAcross = (j==0 || grid[i][j-1]=='.') && grid[i][j]!='.' && j+1<w && grid[i][j+1]!='.';
+            let startsDown   = (i==0 || grid[i-1][j]=='.') && grid[i][j]!='.' && i+1<h && grid[i+1][j]!='.';
 
-            index=i;
-            if( (index==0 || grid[index-1][j]=='.')&& grid[index][j]!='.' && index+1<h && grid[index+1][j]!='.' ){
-                words[n]={word:"",dir:'down',x:i,y:j,length:0};
-                while(index<h && grid[index][j]!='.'){
-                    words[n].word+=grid[index][j];
-                    index++;
+            if(startsAcross || startsDown){
+                cellNumber++;
+
+                if(startsAcross){
+                    let word = {word:"",dir:'right',x:i,y:j,length:0,number:cellNumber};
+                    let index = j;
+                    while(index<w && grid[i][index]!='.') {
+                        word.word += grid[i][index];
+                        index++;
+                    }
+                    word.length = index - j;
+                    words.push(word);
                 }
-                words[n].length=index-i;
-                n++;
+
+                if(startsDown){
+                    let word = {word:"",dir:'down',x:i,y:j,length:0,number:cellNumber};
+                    let index = i;
+                    while(index<h && grid[index][j]!='.') {
+                        word.word += grid[index][j];
+                        index++;
+                    }
+                    word.length = index - i;
+                    words.push(word);
+                }
             }
         }
     }

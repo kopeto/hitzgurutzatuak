@@ -19,7 +19,8 @@ function sanitizeWords(words) {
     dir: w.dir,
     x: w.x,
     y: w.y,
-    length: w.length
+    length: w.length,
+    number: w.number
     // Do NOT include w.word (the answer)
   }));
 }

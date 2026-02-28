@@ -11,7 +11,8 @@ let cwSchema = mongoose.Schema({
     dir: String,
     x: Number,
     y: Number,
-    length: Number
+    length: Number,
+    number: Number
   }],
   clues: [String],
   name: String,
