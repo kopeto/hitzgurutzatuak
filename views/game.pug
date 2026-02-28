@@ -9,53 +9,61 @@ block styles
 	link(rel='stylesheet', href='/style/cw.css')
 
 block content
-	h1 #{title}
-	a(href='/puzzles')
-		button Atzera jo
-	
-	div.puzzle
-		table.grid.unselectable#jokoa(tabindex='-1')
-			tbody
-				each row,i in puz.void_grid
-					tr
-						each cell,j in row
-							- let id='c_'+i+'_'+j
-							if cell=='.'
-								td.black(id=id)
-							else
-								td(id=id)
-									- let cellNum = null
-									for word in puz.words
-										if word.x == i && word.y == j && cellNum === null
-											- cellNum = word.number
-									if cellNum !== null
-										span.i_words #{cellNum}
-									span.char
-										
-		div.clues.unselectable
-			strong EZKER ESKUIN
-			div.clues_across
-				each word,i in puz.words
-					if word.dir=='right'
-						- let id = 'clueacross_'+word.number+'_'+word.x+'_'+word.y;
-						div(id=id) #{word.number} #{puz.clues[i]}
-			strong GOITIK BEHERA
-			div.clues_down
-				each word,i in puz.words
-					if word.dir=='down'
-						- let id = 'cluedown_'+word.number+'_'+word.x+'_'+word.y;
-						div(id=id) #{word.number} #{puz.clues[i]}
-				
-	nav.buttons
-		button#check_cell.btn.btn-outline-secondary(type='button') Hizkia zuzendu
-		button#check_word.btn.btn-outline-secondary(type='button') Hitza zuzendu
-		button#check_grid.btn.btn-outline-secondary(type='button') Koadroa zuzendu
-		|  &nbsp;
-		button#solve_cell.btn.btn-outline-secondary(type='button') Hizkia bete
-		button#solve_word.btn.btn-outline-secondary(type='button') Hitza bete
-		button#solve_grid.btn.btn-outline-secondary(type='button') Koadroa bete
-		|  &nbsp;
-		button#delete_all.btn.btn-outline-danger(type='button') Koadroa garbitu
-			
+	.game-topbar
+		a(href='/puzzles')
+			button.btn.btn-sm.btn-outline-secondary Atzera jo
+		h2.game-title #{puz.name}
+
+	.game-wrapper
+		div.puzzle
+			div.grid-block
+				table.grid.unselectable#jokoa(tabindex='-1')
+					tbody
+						each row,i in puz.void_grid
+							tr
+								each cell,j in row
+									- let id='c_'+i+'_'+j
+									if cell=='.'
+										td.black(id=id)
+									else
+										td(id=id)
+											- let cellNum = null
+											for word in puz.words
+												if word.x == i && word.y == j && cellNum === null
+													- cellNum = word.number
+											if cellNum !== null
+												span.i_words #{cellNum}
+											span.char
+												
+				div.history-bar
+					button#undo_btn.btn.btn-sm.btn-outline-secondary(type='button' disabled) &#8630; Desegin
+					button#redo_btn.btn.btn-sm.btn-outline-secondary(type='button' disabled) &#8631; Berregin
+
+			div.clues.unselectable
+				strong EZKER ESKUIN
+				div.clues_across
+					each word,i in puz.words
+						if word.dir=='right'
+							- let id = 'clueacross_'+word.number+'_'+word.x+'_'+word.y;
+							div(id=id) #{word.number} #{puz.clues[i]}
+				strong GOITIK BEHERA
+				div.clues_down
+					each word,i in puz.words
+						if word.dir=='down'
+							- let id = 'cluedown_'+word.number+'_'+word.x+'_'+word.y;
+							div(id=id) #{word.number} #{puz.clues[i]}
+
+		nav.buttons
+			div.btn-section
+				span.btn-section-label Zuzendu
+				button#check_cell.btn.btn-outline-secondary(type='button') Hizkia
+				button#check_word.btn.btn-outline-secondary(type='button') Hitza
+				button#check_grid.btn.btn-outline-secondary(type='button') Koadroa
+			div.btn-section
+				span.btn-section-label Bete
+				button#solve_cell.btn.btn-outline-secondary(type='button') Hizkia
+				button#solve_word.btn.btn-outline-secondary(type='button') Hitza
+				button#solve_grid.btn.btn-outline-secondary(type='button') Koadroa
+			button#delete_all.btn.btn-outline-danger(type='button') Koadroa garbitu
 block footer
 	p #{puz.author} - #{puz.name}
