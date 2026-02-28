@@ -125,9 +125,6 @@ router.post('/check-cell', actionLimiter, requireGameSession, async (req, res) =
     const correctValueUpper = correctValue.toUpperCase().trim();
     const isCorrect = userValue === correctValueUpper;
 
-    // Debug logging
-    logInfo(`Check cell [${row}][${col}]: user="${userValue}" (${userValue.charCodeAt(0)}) vs correct="${correctValueUpper}" (${correctValueUpper.charCodeAt(0)}) => ${isCorrect}`);
-
     // Update user grid if correct
     if (isCorrect) {
       req.session.currentGame.userGrid[row][col] = userValue;

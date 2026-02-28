@@ -1,143 +1,133 @@
-*
-{
-/*font-family: "Lucida Console", Monaco, monospace;*/
--ms-transition: all .5s ease-out;
--moz-transition: all .5s ease-out;
--o-transition: all .5s ease-out;
--webkit-transition: all .5s ease-out;
-transition: all .2s ease-out;
+/* =============================================================================
+   BASE
+   ============================================================================= */
+
+* {
+  transition: all .2s ease-out;
 }
 
-body
-{
-/*overflow: hidden;*/
-/* background-color: cyan; */
+footer {
+  bottom: 2em;
+  font-size: 0.8em;
 }
 
-input
-{
+strong {
+  margin: 1em;
 }
 
-footer
-{
-/* position:fixed; */
-bottom:2em;
-font-size: 0.8em;
+/* =============================================================================
+   GRID TABLE
+   ============================================================================= */
+
+table {
+  border-top: 1px solid black;
+  border-left: 1px solid black;
 }
 
-strong
-{
-margin: 1em;
+tbody {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 15), min(50px, calc(100cqw / var(--grid-cols, 15))));
 }
 
-table
-{
-border-collapse: collapse;
-border: 1px solid black;
-table-layout: fixed;
+tr {
+  display: contents;
 }
 
-td
-{
-border: 1px solid black;
+td {
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
 }
 
-td span.n
-{
-position: absolute;
-top: 1px;
-left: 1px;
-width: 12px;
-height: 12px;
-font-size: 1em;
-font-weight: 600;
+tbody td {
+  aspect-ratio: 1;
+  width: 100%;
+  font-size: clamp(0.6rem, calc(min(50px, 100cqw / var(--grid-cols, 15)) * 0.7), 1.8em);
+  background-color: white;
+  text-align: center;
+  vertical-align: middle;
+  position: relative;
+  line-height: 1;
+  overflow: hidden;
 }
 
-td span.i_words
-{
-position: absolute;
-top: 1px;
-left: 2px;
-width: auto;
-height: auto;
-font-size: clamp(6px, calc(100cqw / var(--grid-cols, 15) * 0.28), 12px);
-line-height: 1;
-font-weight: 600;
-color: black;
+/* Cell number label */
+td span.i_words {
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  font-size: clamp(6px, calc(100cqw / var(--grid-cols, 15) * 0.28), 12px);
+  line-height: 1;
+  font-weight: 600;
+  color: black;
 }
 
-tbody td
-{
-width: calc(100cqw / var(--grid-cols, 15));
-height: calc(100cqw / var(--grid-cols, 15));
-font-size: clamp(0.5rem, calc(100cqw / var(--grid-cols, 15) * 0.55), 1.4em);
-background-color: white;
-text-align: center;
-position: relative;
-border: 1px solid black;
-line-height: 1em;
+/* Cell states */
+tbody td:hover            { background-color: #d0e8f0; }
+td.focus_across,
+td.focus_down             { background-color: #b8d8e8; }
+td.selected_cell          { background-color: #7ab8d0; }
+td.black                  { background-color: black; }
+td.black:hover            { background-color: black; }
+td.empty-warn             { background-color: #fff9c4 !important; }
+
+/* Correct / wrong letter colours */
+.right  { color: #00c200; }
+.wrong  { color: red; }
+.answer { display: none; }
+
+/* =============================================================================
+   CLUES PANEL
+   ============================================================================= */
+
+.clues {
+  text-align: left;
+  flex-shrink: 3;
+  flex-basis: 320px;
+  width: 320px;
+  min-width: 120px;
+  max-width: 360px;
+  height: min(80vh, 600px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
 }
 
-tbody td:hover
-{
-background-color: #d0e8f0;
+.clues_across, .clues_down {
+  border-radius: 0.3em;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  background: #eef4f7;
+  overflow: auto;
+  font-size: 0.92rem;
 }
 
-td.focus_across, td.focus_down
-{
-background-color: #b8d8e8;
-color: black;
+.clues_across div, .clues_down div {
+  padding: 0.2em;
+  border-radius: 0.3em;
+  cursor: pointer;
 }
 
-td.black
-{
-background-color: black;
+.clues_across div:hover,
+.clues_down div:hover {
+  background-color: #4a90a4;
+  color: white;
 }
 
-td.black:hover
-{
-background-color: black;
+.clue-num {
+  font-weight: 700;
+  margin-right: 0.15em;
 }
 
-td.selected_cell
-{
-background-color: #7ab8d0;
+.selected_clue {
+  background-color: #4a90a4;
+  color: white;
+  font-size: 1.3em;
 }
 
-.clues_across, .clues_down
-{
-border-width: 0.4em;
-border-radius: 0.3em;
-flex: 1 1 0;
-min-height: 0;
-width: 100%;
-max-width: 360px;
-background: #eef4f7;
-overflow: auto;
-font-size: 0.92rem;
-}
-max-width: 360px;
-background: #eef4f7;
-overflow: auto;
-font-size: 0.92rem;
-}
-
-.clues_across div, .clues_down div
-{
-padding: 0.2em;
-border-radius: 0.3em;
-cursor: pointer;
-}
-
-.clues_across div:hover, .clues_down div:hover
-{
-background-color: #4a90a4;
-color: white;
-}
-
-/* -----------------------------------------------
+/* =============================================================================
    GAME LAYOUT
------------------------------------------------ */
+   ============================================================================= */
 
 .game-topbar {
   display: flex;
@@ -162,8 +152,7 @@ color: white;
   box-sizing: border-box;
 }
 
-.puzzle
-{
+.puzzle {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: start;
@@ -175,13 +164,20 @@ color: white;
 .grid-block {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   flex-grow: 1;
   flex-shrink: 0;
   min-width: calc(var(--grid-cols, 15) * 20px);
   max-width: calc(var(--grid-cols, 15) * 50px);
   container-type: inline-size;
   container-name: grid-block;
+}
+
+.grid {
+  position: relative;
+  cursor: default;
+  width: fit-content;
+  margin: 0 auto;
 }
 
 .history-bar {
@@ -193,42 +189,11 @@ color: white;
   width: 100%;
 }
 
-.grid
-{
-position: relative;
-cursor: default;
-width: 100%;
-}
+/* =============================================================================
+   BUTTONS BAR
+   ============================================================================= */
 
-.clues
-{
-text-align: left;
-flex-shrink: 3;
-flex-basis: 320px;
-width: 320px;
-min-width: 120px;
-max-width: 360px;
-height: min(80vh, 600px);
-display: flex;
-flex-direction: column;
-gap: 0.4em;
-}
-
-.selected_clue
-{
-background-color: #4a90a4;
-color: white;
-font-size: 1.3em;
-}
-
-.selected_clue_min
-{
-color: white;
-font-size: 1.1em;
-}
-
-.buttons
-{
+.buttons {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -258,8 +223,7 @@ font-size: 1.1em;
   margin-right: 0.2em;
 }
 
-.buttons .btn
-{
+.buttons .btn {
   margin: 0;
   font-size: 0.85em;
   letter-spacing: 0.03em;
@@ -273,9 +237,10 @@ font-size: 1.1em;
   letter-spacing: 0.04em !important;
 }
 
-/* ---------------------------------------------------------------------------
-   IN-PAGE NOTIFICATION BAR
-   --------------------------------------------------------------------------- */
+/* =============================================================================
+   NOTIFICATION BAR
+   ============================================================================= */
+
 .game-notification-bar {
   width: 100%;
   max-width: 520px;
@@ -290,47 +255,38 @@ font-size: 1.1em;
   max-height: 0;
   opacity: 0;
   transition: max-height 0.22s ease, opacity 0.22s ease, padding 0.22s ease;
+  position: sticky;
+  top: 0.5rem;
+  z-index: 100;
 }
+
 .game-notification-bar.show {
   max-height: 3em;
   opacity: 1;
   padding: 0.45em 1em;
 }
+
 .game-notification-bar.ntf-success { background: #d1e7dd; color: #0a3622; }
 .game-notification-bar.ntf-error   { background: #f8d7da; color: #58151c; }
 .game-notification-bar.ntf-warning { background: #fff3cd; color: #664d03; }
 .game-notification-bar.ntf-info    { background: #e9ecef; color: #212529; }
 
-.answer
-{
-display: none;
-}
-
-.right
-{
-color: #00c200;
-}
-
-.wrong
-{
-color: red;
-}
-
-/* Empty cell highlighted after Zuzendu koadroa */
-td.empty-warn {
-  background-color: #fff9c4 !important;
-}
+/* =============================================================================
+   UTILITIES
+   ============================================================================= */
 
 .unselectable {
--webkit-touch-callout: none;
--webkit-user-select: none;
--khtml-user-select: none;
--moz-user-select: none;
--ms-user-select: none;
-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-/* Stack grid above clues on narrow screens */
+/* =============================================================================
+   RESPONSIVE — narrow screens
+   ============================================================================= */
+
 @media (max-width: 640px) {
   .puzzle {
     display: flex;
@@ -339,10 +295,8 @@ user-select: none;
   .clues {
     width: 100%;
     max-width: 100%;
-    align-self: auto;
   }
   .clues_across, .clues_down {
-    max-width: 100%;
     height: 200px;
     flex: none;
   }
