@@ -22,7 +22,7 @@ block content
 	.game-wrapper(data-puzzle-id=puz.id)
 		div.puzzle
 			div.grid-block
-				table.grid.unselectable#jokoa(tabindex='-1')
+				table.grid.unselectable#jokoa(tabindex='-1' style=`--grid-cols: ${puz.width}`)
 					tbody
 						each row,i in puz.void_grid
 							tr

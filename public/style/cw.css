@@ -60,7 +60,7 @@ top: 1px;
 left: 2px;
 width: auto;
 height: auto;
-font-size: 12px;
+font-size: clamp(6px, calc(100cqw / var(--grid-cols, 15) * 0.28), 12px);
 line-height: 1;
 font-weight: 600;
 color: black;
@@ -68,9 +68,9 @@ color: black;
 
 tbody td
 {
-width: 40px;
-height: 40px;
-font-size: 1.4em;
+width: calc(100cqw / var(--grid-cols, 15));
+height: calc(100cqw / var(--grid-cols, 15));
+font-size: clamp(0.5rem, calc(100cqw / var(--grid-cols, 15) * 0.55), 1.4em);
 background-color: white;
 text-align: center;
 position: relative;
@@ -108,11 +108,18 @@ background-color: #7ab8d0;
 {
 border-width: 0.4em;
 border-radius: 0.3em;
-height: 250px;
+flex: 1 1 0;
+min-height: 0;
 width: 100%;
-max-width: 430px;
+max-width: 360px;
 background: #eef4f7;
 overflow: auto;
+font-size: 0.92rem;
+}
+max-width: 360px;
+background: #eef4f7;
+overflow: auto;
+font-size: 0.92rem;
 }
 
 .clues_across div, .clues_down div
@@ -149,22 +156,32 @@ color: white;
 .game-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  width: 100%;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
 .puzzle
 {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
   gap: 2em;
   padding: 1em 0;
+  width: 100%;
 }
 
 .grid-block {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  flex-grow: 1;
+  flex-shrink: 0;
+  min-width: calc(var(--grid-cols, 15) * 20px);
+  max-width: calc(var(--grid-cols, 15) * 50px);
+  container-type: inline-size;
+  container-name: grid-block;
 }
 
 .history-bar {
@@ -180,19 +197,21 @@ color: white;
 {
 position: relative;
 cursor: default;
-flex-shrink: 0;
-flex-grow: 0;
+width: 100%;
 }
 
 .clues
 {
-position: relative;
 text-align: left;
-vertical-align: top;
-flex-shrink: 1;
-flex-grow: 0;
-min-width: 180px;
-overflow: hidden;
+flex-shrink: 3;
+flex-basis: 320px;
+width: 320px;
+min-width: 120px;
+max-width: 360px;
+height: min(80vh, 600px);
+display: flex;
+flex-direction: column;
+gap: 0.4em;
 }
 
 .selected_clue
@@ -309,4 +328,27 @@ td.empty-warn {
 -moz-user-select: none;
 -ms-user-select: none;
 user-select: none;
+}
+
+/* Stack grid above clues on narrow screens */
+@media (max-width: 640px) {
+  .puzzle {
+    display: flex;
+    flex-direction: column;
+  }
+  .clues {
+    width: 100%;
+    max-width: 100%;
+    align-self: auto;
+  }
+  .clues_across, .clues_down {
+    max-width: 100%;
+    height: 200px;
+    flex: none;
+  }
+  .grid-block {
+    width: 100%;
+    min-width: unset;
+    max-width: calc(var(--grid-cols, 15) * 40px);
+  }
 }
