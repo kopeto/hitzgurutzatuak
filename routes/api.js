@@ -2,7 +2,13 @@ const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const CrosswordModel = require('../models/crosswords');
+const GameStateModel = require('../models/gamestate');
 const {logError, logInfo} = require('../utils.js');
+
+// Returns a stable player identifier: userId if logged in, sessionId if anon
+function getPlayerId(req) {
+  return req.user ? req.user._id.toString() : 'anon_' + req.session.id;
+}
 
 // ---------------------------------------------------------------------------
 // RATE LIMITERS
@@ -149,9 +155,9 @@ router.post('/check-cell', actionLimiter, requireGameSession, async (req, res) =
  */
 router.post('/check-word', actionLimiter, requireGameSession, async (req, res) => {
   try {
-    const { wordIndex, cells } = req.body;
+    const { wordDir, wordX, wordY, cells } = req.body;
 
-    if (wordIndex === undefined || !Array.isArray(cells)) {
+    if (wordDir === undefined || wordX === undefined || wordY === undefined || !Array.isArray(cells)) {
       return res.status(400).json({
         error: true,
         message: 'Datu osatugabeak'
@@ -159,8 +165,14 @@ router.post('/check-word', actionLimiter, requireGameSession, async (req, res) =
     }
 
     const puzzle = await CrosswordModel.findById(req.session.currentGame.puzzleId);
-    
-    if (!puzzle || !puzzle.words[wordIndex]) {
+    if (!puzzle) {
+      return res.status(404).json({ error: true, message: 'Puzlea ez da aurkitu' });
+    }
+
+    const wordIndex = puzzle.words.findIndex(
+      w => w.dir === wordDir && w.x === wordX && w.y === wordY
+    );
+    if (wordIndex === -1) {
       return res.status(404).json({
         error: true,
         message: 'Hitza ez da aurkitu'
@@ -247,22 +259,28 @@ router.post('/solve-cell', actionLimiter, requireGameSession, async (req, res) =
  */
 router.post('/solve-word', actionLimiter, requireGameSession, async (req, res) => {
   try {
-    const { wordIndex } = req.body;
+    const { wordDir, wordX, wordY } = req.body;
 
-    if (wordIndex === undefined) {
+    if (wordDir === undefined || wordX === undefined || wordY === undefined) {
       return res.status(400).json({
         error: true,
-        message: 'Hitz indizea beharrezkoa da'
+        message: 'Hitz kokapena beharrezkoa da'
       });
     }
 
     const puzzle = await CrosswordModel.findById(req.session.currentGame.puzzleId);
-    
     if (!puzzle) {
       return res.status(404).json({
         error: true,
         message: 'Puzlea ez da aurkitu'
       });
+    }
+
+    const wordIndex = puzzle.words.findIndex(
+      w => w.dir === wordDir && w.x === wordX && w.y === wordY
+    );
+    if (wordIndex === -1) {
+      return res.status(404).json({ error: true, message: 'Hitza ez da aurkitu' });
     }
 
     const word = puzzle.words[wordIndex];
@@ -447,6 +465,52 @@ router.post('/end', requireGameSession, (req, res) => {
 });
 
 // Helper functions
+
+/**
+ * GET /api/game/history/:puzzleId
+ * Returns saved grid state for (player, puzzle)
+ */
+router.get('/history/:puzzleId', async (req, res) => {
+  try {
+    const playerId = getPlayerId(req);
+    const state = await GameStateModel.findOne({
+      playerId,
+      puzzleId: req.params.puzzleId
+    });
+    res.json({
+      success: true,
+      cells: state ? state.cells : []
+    });
+  } catch (err) {
+    logError(err);
+    res.status(500).json({ error: true, message: 'Errorea historia eskuratzean' });
+  }
+});
+
+/**
+ * POST /api/game/history/:puzzleId
+ * Saves (upserts) the current grid state for (player, puzzle)
+ */
+router.post('/history/:puzzleId', actionLimiter, async (req, res) => {
+  try {
+    const { cells } = req.body;
+    if (!Array.isArray(cells)) {
+      return res.status(400).json({ error: true, message: 'Datu osatugabeak' });
+    }
+    const playerId = getPlayerId(req);
+    await GameStateModel.findOneAndUpdate(
+      { playerId, puzzleId: req.params.puzzleId },
+      { cells, updatedAt: new Date() },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    logError(err);
+    res.status(500).json({ error: true, message: 'Errorea historia gordetzean' });
+  }
+});
+
+// ---------------------------------------------------------------------------
 
 function createEmptyGrid(void_grid) {
   return void_grid.map(row => 

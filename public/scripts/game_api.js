@@ -27,15 +27,16 @@ const GameAPI = {
 
   /**
    * Verifies a complete word — sends current cell values from DOM
+   * wordDir: 'right' | 'down', wordX/wordY: start cell coordinates
    */
-  checkWord: async function(wordIndex, cells) {
+  checkWord: async function(wordDir, wordX, wordY, cells) {
     try {
       const response = await fetch('/api/game/check-word', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ wordIndex, cells })
+        body: JSON.stringify({ wordDir, wordX, wordY, cells })
       });
       
       const data = await response.json();
@@ -90,15 +91,16 @@ const GameAPI = {
 
   /**
    * Reveals a complete word
+   * wordDir: 'right' | 'down', wordX/wordY: start cell coordinates
    */
-  solveWord: async function(wordIndex) {
+  solveWord: async function(wordDir, wordX, wordY) {
     try {
       const response = await fetch('/api/game/solve-word', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ wordIndex })
+        body: JSON.stringify({ wordDir, wordX, wordY })
       });
       
       const data = await response.json();
@@ -160,6 +162,38 @@ const GameAPI = {
     } catch (err) {
       console.error('Errorea jokoa amaitzerakoan:', err);
       return { error: true, message: 'Konexio errorea' };
+    }
+  },
+
+  /**
+   * Loads saved grid state for a puzzle
+   */
+  loadState: async function(puzzleId) {
+    try {
+      const response = await fetch('/api/game/history/' + puzzleId);
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      console.error('Errorea egoera kargatzerakoan:', err);
+      return { error: true, cells: [] };
+    }
+  },
+
+  /**
+   * Saves current grid state for a puzzle.
+   * cells = [{row, col, value}] — only non-empty cells.
+   */
+  saveState: async function(puzzleId, cells) {
+    try {
+      const response = await fetch('/api/game/history/' + puzzleId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cells })
+      });
+      return await response.json();
+    } catch (err) {
+      console.error('Errorea egoera gordetzean:', err);
+      return { error: true };
     }
   }
 };
@@ -313,8 +347,13 @@ document.addEventListener('DOMContentLoaded', function() {
         };
       });
 
-      const wordIndex = parseInt(activeClue.id.split('_')[1]);
-      const result = await GameAPI.checkWord(wordIndex, cells);
+      // Identify word by direction + start coordinates (number alone is ambiguous
+      // when across and down share the same starting cell)
+      const clueparts = activeClue.id.split('_');
+      const wordDir = activeClue.id.startsWith('clueacross') ? 'right' : 'down';
+      const wordX = parseInt(clueparts[2]);
+      const wordY = parseInt(clueparts[3]);
+      const result = await GameAPI.checkWord(wordDir, wordX, wordY, cells);
 
       if (result.error) {
         GameUI.showNotification(result.message, 'error');
@@ -386,8 +425,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      const wordIndex = parseInt(activeClue.id.split('_')[1]);
-      const result = await GameAPI.solveWord(wordIndex);
+      const clueparts = activeClue.id.split('_');
+      const wordDir = activeClue.id.startsWith('clueacross') ? 'right' : 'down';
+      const wordX = parseInt(clueparts[2]);
+      const wordY = parseInt(clueparts[3]);
+      const result = await GameAPI.solveWord(wordDir, wordX, wordY);
 
       if (result.error) {
         GameUI.showNotification(result.message, 'error');
