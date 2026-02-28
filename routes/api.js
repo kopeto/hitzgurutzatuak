@@ -1,7 +1,32 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const CrosswordModel = require('../models/crosswords');
 const {logError, logInfo} = require('../utils.js');
+
+// ---------------------------------------------------------------------------
+// RATE LIMITERS
+// ---------------------------------------------------------------------------
+
+// Max 10 game starts per IP per minute
+const startLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: true, message: 'Eskaera gehiegi. Saiatu berriro minutu batzuen buruan.' }
+});
+
+// Max 600 actions (check/solve) per IP per minute
+const actionLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: true, message: 'Eskaera gehiegi. Saiatu berriro minutu baten buruan.' }
+});
+
+// ---------------------------------------------------------------------------
 
 // Middleware to verify user has an active game session
 const requireGameSession = (req, res, next) => {
@@ -18,7 +43,7 @@ const requireGameSession = (req, res, next) => {
  * POST /api/game/start/:id
  * Starts a new game session
  */
-router.post('/start/:id', async (req, res) => {
+router.post('/start/:id', startLimiter, async (req, res) => {
   try {
     const puzzle = await CrosswordModel.findById(req.params.id);
     
@@ -68,7 +93,7 @@ router.post('/start/:id', async (req, res) => {
  * POST /api/game/check-cell
  * Verifies an individual cell
  */
-router.post('/check-cell', requireGameSession, async (req, res) => {
+router.post('/check-cell', actionLimiter, requireGameSession, async (req, res) => {
   try {
     const { row, col, value } = req.body;
 
@@ -122,7 +147,7 @@ router.post('/check-cell', requireGameSession, async (req, res) => {
  * POST /api/game/check-word
  * Verifies a complete word — receives cell values from client DOM
  */
-router.post('/check-word', requireGameSession, async (req, res) => {
+router.post('/check-word', actionLimiter, requireGameSession, async (req, res) => {
   try {
     const { wordIndex, cells } = req.body;
 
@@ -176,7 +201,7 @@ router.post('/check-word', requireGameSession, async (req, res) => {
  * POST /api/game/solve-cell
  * Revela la respuesta de una celda (hint)
  */
-router.post('/solve-cell', requireGameSession, async (req, res) => {
+router.post('/solve-cell', actionLimiter, requireGameSession, async (req, res) => {
   try {
     const { row, col } = req.body;
 
@@ -220,7 +245,7 @@ router.post('/solve-cell', requireGameSession, async (req, res) => {
  * POST /api/game/solve-word
  * Revela todas las letras de una palabra (hint fuerte)
  */
-router.post('/solve-word', requireGameSession, async (req, res) => {
+router.post('/solve-word', actionLimiter, requireGameSession, async (req, res) => {
   try {
     const { wordIndex } = req.body;
 
@@ -278,7 +303,7 @@ router.post('/solve-word', requireGameSession, async (req, res) => {
  * POST /api/game/check-grid
  * Verifies complete grid — receives all cell values from client DOM
  */
-router.post('/check-grid', requireGameSession, async (req, res) => {
+router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) => {
   try {
     const { cells } = req.body;
 
@@ -361,7 +386,7 @@ router.get('/status', requireGameSession, (req, res) => {
  * POST /api/game/solve-grid
  * Revela la solución completa (rendirse)
  */
-router.post('/solve-grid', requireGameSession, async (req, res) => {
+router.post('/solve-grid', actionLimiter, requireGameSession, async (req, res) => {
   try {
     const puzzle = await CrosswordModel.findById(req.session.currentGame.puzzleId);
     
