@@ -48,11 +48,11 @@
 - [ ] **Metadatos de puzzle: dificultad, categorías, etiquetas**  
   La tabla de puzzles muestra poca información de valor. Añadir nivel de dificultad y etiquetas opcionales al modelo.
 
-- [ ] **SEO básico**  
-  No hay `<meta description>`, `og:title` ni nada. El `<title>` es idéntico para todos los puzzles. Añadir metadatos dinámicos en `layout.pug`.
+- [x] **SEO básico**  
+  `<title>` dinámico con nombre del puzzle. `block meta` en `layout.pug` con defaults; `game.pug` sobreescribe con datos del puzzle (`name`, `author`, `width×height`). `og:title`, `og:description`, `og:type`. `charset` y `viewport` añadidos.
 
 - [ ] **Accesibilidad (a11y)**  
-  El grid no tiene ARIA labels. Añadir roles y descripciones para lectores de pantalla.
+  El grid no tiene ARIA labels. Pendiente (descartado por ahora).
 
 - [x] **Consistencia de idioma en la UI**  
   La interfaz mezcla euskera y inglés en mensajes de error del servidor. Unificar al euskera si el objetivo es un portal en euskera.

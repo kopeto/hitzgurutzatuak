@@ -5,6 +5,11 @@ block scripts
 	script(src='/scripts/game_api.js')
 	script(src='/scripts/cw_scripts.js')
 	script(src='http://cdn.jsdelivr.net/jquery.scrollto/2.1.2/jquery.scrollTo.min.js')
+block meta
+	meta(name='description' content=`${puz.name} — ${puz.author} — ${puz.width}×${puz.height} — Hitzgurutzatuak`)
+	meta(property='og:title' content=`${puz.name} | Hitzgurutzatuak`)
+	meta(property='og:description' content=`${puz.author}en hitz-gurutzatua — Hitz jokoen jokoa`)
+	meta(property='og:type' content='website')
 block styles
 	link(rel='stylesheet', href='/style/cw.css')
 
@@ -26,11 +31,11 @@ block content
 									if cell=='.'
 										td.black(id=id)
 									else
+										- let cellNum = null
+										for word in puz.words
+											if word.x == i && word.y == j && cellNum === null
+												- cellNum = word.number
 										td(id=id)
-											- let cellNum = null
-											for word in puz.words
-												if word.x == i && word.y == j && cellNum === null
-													- cellNum = word.number
 											if cellNum !== null
 												span.i_words #{cellNum}
 											span.char

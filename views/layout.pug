@@ -1,7 +1,14 @@
 doctype html
 html
   head
-    title #{title}
+    title #{title} | Hitzgurutzatuak
+    block meta
+      meta(name='description' content='Hitzgurutzatuak — Hitz jokoen jokoa')
+      meta(property='og:title' content=`${title} | Hitzgurutzatuak`)
+      meta(property='og:description' content='Hitzgurutzatuak — Hitz jokoen jokoa')
+      meta(property='og:type' content='website')
+    meta(charset='utf-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1')
     
     link(rel='stylesheet' href='/style/style.css')
     script(src='/vendor/jquery/jquery.min.js')

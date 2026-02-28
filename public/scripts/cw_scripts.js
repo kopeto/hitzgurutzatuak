@@ -29,7 +29,8 @@ $(document).ready(function() {
    }
 
    function setCellText(x, y, value) {
-     const $char = $('#c_'+x+'_'+y+' > .char');
+     const $td = $('#c_'+x+'_'+y);
+     const $char = $td.find('.char');
      $char.text(value);
      if (value === '') {
        $char.removeClass('right wrong');
