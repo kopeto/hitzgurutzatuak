@@ -20,7 +20,7 @@ const GameAPI = {
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('Error checking cell:', err);
+      console.error('Errorea zelula egiaztatzean:', err);
       return { error: true, message: 'Konexio errorea' };
     }
   },
@@ -41,7 +41,7 @@ const GameAPI = {
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('Error checking word:', err);
+      console.error('Errorea hitza egiaztatzean:', err);
       return { error: true, message: 'Konexio errorea' };
     }
   },
@@ -62,7 +62,7 @@ const GameAPI = {
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('Error solving cell:', err);
+      console.error('Errorea zelula betetzean:', err);
       return { error: true, message: 'Konexio errorea' };
     }
   },
@@ -83,7 +83,7 @@ const GameAPI = {
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('Error checking grid:', err);
+      console.error('Errorea koadroa egiaztatzean:', err);
       return { error: true, message: 'Konexio errorea' };
     }
   },
@@ -104,7 +104,7 @@ const GameAPI = {
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('Error solving word:', err);
+      console.error('Errorea hitza betetzean:', err);
       return { error: true, message: 'Konexio errorea' };
     }
   },
@@ -124,7 +124,7 @@ const GameAPI = {
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('Error solving grid:', err);
+      console.error('Errorea koadroa betetzean:', err);
       return { error: true, message: 'Konexio errorea' };
     }
   },
@@ -138,7 +138,7 @@ const GameAPI = {
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('Error getting status:', err);
+      console.error('Errorea egoera eskuratzean:', err);
       return { error: true, message: 'Konexio errorea' };
     }
   },
@@ -158,7 +158,7 @@ const GameAPI = {
       const data = await response.json();
       return data;
     } catch (err) {
-      console.error('Error ending game:', err);
+      console.error('Errorea jokoa amaitzerakoan:', err);
       return { error: true, message: 'Konexio errorea' };
     }
   }

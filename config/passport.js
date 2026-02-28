@@ -16,7 +16,7 @@ module.exports = (passport)=>{
       }
       const isMatch = await bcrypt.compare(password, user.password);
       if (isMatch) {
-        logInfo('User \'' + username + '\' logged in.');
+        logInfo('\'' + username + '\' erabiltzaileak saioa hasi du.');
         return done(null, user, { message: 'Ongi etorri ' + username + '!' });
       } else {
         return done(null, false, { message: 'Pasahitz okerra' });

@@ -72,7 +72,7 @@ router.post('/upload', checkAuth, upload.single('filename'), async (req, res, ne
     cw.clues      = crossword.clues;
     cw.void_grid  = crossword.void_grid;
     cw.filled_grid = crossword.filled_grid;
-    cw.name       = crossword.cw_name === 'Unknown' ? 'noname' : crossword.cw_name;
+    cw.name       = crossword.cw_name === 'Unknown' ? 'Izengabea' : crossword.cw_name;
     cw.author     = crossword.cw_author === 'Unknown' ? 'Joxan Elosegi' : crossword.cw_author;
 
     await cw.save();

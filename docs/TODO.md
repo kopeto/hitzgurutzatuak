@@ -54,7 +54,7 @@
 - [ ] **Accesibilidad (a11y)**  
   El grid no tiene ARIA labels. Añadir roles y descripciones para lectores de pantalla.
 
-- [ ] **Consistencia de idioma en la UI**  
+- [x] **Consistencia de idioma en la UI**  
   La interfaz mezcla euskera y inglés en mensajes de error del servidor. Unificar al euskera si el objetivo es un portal en euskera.
 
 ---

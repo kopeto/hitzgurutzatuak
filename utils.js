@@ -24,9 +24,9 @@ const logInfo = (info)=>{
 }
 
 const notFoundHandler = (req,res)=>{
-	console.log(colors.red(logDate()+' - '+req.method+' '+req.url + ' not found.'));
+	console.log(colors.red(logDate()+' - '+req.method+' '+req.url + ' ez da aurkitu.'));
 	res.render('notfound',{
-		title: 'Not Found',
+		title: 'Ez da aurkitu',
 		url: req.url
 	});
 }
