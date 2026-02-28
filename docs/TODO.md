@@ -8,7 +8,7 @@
 - [ ] **Pantalla de victoria al completar**  
   El API devuelve `complete: true` pero el frontend no reacciona. Añadir modal/animación con tiempo final, contadores de chequeos y pistas usadas.
 
-- [ ] **Bug en selección de pistas (cw_scripts.js)**  
+- [x] **Bug en selección de pistas (cw_scripts.js)**  
   - Límite hardcodeado a `50` celdas en `selectWordDown` y `selectWordAcross` (`while(index<50 && ...)`)
   - La función que clica una pista busca `<span class="n">` que no existe en el HTML
   - Hay dos comentarios `// ERROR PROBABLY HERE` marcando los puntos afectados

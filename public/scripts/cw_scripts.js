@@ -114,35 +114,26 @@ $(document).ready(function() {
    // -----------------------------------------------------------------------------
 
  function selectWordDown(x,y){
-   //Down
      var index = x;
      var cell_id="c_"+index+"_"+y;
 
      $('td').removeClass('focus_across');
      $('td').removeClass('focus_down');
 
-       while(index>=0 && !$("#"+cell_id).hasClass("black"))
-       {
-         index--;
-         cell_id="c_"+index+"_"+y;
-       }
+     // Retrocede hasta encontrar celda negra o borde del grid
+     while(index>=0 && !$("#"+cell_id).hasClass("black")){
+       index--;
+       cell_id="c_"+index+"_"+y;
+     }
+     index++;
+     cell_id="c_"+index+"_"+y;
 
-       // ERROR PROBABLY HERE
+     // Avanza marcando celdas mientras existan en el DOM y no sean negras
+     while($("#"+cell_id).length > 0 && !$("#"+cell_id).hasClass("black")){
+       $("#"+cell_id).addClass('focus_down');
        index++;
-       let firstcell_x = index;
-       cell_id="c_"+firstcell_x+"_"+y;
-       let first_cell_id = cell_id;
-
-     while(index<50 && !$("#"+cell_id).hasClass("black"))
-       {
-         $("#"+cell_id).addClass('focus_down');
-         index++;
-         cell_id="c_"+index+"_"+y;
-       }
-
-    //$('td').removeClass('selected_cell');
-    //$('#'+first_cell_id).addClass('selected_cell');
-
+       cell_id="c_"+index+"_"+y;
+     }
  }
 
    // ---------------------------------------------------------------------------
@@ -153,34 +144,26 @@ $(document).ready(function() {
 
 
  function selectWordAcross(x,y){
-   //Across
-    var index = y;
+     var index = y;
      var cell_id="c_"+x+"_"+index;
 
      $('td').removeClass('focus_across');
      $('td').removeClass('focus_down');
 
-       while(index>=0 && !$("#"+cell_id).hasClass("black"))
-       {
-         index--;
-         cell_id="c_"+x+"_"+index;
-       }
+     // Retrocede hasta encontrar celda negra o borde del grid
+     while(index>=0 && !$("#"+cell_id).hasClass("black")){
+       index--;
+       cell_id="c_"+x+"_"+index;
+     }
+     index++;
+     cell_id="c_"+x+"_"+index;
 
-       // ERROR PROBABLY HERE
+     // Avanza marcando celdas mientras existan en el DOM y no sean negras
+     while($("#"+cell_id).length > 0 && !$("#"+cell_id).hasClass("black")){
+       $("#"+cell_id).addClass('focus_across');
        index++;
-       let firstcell_y = index;
-       cell_id="c_"+x+"_"+firstcell_y;
-      let first_cell_id = cell_id;
-
-     while(index<50 && !$("#"+cell_id).hasClass("black"))
-       {
-         $("#"+cell_id).addClass('focus_across');
-         index++;
-         cell_id="c_"+x+"_"+index;
-       }
-
-     //$('td').removeClass('selected_cell');
-     //$('#'+first_cell_id).addClass('selected_cell');
+       cell_id="c_"+x+"_"+index;
+     }
 }
 
    // ---------------------------------------------------------------------------
@@ -268,11 +251,6 @@ $(document).ready(function() {
        let x = splitted[2];
        let y = splitted[3];
        //console.log('Clue: '+n);
-
-       $span = $('.n').filter(function() {
-           // Matches exact string
-           return $(this).text() === n;
-       });
 
        $('td').removeClass('selected_cell');
        let first_cell_id = 'c_'+x+'_'+y;
