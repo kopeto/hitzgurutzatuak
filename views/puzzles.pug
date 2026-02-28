@@ -1,24 +1,98 @@
 extends layout
 
+block styles
+  style.
+    .puzzle-table {
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+    }
+    .puzzle-table thead {
+      background: #343a40;
+      color: #fff;
+      letter-spacing: 0.04em;
+      font-size: 0.93rem;
+    }
+    .puzzle-table tbody tr {
+      transition: background 0.15s;
+    }
+    .puzzle-table tbody tr:hover {
+      background: #f0f4ff;
+    }
+    .grid-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #e9ecef;
+      font-family: monospace;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #495057;
+    }
+    .play-btn {
+      width: 90px;
+    }
+    .puzzle-title {
+      font-weight: 600;
+      color: #212529;
+    }
+    .puzzle-author {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    .upload-panel {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+      border: 1px solid #dee2e6;
+    }
+
 block content
-  h1 #{title}
-  ul.list-group
-    each puz, i in puzzles
-      li.list-group-item
-        if user && user.master
-          - let id=puz._id
-          button.btn.btn-danger.deletePUZ(data-id=id) Ezabatu
-        a(href='puzzles/game/' +puz.id)   [#{puz.width}x#{puz.height}] #{puz.filename}
-  br
+  .d-flex.align-items-center.justify-content-between.mb-4
+    h2.mb-0 #{title}
+    if user && user.master
+      button.btn.btn-sm.btn-outline-secondary(type='button' data-toggle='collapse' data-target='#uploadPanel') 
+        | &#8679; Kargatu puzlea
 
   if user && user.master
-    form.form-inline(method='POST', action='/puzzles/upload', enctype='multipart/form-data')
-      .form-row
-        input.form-control(name='filename', type='file', required)
-        input.btn.btn-primary(type='submit', value='Puzlea kargatu')
+    .collapse.mb-4#uploadPanel
+      .upload-panel
+        form(method='POST', action='/puzzles/upload', enctype='multipart/form-data')
+          .form-row.align-items-end
+            .col-auto
+              label.sr-only(for='fileInput') Fitxategia
+              input.form-control#fileInput(name='filename', type='file', accept='.puz', required)
+            .col-auto
+              input.btn.btn-primary(type='submit', value='Kargatu')
 
-  //- if user && user.username=='ander'
-  //-   a(href='puzzles/upload')
-  //-     button.btn.btn-primary Puzlea Kargatu Databasean
-  if user && user.master
-    br
+  if puzzles.length === 0
+    .alert.alert-info Ez dago puzlerik oraindik.
+  else
+    .table-responsive
+      table.table.table-hover.puzzle-table.mb-0
+        thead
+          tr
+            th # 
+            th Izena
+            th Egilea
+            th Tamaina
+            th Hitzak
+            th
+              if user && user.master
+                | Ekintzak
+        tbody
+          each puz, i in puzzles
+            tr
+              td.align-middle.text-muted.small #{i + 1}
+              td.align-middle
+                a.puzzle-title(href='/puzzles/game/' + puz.id) #{puz.name}
+              td.align-middle
+                span.puzzle-author #{puz.author}
+              td.align-middle
+                span.grid-badge #{puz.width}&times;#{puz.height}
+              td.align-middle.text-center #{puz.words.length}
+              td.align-middle.text-right
+                a.btn.btn-primary.btn-sm.play-btn(href='/puzzles/game/' + puz.id) &#9654; Jokatu
+                if user && user.master
+                  |  
+                  button.btn.btn-outline-danger.btn-sm.deletePUZ(data-id=puz._id) Ezabatu
