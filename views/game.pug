@@ -53,17 +53,20 @@ block content
 							- let id = 'cluedown_'+word.number+'_'+word.x+'_'+word.y;
 							div(id=id) #{word.number} #{puz.clues[i]}
 
+		#game-notification.game-notification-bar
+
 		nav.buttons
 			div.btn-section
 				span.btn-section-label Zuzendu
 				button#check_cell.btn.btn-outline-secondary(type='button') Hizkia
 				button#check_word.btn.btn-outline-secondary(type='button') Hitza
-				button#check_grid.btn.btn-outline-secondary(type='button') Koadroa
 			div.btn-section
 				span.btn-section-label Bete
 				button#solve_cell.btn.btn-outline-secondary(type='button') Hizkia
 				button#solve_word.btn.btn-outline-secondary(type='button') Hitza
 				button#solve_grid.btn.btn-outline-secondary(type='button') Koadroa
 			button#delete_all.btn.btn-outline-danger(type='button') Koadroa garbitu
+			button#check_grid.btn.btn-primary.btn-check-grid(type='button') ✓ Zuzendu koadroa
+
 block footer
 	p #{puz.author} - #{puz.name}

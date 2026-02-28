@@ -8,6 +8,7 @@ const path = require('path');
 const Crossword = require('../cw/crossword.js');
 // Models
 const CrosswordModel = require('../models/crosswords');
+const PlaySession = require('../models/playsession');
 
 const flash = require('connect-flash');
 
@@ -35,13 +36,25 @@ function createEmptyGrid(void_grid) {
 router.get('/', async (req, res) => {
   try {
     const puzzles = await CrosswordModel.find({});
+
+    // For logged-in users build a map puzzleId → status
+    let statusMap = {};
+    if (req.user) {
+      const userId = req.user._id.toString();
+      const sessions = await PlaySession.find({ userId, puzzleId: { $in: puzzles.map(p => p._id.toString()) } });
+      sessions.forEach(s => {
+        statusMap[s.puzzleId] = s.completedAt ? 'completed' : 'started';
+      });
+    }
+
     res.render('puzzles', {
       title: 'Puzleak',
-      puzzles: puzzles
+      puzzles: puzzles,
+      statusMap
     });
   } catch (err) {
     logError(err);
-    res.render('puzzles', { title: 'Puzleak', puzzles: [] });
+    res.render('puzzles', { title: 'Puzleak', puzzles: [], statusMap: {} });
   }
 });
 
@@ -106,6 +119,15 @@ router.get('/game/:id', async (req, res) => {
       checkCount: 0,
       hintCount:  0
     };
+
+    // Record play start for logged-in users. Never overwrites completedAt.
+    if (req.user) {
+      await PlaySession.findOneAndUpdate(
+        { userId: req.user._id.toString(), puzzleId: puzzle._id.toString() },
+        { $set: { startedAt: new Date() } },
+        { upsert: true, new: true }
+      );
+    }
 
     // Send sanitized puzzle to view (no filled_grid, no word answers)
     res.render('game', {

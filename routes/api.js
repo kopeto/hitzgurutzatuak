@@ -3,6 +3,7 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const CrosswordModel = require('../models/crosswords');
 const GameStateModel = require('../models/gamestate');
+const PlaySession = require('../models/playsession');
 const {logError, logInfo} = require('../utils.js');
 
 // Returns a stable player identifier: userId if logged in, sessionId if anon
@@ -363,7 +364,20 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
     const progress = Math.round((correctCells / totalCells) * 100);
     req.session.currentGame.checkCount++;
 
-    res.json({
+    // Mark puzzle as completed for logged-in users and reset saved grid state
+    if (isComplete && req.user) {
+      const userId = req.user._id.toString();
+      const puzzleId = req.session.currentGame.puzzleId;
+      await PlaySession.findOneAndUpdate(
+        { userId, puzzleId },
+        { $set: { completedAt: new Date() } },
+        { upsert: true }
+      );
+      // Clear persisted grid so next play starts clean
+      await GameStateModel.deleteOne({ playerId: userId, puzzleId });
+    }
+
+    const responseData = {
       success: true,
       complete: isComplete,
       progress,
@@ -372,7 +386,19 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
       hasErrors: errorCount > 0,
       errorCount,
       cellResults
-    });
+    };
+
+    // Include play stats when the puzzle is completed
+    if (isComplete) {
+      const elapsed = Math.floor((Date.now() - new Date(req.session.currentGame.startedAt).getTime()) / 1000);
+      responseData.stats = {
+        durationSec: elapsed,
+        checks: req.session.currentGame.checkCount,
+        hints: req.session.currentGame.hintCount
+      };
+    }
+
+    res.json(responseData);
 
   } catch (err) {
     logError(err);

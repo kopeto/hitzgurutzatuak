@@ -256,17 +256,20 @@ const GameUI = {
   },
 
   /**
-   * Shows notification temporal
+   * Shows feedback in the in-page notification bar.
+   * Pass permanent=true to keep it visible indefinitely.
    */
-  showNotification: function(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.remove();
-    }, 3000);
+  showNotification: function(message, type = 'info', permanent = false) {
+    const el = document.getElementById('game-notification');
+    if (!el) return;
+    clearTimeout(el._hideTimer);
+    el.textContent = message;
+    el.className = 'game-notification-bar show ntf-' + type;
+    if (!permanent) {
+      el._hideTimer = setTimeout(() => {
+        el.classList.remove('show');
+      }, 3000);
+    }
   }
 };
 
@@ -474,8 +477,12 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         // Apply per-cell feedback
         result.cellResults.forEach(({ row, col, correct, empty }) => {
-          const charSpan = document.querySelector(`#c_${row}_${col} .char`);
-          if (charSpan && !empty) {
+          const td = document.getElementById(`c_${row}_${col}`);
+          const charSpan = td ? td.querySelector('.char') : null;
+          if (empty && td) {
+            td.classList.add('empty-warn');
+          } else if (charSpan) {
+            td.classList.remove('empty-warn');
             if (correct) {
               charSpan.classList.add('right');
               charSpan.classList.remove('wrong');
@@ -486,9 +493,25 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         });
 
-        GameUI.showProgress(result.progress, result.correctCells, result.totalCells);
-
-
+        if (result.complete && result.stats) {
+          const s = result.stats;
+          const mins = String(Math.floor(s.durationSec / 60)).padStart(2, '0');
+          const secs = String(s.durationSec % 60).padStart(2, '0');
+          window._puzzleCompleted = true;  // block any further saves
+          GameUI.showNotification(
+            `✓ Zorionak! ${mins}:${secs} · ${s.checks} egiaztapen · ${s.hints || 0} pista`,
+            'success',
+            true
+          );
+        } else {
+          const emptyCount = result.cellResults.filter(c => c.empty).length;
+          const parts = [];
+          if (result.errorCount > 0)
+            parts.push(`${result.errorCount} akats${result.errorCount > 1 ? '' : ''}`);
+          if (emptyCount > 0)
+            parts.push(`${emptyCount} hutsune`);
+          GameUI.showNotification(parts.join(' · '), 'error');
+        }
       }
     });
   }

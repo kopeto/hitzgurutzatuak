@@ -5,16 +5,16 @@
 - [ ] **Responsive/mobile del grid**  
   La tabla HTML del crucigrama es inutilizable en móvil. Requiere rediseño del grid para pantallas pequeñas (táctil, zoom, scroll).
 
-- [ ] **Pantalla de victoria al completar**  
-  El API devuelve `complete: true` pero el frontend no reacciona. Añadir modal/animación con tiempo final, contadores de chequeos y pistas usadas.
+- [x] **Pantalla de victoria al completar**  
+  Al verificar el koadroa correctamente aparece una barra de notificación permanente con tiempo, egiaztapenak y pistak. Las celdas vacías se marcan en amarillo, las incorrectas en rojo.
 
 - [x] **Bug en selección de pistas (cw_scripts.js)**  
   - Límite hardcodeado a `50` celdas en `selectWordDown` y `selectWordAcross` (`while(index<50 && ...)`)
   - La función que clica una pista busca `<span class="n">` que no existe en el HTML
   - Hay dos comentarios `// ERROR PROBABLY HERE` marcando los puntos afectados
 
-- [ ] **Persistencia de progreso en base de datos**  
-  El progreso del usuario vive solo en la sesión HTTP. Si se cierra el navegador o expira la sesión, se pierde todo. Guardar estado por `(userId, puzzleId)` en MongoDB.
+- [x] **Persistencia de progreso en base de datos**  
+  Modelo `GameState` (`playerId, puzzleId, cells, updatedAt`). Guardado con debounce 2s + inmediato en `visibilitychange`/`beforeunload` (sendBeacon). Carga y rellena el grid al volver a la página. Los usuarios anónimos no guardan nada.
 
 ---
 
@@ -32,8 +32,8 @@
 - [ ] **Verificación de email en registro**  
   El registro está completamente abierto sin verificación. Añadir email de confirmación para evitar cuentas basura.
 
-- [ ] **Timestamps y contador de jugadas en puzzles**  
-  El schema de `Crossword` no tiene `createdAt` ni `playCount`. Añadir `{ timestamps: true }` en Mongoose y un contador que se incrementa al iniciar partida.
+- [x] **Timestamps y contador de jugadas en puzzles**  
+  `{ timestamps: true }` en Mongoose. Modelo `PlaySession` (`userId, puzzleId, startedAt, completedAt`): se crea al abrir un puzzle (solo usuarios logueados), se marca `completedAt` al verificar el grid completo. La lista de puzzles muestra badge Hasi Gabea / Hasia / Osatua por usuario. El estado Osatua es permanente; el grid se resetea al volver a jugar.
 
 ---
 
@@ -70,3 +70,10 @@
 - Formato `.puz` estándar — compatible con herramientas externas
 - Docker disponible para despliegue
 - Numeración unificada de celdas (across/down comparten número si empiezan en la misma celda)
+- Undo/redo (Ctrl+Z / Ctrl+Y) con pila de acciones en cliente; botones Desegin/Berregin
+- Zuzendu/Bete Hitza identifica la palabra por dirección + coordenadas, no por número compartido
+- Persistencia de progreso: debounce 2s + save-on-exit (sendBeacon); anónimos sin guardar
+- PlaySession por usuario: badges Hasi Gabea / Hasia / Osatua en lista de puzzles
+- Notificación en barra in-page (debajo del grid): errores, huecos vacíos, y victoria permanente
+- Celdas vacías al Zuzendu koadroa marcadas en amarillo; se limpian con cualquier interacción
+- Zuzendu koadroa destacado como botón primario

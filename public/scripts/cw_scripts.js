@@ -50,7 +50,7 @@ $(document).ready(function() {
 
    // Immediate save — cancels any pending debounce timer
    function saveNow() {
-     if (_isReplaying || !PUZZLE_ID) return;
+     if (_isReplaying || !PUZZLE_ID || window._puzzleCompleted) return;
      clearTimeout(_saveTimer);
      _saveTimer = null;
      GameAPI.saveState(PUZZLE_ID, collectCells());
@@ -58,7 +58,7 @@ $(document).ready(function() {
 
    // Debounced save — waits 2s of inactivity before saving
    function scheduleSave() {
-     if (_isReplaying || !PUZZLE_ID) return;
+     if (_isReplaying || !PUZZLE_ID || window._puzzleCompleted) return;
      clearTimeout(_saveTimer);
      _saveTimer = setTimeout(saveNow, 2000);
    }
@@ -69,7 +69,7 @@ $(document).ready(function() {
    });
    window.addEventListener('beforeunload', function() {
      // Use sendBeacon for reliability on tab/window close
-     if (!PUZZLE_ID) return;
+     if (!PUZZLE_ID || window._puzzleCompleted) return;
      clearTimeout(_saveTimer);
      const cells = collectCells();
      navigator.sendBeacon(
@@ -79,6 +79,7 @@ $(document).ready(function() {
    });
 
    function pushAction(action) {
+     $('td').removeClass('empty-warn');
      undoStack.push(action);
      redoStack.length = 0;
      updateHistoryButtons();
@@ -87,6 +88,7 @@ $(document).ready(function() {
 
    function applyUndo() {
      if (!undoStack.length) return;
+     $('td').removeClass('empty-warn');
      const action = undoStack.pop();
      if (action.batch) {
        action.batch.forEach(a => setCellText(a.row, a.col, a.prev));
@@ -100,6 +102,7 @@ $(document).ready(function() {
 
    function applyRedo() {
      if (!redoStack.length) return;
+     $('td').removeClass('empty-warn');
      const action = redoStack.pop();
      if (action.batch) {
        action.batch.forEach(a => setCellText(a.row, a.col, a.value));
@@ -334,6 +337,7 @@ $(document).ready(function() {
        var y = parseInt(splitted[2]);
 
        if(!$(this).hasClass('black')){
+         $('td').removeClass('empty-warn');
          if($(this).hasClass('selected_cell'))
          {
            if($(this).hasClass('focus_across')){
@@ -412,6 +416,7 @@ $(document).ready(function() {
 
        if(e.key=='Backspace')
        {
+           $('td').removeClass('empty-warn');
            if($('.selected_cell > .char').text()!="")
            {
                var _id = $('.selected_cell').attr('id');
@@ -456,6 +461,7 @@ $(document).ready(function() {
        }
        if(e.which >= 65 && e.which <= 90 || e.key=='ñ')
        {
+           $('td').removeClass('empty-warn');
            $('.wrong').removeClass('wrong');
            $('.right').removeClass('right');
 
@@ -512,6 +518,7 @@ $(document).ready(function() {
        }
        else if(e.which >= 37 && e.which<=40)
        {
+           $('td').removeClass('empty-warn');
            var id = $('.selected_cell').attr('id');
            var splitted = id.split("_");
            var x = parseInt(splitted[1]);

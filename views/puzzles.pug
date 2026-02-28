@@ -32,6 +32,16 @@ block styles
     .play-btn {
       width: 90px;
     }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .status-started  { background: #fff3cd; color: #856404; }
+    .status-completed { background: #d1e7dd; color: #0a3622; }
+    .status-notstarted { background: #e9ecef; color: #6c757d; }
     .puzzle-title {
       font-weight: 600;
       color: #212529;
@@ -72,11 +82,13 @@ block content
       table.table.table-hover.puzzle-table.mb-0
         thead
           tr
-            th # 
+            th #
             th Izena
             th Egilea
             th Tamaina
             th Hitzak
+            if user
+              th Egoera
             th
               if user && user.master
                 | Ekintzak
@@ -91,6 +103,15 @@ block content
               td.align-middle
                 span.grid-badge #{puz.width}&times;#{puz.height}
               td.align-middle.text-center #{puz.words.length}
+              if user
+                td.align-middle
+                  - const st = statusMap && statusMap[puz._id.toString()]
+                  if st === 'completed'
+                    span.status-badge.status-completed ✓ Osatua
+                  else if st === 'started'
+                    span.status-badge.status-started ⏳ Hasia
+                  else
+                    span.status-badge.status-notstarted Hasi Gabea
               td.align-middle.text-right
                 a.btn.btn-primary.btn-sm.play-btn(href='/puzzles/game/' + puz.id) &#9654; Jokatu
                 if user && user.master

@@ -17,6 +17,6 @@ let cwSchema = mongoose.Schema({
   clues: [String],
   name: String,
   author: String
-});
+}, { timestamps: true });
 
 let crossword = module.exports = mongoose.model('Crossword', cwSchema);
