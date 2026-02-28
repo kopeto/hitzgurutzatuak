@@ -15,6 +15,62 @@ $(document).ready(function() {
    selectClue(getClueId(0,0,'across'));
 
    // ---------------------------------------------------------------------------
+   // UNDO / REDO STACK
+   // ---------------------------------------------------------------------------
+
+   const undoStack = [];
+   const redoStack = [];
+
+   function cellText(x, y) {
+     return $('#c_'+x+'_'+y+' > .char').text();
+   }
+
+   function setCellText(x, y, value) {
+     const $char = $('#c_'+x+'_'+y+' > .char');
+     $char.text(value);
+     if (value === '') {
+       $char.removeClass('right wrong');
+     }
+   }
+
+   function pushAction(action) {
+     undoStack.push(action);
+     redoStack.length = 0;
+     updateHistoryButtons();
+   }
+
+   function applyUndo() {
+     if (!undoStack.length) return;
+     const action = undoStack.pop();
+     if (action.batch) {
+       action.batch.forEach(a => setCellText(a.row, a.col, a.prev));
+     } else {
+       setCellText(action.row, action.col, action.prev);
+     }
+     redoStack.push(action);
+     updateHistoryButtons();
+   }
+
+   function applyRedo() {
+     if (!redoStack.length) return;
+     const action = redoStack.pop();
+     if (action.batch) {
+       action.batch.forEach(a => setCellText(a.row, a.col, a.value));
+     } else {
+       setCellText(action.row, action.col, action.value);
+     }
+     undoStack.push(action);
+     updateHistoryButtons();
+   }
+
+   function updateHistoryButtons() {
+     $('#undo_btn').prop('disabled', undoStack.length === 0);
+     $('#redo_btn').prop('disabled', redoStack.length === 0);
+   }
+
+   updateHistoryButtons();
+
+   // ---------------------------------------------------------------------------
    // CHECKER
    //
    //
@@ -172,6 +228,7 @@ $(document).ready(function() {
    //
    // -----------------------------------------------------------------------------
    $('#delete_all').on('click', function(e){
+       const batch = [];
        $('td').each(function(i)
        {
            if(!$(this).hasClass('black'))
@@ -180,13 +237,21 @@ $(document).ready(function() {
                var splitted = theId.split("_");
                var x = parseInt(splitted[1]);
                var y = parseInt(splitted[2]);
-
+               const prev = cellText(x, y);
+               if(prev !== '') batch.push({ row: x, col: y, prev, value: '' });
                deleteCell(x,y);
            }
        });
+       if(batch.length) pushAction({ batch });
        $('.right').removeClass('right');
        $('.wrong').removeClass('wrong');
    });
+
+   // ---------------------------------------------------------------------------
+   // UNDO / REDO BUTTONS
+   // ---------------------------------------------------------------------------
+   $('#undo_btn').on('click', function() { applyUndo(); });
+   $('#redo_btn').on('click', function() { applyRedo(); });
 
    // -----------------------------------------------------------------------------
    // NOTE: solve_cell, solve_word, solve_grid, check_cell, check_word, check_grid
@@ -280,11 +345,21 @@ $(document).ready(function() {
        var max_y = $('#jokoa tr:nth-child(1) td').length;
        var max_x = $('#jokoa tr').length;
 
+       // Ctrl+Z → undo / Ctrl+Y o Ctrl+Shift+Z → redo
+       if(e.ctrlKey && e.key === 'z') { e.preventDefault(); applyUndo(); return; }
+       if(e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); applyRedo(); return; }
+
        if(e.key=='Backspace')
        {
            if($('.selected_cell > .char').text()!="")
            {
+               var _id = $('.selected_cell').attr('id');
+               var _sp = _id.split("_");
+               var _bx = parseInt(_sp[1]);
+               var _by = parseInt(_sp[2]);
+               var _prev = cellText(_bx, _by);
                $('.selected_cell > .char').text("");
+               pushAction({ row: _bx, col: _by, prev: _prev, value: '' });
            }
            else
            {
@@ -297,9 +372,11 @@ $(document).ready(function() {
                    y--;
                    if(y>=0 && !$('#c_'+x+'_'+y).hasClass('black'))
                    {
+                       var _prev = cellText(x, y);
                        $('.selected_cell').removeClass('selected_cell');
                        $('#c_'+x+'_'+y).addClass('selected_cell');
                        $('.selected_cell > .char').text("");
+                       if(_prev !== '') pushAction({ row: x, col: y, prev: _prev, value: '' });
                    }
                }
                else if($('.selected_cell').hasClass('focus_down'))
@@ -307,9 +384,11 @@ $(document).ready(function() {
                    x--;
                    if(x>=0 && !$('#c_'+x+'_'+y).hasClass('black'))
                    {
+                       var _prev = cellText(x, y);
                        $('.selected_cell').removeClass('selected_cell');
                        $('#c_'+x+'_'+y).addClass('selected_cell');
                        $('.selected_cell > .char').text("");
+                       if(_prev !== '') pushAction({ row: x, col: y, prev: _prev, value: '' });
                    }
                }
            }
@@ -319,11 +398,14 @@ $(document).ready(function() {
            $('.wrong').removeClass('wrong');
            $('.right').removeClass('right');
 
-           $('.selected_cell > .char').text(e.key.toUpperCase());
            var id = $('.selected_cell').attr('id');
            var splitted = id.split("_");
            var x = parseInt(splitted[1]);
            var y = parseInt(splitted[2]);
+           var _prev = cellText(x, y);
+           var _newVal = e.key.toUpperCase();
+           $('.selected_cell > .char').text(_newVal);
+           if(_prev !== _newVal) pushAction({ row: x, col: y, prev: _prev, value: _newVal });
 
            if($('.selected_cell').hasClass('focus_across'))
            {
