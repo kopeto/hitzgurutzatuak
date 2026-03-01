@@ -29,13 +29,16 @@ html
           ul.navbar-nav.mr-auto
             li.nav-item.active
               a.nav-link(href='/puzzles')
-                | Home
+                | Puzleak
                 span.sr-only (current)
+            if user && user.master
+              li.nav-item
+                a.nav-link(href='/master') ⚙️ Master
 
         ul.navbar-nav.ml-auto.flex-row
           if user
             li.nav-item
-              a.nav-link.px-2(href='#')
+              a.nav-link.px-2(href='/users/dashboard')
                 strong #{user.username}
             li.nav-item
               a.nav-link.px-2(href='/users/logout') Logout

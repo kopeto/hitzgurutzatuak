@@ -9,3 +9,63 @@
   background-color: #dff0d8;
   border-color: #d6e9c6;
 }
+
+/* =============================================================================
+   DASHBOARD
+   ============================================================================= */
+
+.dashboard {
+  padding: 1rem 0;
+}
+
+.dashboard-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+}
+
+.dashboard-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.6rem 0 0.6rem;
+  border-bottom: 2px solid #dee2e6;
+  padding-bottom: 0.3rem;
+}
+
+.dashboard-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 1rem 1.6rem;
+  text-align: center;
+  min-width: 110px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0d6efd;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.3rem;
+}
+
+.dashboard-actions {
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

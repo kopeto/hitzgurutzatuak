@@ -13,6 +13,7 @@ require('dotenv/config');
 const puzzles = require('./routes/puzzles');
 const users = require('./routes/users');
 const api = require('./routes/api');
+const master = require('./routes/master');
 
 
 //************************************************
@@ -58,6 +59,8 @@ app.use(passport.session());
 app.use(defaultHandler);
 app.use('/puzzles', puzzles);
 app.use('/users', users);
+app.use('/api', api);
+app.use('/master', master);
 app.use('/api/game', api);
 app.get('/',(req,res)=>{res.redirect('/puzzles');});
 

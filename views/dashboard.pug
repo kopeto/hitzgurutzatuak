@@ -1,0 +1,60 @@
+extends layout
+
+block content
+  .dashboard
+    h2.dashboard-title Nire panela
+
+    .dashboard-stats-row
+      .stat-card
+        .stat-value #{stats.completed}
+        .stat-label Osatutakoak
+      .stat-card
+        .stat-value #{stats.inProgress}
+        .stat-label Abian
+      .stat-card
+        .stat-value #{stats.total}
+        .stat-label Guztira
+
+    if completed.length
+      h4.dashboard-section-title ✓ Osatutako puzleak
+      table.table.table-sm.table-hover
+        thead
+          tr
+            th Izena
+            th Neurria
+            th Osatu zen
+            th Iraupena
+        tbody
+          each s in completed
+            tr
+              td
+                a(href=`/puzzles/game/${s.puzzleId}`) #{s.puzzle ? s.puzzle.name : s.puzzleId}
+              td #{s.puzzle ? s.puzzle.width + '×' + s.puzzle.height : '—'}
+              td #{new Date(s.completedAt).toLocaleDateString('eu')}
+              td
+                if s.durationMin != null
+                  | #{s.durationMin} min
+                else
+                  | —
+
+    if inProgress.length
+      h4.dashboard-section-title ⏳ Abian dauden puzleak
+      table.table.table-sm.table-hover
+        thead
+          tr
+            th Izena
+            th Neurria
+            th Hasi zen
+            th
+        tbody
+          each s in inProgress
+            tr
+              td #{s.puzzle ? s.puzzle.name : s.puzzleId}
+              td #{s.puzzle ? s.puzzle.width + '×' + s.puzzle.height : '—'}
+              td #{new Date(s.startedAt).toLocaleDateString('eu')}
+              td
+                a.btn.btn-sm.btn-outline-primary(href=`/puzzles/game/${s.puzzleId}`) Jarraitu
+
+    if !completed.length && !inProgress.length
+      p.text-muted Oraindik ez duzu puzlerik jokatu.
+      a.btn.btn-primary(href='/puzzles') Puzleak ikusi

@@ -1,0 +1,77 @@
+extends layout
+
+block content
+  .dashboard
+    h2.dashboard-title ⚙️ Master panela
+
+    .dashboard-stats-row
+      .stat-card
+        .stat-value #{stats.puzzles}
+        .stat-label Puzle guztira
+      .stat-card
+        .stat-value #{stats.users}
+        .stat-label Erabiltzaile
+      .stat-card
+        .stat-value #{stats.completions}
+        .stat-label Osatze guztira
+      .stat-card
+        .stat-value #{stats.activeSessions}
+        .stat-label Abian
+
+    .dashboard-actions
+      a.btn.btn-primary(href='/puzzles/upload') ⬆ Puzle berria igo
+
+    h4.dashboard-section-title Puzleak
+    table.table.table-sm.table-hover
+      thead
+        tr
+          th Izena
+          th Neurria
+          th Egilea
+          th Osatze kop.
+          th Argitaratua
+          th
+      tbody
+        each p in puzzles
+          tr
+            td #{p.name}
+            td #{p.width}×#{p.height}
+            td #{p.author || '—'}
+            td.text-center #{completionMap[p._id] || 0}
+            td #{p.createdAt ? new Date(p.createdAt).toLocaleDateString('eu') : '—'}
+            td
+              a.btn.btn-sm.btn-outline-secondary(href=`/puzzles/game/${p._id}`) Jokatu
+
+    h4.dashboard-section-title Erabiltzaileak
+    table.table.table-sm.table-hover
+      thead
+        tr
+          th Erabiltzailea
+          th Posta
+          th Master
+          th Osatutakoak
+          th Abian
+      tbody
+        each u in users
+          tr
+            td #{u.username}
+            td #{u.email}
+            td
+              if u.master
+                span.badge.badge-warning Master
+            td.text-center #{userStats[u._id] ? userStats[u._id].completed : 0}
+            td.text-center #{userStats[u._id] ? userStats[u._id].inProgress : 0}
+
+    h4.dashboard-section-title Azken osatze (#{recentCompletions.length})
+    table.table.table-sm
+      thead
+        tr
+          th Erabiltzailea
+          th Puzlea
+          th Data
+      tbody
+        each s in recentCompletions
+          tr
+            td #{s.username || s.userId}
+            td #{s.puzzleName || s.puzzleId}
+            td #{new Date(s.completedAt).toLocaleDateString('eu')}

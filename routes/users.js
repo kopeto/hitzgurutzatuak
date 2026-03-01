@@ -11,6 +11,8 @@ require('dotenv/config');
 
 // Models
 const UserModel = require('../models/user');
+const PlaySession = require('../models/playsession');
+const CrosswordModel = require('../models/crosswords');
 
 router.get('/register',(req,res)=>{
   res.render('register');
@@ -83,6 +85,48 @@ router.get('/logout',(req,res,next)=>{
     if (err) return next(err);
     res.redirect('/');
   });
+});
+
+// User dashboard
+router.get('/dashboard', async (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect('/users/login');
+  try {
+    const sessions = await PlaySession.find({ userId: req.user._id.toString() }).lean();
+    const puzzleIds = sessions.map(s => s.puzzleId);
+    const puzzles = await CrosswordModel.find({ _id: { $in: puzzleIds } }).lean();
+    const puzzleMap = {};
+    puzzles.forEach(p => { puzzleMap[p._id.toString()] = p; });
+
+    const completed  = sessions
+      .filter(s => s.completedAt)
+      .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+      .map(s => ({
+        ...s,
+        puzzle: puzzleMap[s.puzzleId] || null,
+        durationMin: s.completedAt
+          ? Math.round((new Date(s.completedAt) - new Date(s.startedAt)) / 60000)
+          : null
+      }));
+
+    const inProgress = sessions
+      .filter(s => !s.completedAt)
+      .sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt))
+      .map(s => ({ ...s, puzzle: puzzleMap[s.puzzleId] || null }));
+
+    res.render('dashboard', {
+      title: 'Nire panela',
+      stats: {
+        completed:  completed.length,
+        inProgress: inProgress.length,
+        total:      sessions.length
+      },
+      completed,
+      inProgress
+    });
+  } catch (err) {
+    logError(err);
+    res.status(500).render('message', { message: 'Errore bat gertatu da', type: 'danger' });
+  }
 });
 
 module.exports = router;
