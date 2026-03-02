@@ -9,10 +9,13 @@ services:
       - PORT=3000
       - MY_SECRET=changeme_in_production
       - MASTERS=master
+      - EXTERNAL_API_KEY=changeme_external_api_key
     depends_on:
       mongo:
         condition: service_healthy
     volumes:
+      - .:/app
+      - /app/node_modules
       - uploads:/app/uploads
     restart: unless-stopped
 

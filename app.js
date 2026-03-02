@@ -3,6 +3,8 @@ const {logDate, logError, notFoundHandler, defaultHandler, logInfo} = require('.
 const express = require('express');
 const bodyparser = require('body-parser');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const helmet = require('helmet');
 const path = require('path');
 const passport = require('passport');
 const config = require('./config/database');
@@ -14,16 +16,14 @@ const puzzles = require('./routes/puzzles');
 const users = require('./routes/users');
 const api = require('./routes/api');
 const master = require('./routes/master');
+const external = require('./routes/external');
 
 
 //************************************************
 // MONGO DB setup
 //************************************************
 const mongoose = require('mongoose');
-mongoose.connect(config.database, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+mongoose.connect(config.database);
 const db = mongoose.connection;
 db.once('open',()=>{logInfo('Connected to mongodb');});
 db.on('error',(err)=>{logError(err); process.exit(1);});
@@ -32,6 +32,12 @@ db.on('error',(err)=>{logError(err); process.exit(1);});
 // APPLICATION
 //************************************************
 const app = express();
+
+// Trust proxy (needed for ngrok/reverse proxies so express-rate-limit works correctly)
+app.set('trust proxy', 1);
+
+// Security headers
+app.use(helmet({ contentSecurityPolicy: false }));
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -43,8 +49,11 @@ app.use('/vendor/bootstrap/js', express.static(path.join(__dirname, 'node_module
 app.use(bodyparser.urlencoded({extended: false}));
 app.use(bodyparser.json());
 
-// Express Session Middleware
-app.use(session(sessionconfig));
+// Express Session Middleware (persistent store in MongoDB)
+app.use(session({
+  ...sessionconfig,
+  store: MongoStore.create({ mongoUrl: config.database })
+}));
 // Express Messages Middleware
 app.use(require('connect-flash')());
 app.use((req,res, next)=>{
@@ -62,6 +71,7 @@ app.use('/users', users);
 app.use('/api', api);
 app.use('/master', master);
 app.use('/api/game', api);
+app.use('/external', external);
 app.get('/',(req,res)=>{res.redirect('/puzzles');});
 
 // Not found page handle:

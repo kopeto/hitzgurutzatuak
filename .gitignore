@@ -2,3 +2,4 @@ node_modules/
 uploads/*.puz
 .npm-debug.log
 public/bower_components/
+.env

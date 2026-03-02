@@ -40,27 +40,29 @@ block content
 												span.i_words #{cellNum}
 											span.char
 												
+				div#active-clue.active-clue-bar &nbsp;
 				div.history-bar
 					button#undo_btn.btn.btn-sm.btn-outline-secondary(type='button' disabled) &#8630; Desegin
 					button#redo_btn.btn.btn-sm.btn-outline-secondary(type='button' disabled) &#8631; Berregin
 
 			div.clues.unselectable
+				- const acrossWords = puz.words.filter(w => w.dir === 'right').sort((a,b) => a.number - b.number)
+				- const downWords   = puz.words.filter(w => w.dir === 'down').sort((a,b) => a.number - b.number)
+				- const acrossCount = acrossWords.length
 				strong EZKER ESKUIN
 				div.clues_across
-					each word,i in puz.words
-						if word.dir=='right'
-							- let id = 'clueacross_'+word.number+'_'+word.x+'_'+word.y;
-								div(id=id)
-									span.clue-num #{word.number}.
-									|  #{puz.clues[i]}
+					each word,ci in acrossWords
+						- let id = 'clueacross_'+word.number+'_'+word.x+'_'+word.y;
+						div(id=id)
+							span.clue-num #{word.number}.
+							|  #{puz.clues[ci]}
 				strong GOITIK BEHERA
 				div.clues_down
-					each word,i in puz.words
-						if word.dir=='down'
-							- let id = 'cluedown_'+word.number+'_'+word.x+'_'+word.y;
-								div(id=id)
-									span.clue-num #{word.number}.
-									|  #{puz.clues[i]}
+					each word,ci in downWords
+						- let id = 'cluedown_'+word.number+'_'+word.x+'_'+word.y;
+						div(id=id)
+							span.clue-num #{word.number}.
+							|  #{puz.clues[acrossCount + ci]}
 		#game-notification.game-notification-bar
 
 		nav.buttons

@@ -214,6 +214,13 @@ $(document).ready(function() {
        $('.selected_clue').removeClass('selected_clue');
        $("#"+id).addClass('selected_clue');
 
+       // Mirror clue text to the active-clue bar above the grid
+       var clueEl = document.getElementById(id);
+       var activeBar = document.getElementById('active-clue');
+       if (activeBar) {
+         activeBar.textContent = clueEl ? clueEl.textContent.trim() : '';
+       }
+
        if ($.fn.scrollTo) {
          $(".clues_across").scrollTo("#"+id,300,{over:{top:-1}});
          $(".clues_down").scrollTo("#"+id,300,{over:{top:-1}});

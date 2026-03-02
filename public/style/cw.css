@@ -48,6 +48,9 @@ tbody td {
   position: relative;
   line-height: 1;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Cell number label */
@@ -62,10 +65,10 @@ td span.i_words {
 }
 
 /* Cell states */
-tbody td:hover            { background-color: #d0e8f0; }
+tbody td:hover            { background-color: #ffe066; }
 td.focus_across,
 td.focus_down             { background-color: #b8d8e8; }
-td.selected_cell          { background-color: #7ab8d0; }
+td.selected_cell          { background-color: #ffd700; }
 td.black                  { background-color: black; }
 td.black:hover            { background-color: black; }
 td.empty-warn             { background-color: #fff9c4 !important; }
@@ -180,10 +183,24 @@ td.empty-warn             { background-color: #fff9c4 !important; }
   margin: 0 auto;
 }
 
+.active-clue-bar {
+  min-height: 2.2em;
+  margin-top: 0.5em;
+  padding: 0.3em 0.5em;
+  background: #eef4f7;
+  border-left: 3px solid #4a90a4;
+  border-radius: 0.3em;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: black;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .history-bar {
   display: flex;
   gap: 0.4em;
-  margin-top: 0.5em;
+  margin-top: 0.4em;
   padding: 0.4em 0.2em;
   border-top: 2px solid #dee2e6;
   width: 100%;
