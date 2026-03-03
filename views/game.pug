@@ -48,21 +48,20 @@ block content
 			div.clues.unselectable
 				- const acrossWords = puz.words.filter(w => w.dir === 'right').sort((a,b) => a.number - b.number)
 				- const downWords   = puz.words.filter(w => w.dir === 'down').sort((a,b) => a.number - b.number)
-				- const acrossCount = acrossWords.length
 				strong EZKER ESKUIN
 				div.clues_across
-					each word,ci in acrossWords
+					each word in acrossWords
 						- let id = 'clueacross_'+word.number+'_'+word.x+'_'+word.y;
 						div(id=id)
 							span.clue-num #{word.number}.
-							|  #{puz.clues[ci]}
+							|  #{word.clue || '—'}
 				strong GOITIK BEHERA
 				div.clues_down
-					each word,ci in downWords
+					each word in downWords
 						- let id = 'cluedown_'+word.number+'_'+word.x+'_'+word.y;
 						div(id=id)
 							span.clue-num #{word.number}.
-							|  #{puz.clues[acrossCount + ci]}
+							|  #{word.clue || '—'}
 		#game-notification.game-notification-bar
 
 		nav.buttons

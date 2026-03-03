@@ -41,6 +41,7 @@ function clues_from_buffer(buf,offset,filesize){
 function words_from_grid(grid,w,h){
     var words = new Array();
     var cellNumber = 0;
+    var wordIndex = 0;
 
     for(let i=0; i<h;i++){
         for(let j=0;j<w;j++){
@@ -51,7 +52,7 @@ function words_from_grid(grid,w,h){
                 cellNumber++;
 
                 if(startsAcross){
-                    let word = {word:"",dir:'right',x:i,y:j,length:0,number:cellNumber};
+                    let word = {word:"",dir:'right',x:i,y:j,length:0,number:cellNumber,index:wordIndex++,x:i,y:j};
                     let index = j;
                     while(index<w && grid[i][index]!='.') {
                         word.word += grid[i][index];
@@ -62,7 +63,7 @@ function words_from_grid(grid,w,h){
                 }
 
                 if(startsDown){
-                    let word = {word:"",dir:'down',x:i,y:j,length:0,number:cellNumber};
+                    let word = {word:"",dir:'down',x:i,y:j,length:0,number:cellNumber,index:wordIndex++,x:i,y:j};
                     let index = i;
                     while(index<h && grid[index][j]!='.') {
                         word.word += grid[index][j];
@@ -127,6 +128,12 @@ class Crossword{
 
             this.clues = clues_from_buffer(buffer,info_index,this.filesize);
             this.words = words_from_grid(this.filled_grid,this.width,this.height);
+
+            // .puz clue order: cell-number ascending, across before down at each numbered cell.
+            // words_from_grid builds words[] in the exact same order, so a direct 1:1 assignment is correct.
+            for (let i = 0; i < this.words.length; i++) {
+                this.words[i].clue = this.clues[i];
+            }
 
         } catch(ex){
             console.log("Error name: "+ex.name);

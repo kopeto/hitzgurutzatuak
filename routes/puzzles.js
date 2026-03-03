@@ -14,14 +14,16 @@ const flash = require('connect-flash');
 
 const upload = require('../config/uploadconfig');
 
-// Helper: strip solution data before sending to client
-function sanitizeWords(words) {
-  return words.map(w => ({
+// Helper: strip solution data before sending to client.
+// clues[] is the flat DB array (always populated); w.clue is a per-word copy (only on newer uploads).
+function sanitizeWords(words, clues) {
+  return words.map((w, i) => ({
     dir: w.dir,
     x: w.x,
     y: w.y,
     length: w.length,
-    number: w.number
+    number: w.number,
+    clue: (clues && clues[i]) ? clues[i] : (w.clue || '')
     // Do NOT include w.word (the answer)
   }));
 }
@@ -139,8 +141,7 @@ router.get('/game/:id', async (req, res) => {
         width:     puzzle.width,
         height:    puzzle.height,
         void_grid: puzzle.void_grid,
-        words:     sanitizeWords(puzzle.words),
-        clues:     puzzle.clues
+        words:     sanitizeWords(puzzle.words, puzzle.clues)
       }
     });
   } catch (err) {
