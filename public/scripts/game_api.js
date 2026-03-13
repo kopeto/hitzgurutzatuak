@@ -48,7 +48,7 @@ const GameAPI = {
   },
 
   /**
-   * Solicita pista (revela una celda)
+   * Pista eskatu (zelula bat agerian utzi)
    */
   solveCell: async function(row, col) {
     try {
@@ -69,7 +69,7 @@ const GameAPI = {
   },
 
   /**
-   * Verifica el grid completo — sends all cell values from DOM
+   * Koadroa egiaztatzen du — DOM-eko zelula guztien balioak bidaltzen ditu
    */
   checkGrid: async function(cells) {
     try {
@@ -112,7 +112,7 @@ const GameAPI = {
   },
 
   /**
-   * Revela el grid completo (solución completa)
+   * Koadroa erabat agerian uzten du (irtenbide osoa)
    */
   solveGrid: async function() {
     try {
@@ -230,7 +230,7 @@ const GameUI = {
     if (statusDiv) {
       statusDiv.innerHTML = `
         <strong>Aurrerapena:</strong> ${progress}% 
-        (${correctCells}/${totalCells} celdas correctas)
+        (${correctCells}/${totalCells} zelula zuzen)
       `;
     }
   },
@@ -241,14 +241,14 @@ const GameUI = {
   showVictory: function(stats) {
     const message = `
       <div class="victory-message">
-        <h2>¡Zorionak! 🎉</h2>
-        <p>Has completado el crucigrama</p>
-        <p>Verificaciones: ${stats.checks}</p>
-        <p>Pistas usadas: ${stats.hints}</p>
+        <h2>Zorionak! 🎉</h2>
+        <p>Hitzgurutzatua osatu duzu</p>
+        <p>Egiaztapenak: ${stats.checks}</p>
+        <p>Erabilitako pistak: ${stats.hints}</p>
       </div>
     `;
     
-    // Mostrar modal o alerta
+    // Alerta edo modala erakutsi
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = message;
@@ -273,7 +273,7 @@ const GameUI = {
   }
 };
 
-// Integración con los botones existentes
+// Botoi existenteekin integrazioa
 document.addEventListener('DOMContentLoaded', function() {
   
   // Check Cell
@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Solve Word (Revelar palabra completa)
+  // Solve Word (Hitza erabat agerian)
   const solveWordBtn = document.getElementById('solve_word');
   if (solveWordBtn) {
     solveWordBtn.addEventListener('click', async function(e) {
@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Solve Grid (Revelar solución completa)
+  // Solve Grid (Irtenbide osoa agerian)
   const solveGridBtn = document.getElementById('solve_grid');
   if (solveGridBtn) {
     solveGridBtn.addEventListener('click', async function(e) {

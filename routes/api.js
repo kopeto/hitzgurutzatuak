@@ -98,7 +98,7 @@ router.post('/start/:id', startLimiter, async (req, res) => {
 
 /**
  * POST /api/game/check-cell
- * Verifies an individual cell
+ * Zelula bat egiaztatzen du
  */
 router.post('/check-cell', actionLimiter, requireGameSession, async (req, res) => {
   try {
@@ -135,7 +135,7 @@ router.post('/check-cell', actionLimiter, requireGameSession, async (req, res) =
     res.json({
       success: true,
       correct: isCorrect,
-      // No enviar la respuesta correcta
+      // Ez bidali erantzun zuzena
     });
 
   } catch (err) {
@@ -149,7 +149,7 @@ router.post('/check-cell', actionLimiter, requireGameSession, async (req, res) =
 
 /**
  * POST /api/game/check-word
- * Verifies a complete word — receives cell values from client DOM
+ * Hitz osoa egiaztatzen du — bezero DOM-etik zelula balioak jasotzen ditu
  */
 router.post('/check-word', actionLimiter, requireGameSession, async (req, res) => {
   try {
@@ -209,7 +209,7 @@ router.post('/check-word', actionLimiter, requireGameSession, async (req, res) =
 
 /**
  * POST /api/game/solve-cell
- * Revela la respuesta de una celda (hint)
+ * Zelula baten erantzuna agerian uzten du (pista)
  */
 router.post('/solve-cell', actionLimiter, requireGameSession, async (req, res) => {
   try {
@@ -233,7 +233,7 @@ router.post('/solve-cell', actionLimiter, requireGameSession, async (req, res) =
 
     const correctValue = puzzle.filled_grid[row][col];
     
-    // Actualizar grid del usuario
+    // Erabiltzailearen koadroa eguneratu
     req.session.currentGame.userGrid[row][col] = correctValue;
     req.session.currentGame.hintCount++;
 
@@ -253,7 +253,7 @@ router.post('/solve-cell', actionLimiter, requireGameSession, async (req, res) =
 
 /**
  * POST /api/game/solve-word
- * Revela todas las letras de una palabra (hint fuerte)
+ * Hitz bateko letra guztiak agerian uzten ditu (pista gogorra)
  */
 router.post('/solve-word', actionLimiter, requireGameSession, async (req, res) => {
   try {
@@ -284,7 +284,7 @@ router.post('/solve-word', actionLimiter, requireGameSession, async (req, res) =
     const word = puzzle.words[wordIndex];
     const solvedLetters = [];
 
-    // Revelar todas las letras de la palabra
+    // Hitzeko letra guztiak agerian utzi
     if (word.dir === 'right') {
       for (let j = 0; j < word.length; j++) {
         const letter = puzzle.filled_grid[word.x][word.y + j];
@@ -317,7 +317,7 @@ router.post('/solve-word', actionLimiter, requireGameSession, async (req, res) =
 
 /**
  * POST /api/game/check-grid
- * Verifies complete grid — receives all cell values from client DOM
+ * Koadro osoa egiaztatzen du — bezero DOM-etik zelula guztien balioak jasotzen ditu
  */
 router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) => {
   try {
@@ -361,7 +361,7 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
     const progress = Math.round((correctCells / totalCells) * 100);
     req.session.currentGame.checkCount++;
 
-    // Mark puzzle as completed for logged-in users and reset saved grid state
+    // Puzlea osatu gisa markatu eta gordetako koadroa ezabatu
     if (isComplete && req.user) {
       const userId = req.user._id.toString();
       const puzzleId = req.session.currentGame.puzzleId;
@@ -385,7 +385,7 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
       cellResults
     };
 
-    // Include play stats when the puzzle is completed
+    // Joko estatistikak gehitu puzlea osatzen denean
     if (isComplete) {
       const elapsed = Math.floor((Date.now() - new Date(req.session.currentGame.startedAt).getTime()) / 1000);
       responseData.stats = {
@@ -425,7 +425,7 @@ router.get('/status', requireGameSession, (req, res) => {
 
 /**
  * POST /api/game/solve-grid
- * Revela la solución completa (rendirse)
+ * Irtenbide osoa agerian uzten du (amore eman)
  */
 router.post('/solve-grid', actionLimiter, requireGameSession, async (req, res) => {
   try {
@@ -438,7 +438,7 @@ router.post('/solve-grid', actionLimiter, requireGameSession, async (req, res) =
       });
     }
 
-    // Copy complete solution to userGrid
+    // Irtenbide osoa erabiltzailearen koadrora kopiatu
     const allLetters = [];
     for (let i = 0; i < puzzle.height; i++) {
       for (let j = 0; j < puzzle.width; j++) {
@@ -450,7 +450,7 @@ router.post('/solve-grid', actionLimiter, requireGameSession, async (req, res) =
       }
     }
 
-    // Count all cells as hints
+    // Zelula guztiak pista gisa kontatu
     req.session.currentGame.hintCount += allLetters.length;
 
     res.json({
