@@ -66,7 +66,8 @@ router.get('/', requireMaster, async (req, res) => {
       users,
       completionMap,
       userStats,
-      recentCompletions
+      recentCompletions,
+      externalApiKey: process.env.EXTERNAL_API_KEY || ''
     });
   } catch (err) {
     console.error(err);
