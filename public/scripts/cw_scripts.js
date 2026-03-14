@@ -34,6 +34,8 @@ $(document).ready(function() {
      $char.text(value);
      if (value === '') {
        $char.removeClass('right wrong');
+       $td.find('.cell-hint').remove();
+       $td.find('.cell-err-mark').remove();
      }
    }
 
@@ -424,6 +426,8 @@ $(document).ready(function() {
        if(batch.length) pushAction({ batch });
        $('.right').removeClass('right');
        $('.wrong').removeClass('wrong');
+       $('.cell-hint').remove();
+       $('.cell-err-mark').remove();
    });
 
    // ---------------------------------------------------------------------------
@@ -531,6 +535,7 @@ $(document).ready(function() {
 
        if(e.key=='Backspace')
        {
+           if (window._puzzleCompleted) return;
            $('td').removeClass('empty-warn');
            if($('.selected_cell > .char').text()!="")
            {
@@ -576,9 +581,12 @@ $(document).ready(function() {
        }
        if(e.which >= 65 && e.which <= 90 || e.key=='ñ')
        {
+           if (window._puzzleCompleted) return;
            $('td').removeClass('empty-warn');
            $('.wrong').removeClass('wrong');
            $('.right').removeClass('right');
+           $('.cell-hint').remove();
+           $('.cell-err-mark').remove();
 
            var id = $('.selected_cell').attr('id');
            var splitted = id.split("_");

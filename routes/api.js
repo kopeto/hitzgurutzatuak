@@ -139,7 +139,7 @@ router.post('/check-cell', actionLimiter, requireGameSession, async (req, res) =
     res.json({
       success: true,
       correct: isCorrect,
-      // Ez bidali erantzun zuzena
+      correctLetter: isCorrect ? undefined : correctValue
     });
 
   } catch (err) {
@@ -191,7 +191,7 @@ router.post('/check-word', actionLimiter, requireGameSession, async (req, res) =
         req.session.currentGame.userGrid[row][col] = puzzle.filled_grid[row][col];
       }
 
-      return { row, col, correct };
+      return { row, col, correct, correctLetter: correct ? undefined : puzzle.filled_grid[row][col] };
     });
 
     const wrongCount = cellResults.filter(r => !r.correct).length;
@@ -361,7 +361,7 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
         errorCount++; // both wrong and empty cells count as errors
       }
 
-      cellResults.push({ row, col, correct, empty });
+      cellResults.push({ row, col, correct, empty, correctLetter: correct ? undefined : correctVal });
     });
 
     const isComplete = correctCells === totalCells;

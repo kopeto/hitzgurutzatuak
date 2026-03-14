@@ -75,8 +75,29 @@ td.empty-warn             { background-color: #fff9c4 !important; }
 
 /* Correct / wrong letter colours */
 .right  { color: #00c200; }
-.wrong  { color: red; }
+.wrong  { color: red; text-decoration: line-through; }
 .answer { display: none; }
+
+.cell-hint {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 0.52em;
+  color: #111;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.cell-err-mark {
+  position: absolute;
+  font-size: 0.7em;
+  color: red;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.7;
+}
 
 /* =============================================================================
    CLUES PANEL
@@ -272,9 +293,8 @@ td.empty-warn             { background-color: #fff9c4 !important; }
   letter-spacing: 0.03em !important;
 }
 
-/* Frozen grid — no interaction after game ends */
+/* Frozen grid — editing disabled after game ends, but selection still works */
 .grid-frozen {
-  pointer-events: none;
   opacity: 0.85;
 }
 

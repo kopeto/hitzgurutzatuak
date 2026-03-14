@@ -243,21 +243,44 @@ const GameUI = {
    * Marks cell as correct (green) — applies to span.char inside td
    */
   markCorrect: function(row, col) {
-    const charSpan = document.querySelector(`#c_${row}_${col} .char`);
+    const td = document.getElementById(`c_${row}_${col}`);
+    if (!td) return;
+    const charSpan = td.querySelector('.char');
     if (charSpan) {
       charSpan.classList.add('right');
       charSpan.classList.remove('wrong');
     }
+    const hint = td.querySelector('.cell-hint');
+    if (hint) hint.remove();
+    const mark = td.querySelector('.cell-err-mark');
+    if (mark) mark.remove();
   },
 
   /**
-   * Marks cell as incorrect (red) — applies to span.char inside td
+   * Marks cell as incorrect (red strikethrough) and shows correct letter hint
    */
-  markIncorrect: function(row, col) {
-    const charSpan = document.querySelector(`#c_${row}_${col} .char`);
-    if (charSpan) {
+  markIncorrect: function(row, col, correctLetter) {
+    const td = document.getElementById(`c_${row}_${col}`);
+    if (!td) return;
+    const charSpan = td.querySelector('.char');
+    const oldHint = td.querySelector('.cell-hint');
+    if (oldHint) oldHint.remove();
+    const oldMark = td.querySelector('.cell-err-mark');
+    if (oldMark) oldMark.remove();
+    if (charSpan && charSpan.textContent.trim()) {
       charSpan.classList.add('wrong');
       charSpan.classList.remove('right');
+    } else {
+      const mark = document.createElement('span');
+      mark.className = 'cell-err-mark';
+      mark.textContent = '×';
+      td.appendChild(mark);
+    }
+    if (correctLetter) {
+      const hint = document.createElement('span');
+      hint.className = 'cell-hint';
+      hint.textContent = correctLetter;
+      td.appendChild(hint);
     }
   },
 
@@ -352,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
         GameUI.markCorrect(row, col);
         GameUI.showNotification('Zuzena! ✓', 'success');
       } else {
-        GameUI.markIncorrect(row, col);
+        GameUI.markIncorrect(row, col, result.correctLetter);
         GameUI.showNotification('Okerra ✗', 'error');
       }
     });
@@ -401,16 +424,11 @@ document.addEventListener('DOMContentLoaded', function() {
         GameUI.showNotification(result.message, 'error');
       } else {
         // Apply per-cell feedback
-        result.cellResults.forEach(({ row, col, correct }) => {
-          const charSpan = document.querySelector(`#c_${row}_${col} .char`);
-          if (charSpan) {
-            if (correct) {
-              charSpan.classList.add('right');
-              charSpan.classList.remove('wrong');
-            } else {
-              charSpan.classList.add('wrong');
-              charSpan.classList.remove('right');
-            }
+        result.cellResults.forEach(({ row, col, correct, correctLetter }) => {
+          if (correct) {
+            GameUI.markCorrect(row, col);
+          } else {
+            GameUI.markIncorrect(row, col, correctLetter);
           }
         });
 
@@ -515,19 +533,17 @@ document.addEventListener('DOMContentLoaded', function() {
         GameUI.showNotification(result.message, 'error');
       } else {
         // Apply per-cell feedback
-        result.cellResults.forEach(({ row, col, correct, empty }) => {
+        result.cellResults.forEach(({ row, col, correct, empty, correctLetter }) => {
           const td = document.getElementById(`c_${row}_${col}`);
-          const charSpan = td ? td.querySelector('.char') : null;
           if (empty && td) {
             td.classList.add('empty-warn');
-          } else if (charSpan) {
+            GameUI.markIncorrect(row, col, correctLetter);
+          } else if (td) {
             td.classList.remove('empty-warn');
             if (correct) {
-              charSpan.classList.add('right');
-              charSpan.classList.remove('wrong');
+              GameUI.markCorrect(row, col);
             } else {
-              charSpan.classList.add('wrong');
-              charSpan.classList.remove('right');
+              GameUI.markIncorrect(row, col, correctLetter);
             }
           }
         });
