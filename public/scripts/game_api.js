@@ -195,6 +195,45 @@ const GameAPI = {
       console.error('Errorea egoera gordetzean:', err);
       return { error: true };
     }
+  },
+
+  /**
+   * Pauses the server-side game timer (jokoa gelditzerakoan)
+   */
+  pauseTimer: async function() {
+    try {
+      const response = await fetch('/api/game/timer/pause', { method: 'POST' });
+      return await response.json();
+    } catch (err) {
+      console.error('Errorea timerra pausatzerakoan:', err);
+      return { error: true };
+    }
+  },
+
+  /**
+   * Resumes the server-side game timer (jokora itzultzerakoan)
+   */
+  resumeTimer: async function() {
+    try {
+      const response = await fetch('/api/game/timer/resume', { method: 'POST' });
+      return await response.json();
+    } catch (err) {
+      console.error('Errorea timerra berrabiaraztean:', err);
+      return { error: true };
+    }
+  },
+
+  /**
+   * Resets game state so the player can start fresh.
+   */
+  resetGame: async function(puzzleId) {
+    try {
+      const response = await fetch('/api/game/reset/' + puzzleId, { method: 'DELETE' });
+      return await response.json();
+    } catch (err) {
+      console.error('Errorea berrabiaraztean:', err);
+      return { error: true };
+    }
   }
 };
 
@@ -493,16 +532,32 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         });
 
-        if (result.complete && result.stats) {
+        if (result.stats) {
           const s = result.stats;
-          const mins = String(Math.floor(s.durationSec / 60)).padStart(2, '0');
-          const secs = String(s.durationSec % 60).padStart(2, '0');
+          const h = Math.floor(s.durationSec / 3600);
+          const m = Math.floor((s.durationSec % 3600) / 60);
+          const sec = s.durationSec % 60;
+          const timeStr = h > 0
+            ? h + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0')
+            : String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+
           window._puzzleCompleted = true;  // block any further saves
-          GameUI.showNotification(
-            `✓ Zorionak! ${mins}:${secs} · ${s.checks} egiaztapen · ${s.hints || 0} pista`,
-            'success',
-            true
-          );
+          if (window.stopGameTimer) window.stopGameTimer(s.durationSec);
+          window.freezeGame();  // disable editing and show restart button
+
+          if (result.complete) {
+            GameUI.showNotification(
+              '\u2713 Zorionak! ' + timeStr + ' \xb7 ' + s.errors + ' akats',
+              'success',
+              true
+            );
+          } else {
+            GameUI.showNotification(
+              'Bidalia: ' + timeStr + ' \xb7 ' + s.errors + ' akats',
+              'info',
+              true
+            );
+          }
         } else {
           const emptyCount = result.cellResults.filter(c => c.empty).length;
           const parts = [];
@@ -542,6 +597,18 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         });
         GameUI.showNotification('Puzlea erabat ebatzi da', 'info');
+      }
+    });
+  }
+
+  // Restart button
+  const restartBtn = document.getElementById('restart_btn');
+  if (restartBtn) {
+    restartBtn.addEventListener('click', async function() {
+      const puzzleId = document.querySelector('.game-wrapper').dataset.puzzleId;
+      const result = await GameAPI.resetGame(puzzleId);
+      if (!result.error) {
+        window.location.reload();
       }
     });
   }

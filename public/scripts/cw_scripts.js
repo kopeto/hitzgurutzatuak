@@ -66,7 +66,23 @@ $(document).ready(function() {
 
    // Save immediately when user leaves, hides or closes the tab
    document.addEventListener('visibilitychange', function() {
-     if (document.visibilityState === 'hidden') saveNow();
+     if (document.visibilityState === 'hidden') {
+       saveNow();
+       if (IS_AUTHENTICATED && !window._puzzleCompleted) {
+         // Accumulate local elapsed before sendBeacon so server is consistent
+         if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+         if (_timerSegmentStart) {
+           _timerBase += Math.floor((Date.now() - _timerSegmentStart) / 1000);
+           _timerSegmentStart = null;
+         }
+         navigator.sendBeacon(
+           '/api/game/timer/pause',
+           new Blob(['{}'], { type: 'application/json' })
+         );
+       }
+     } else if (document.visibilityState === 'visible') {
+       resumeTimerIfAuthenticated();
+     }
    });
    window.addEventListener('beforeunload', function() {
      // Use sendBeacon for reliability on tab/window close
@@ -77,6 +93,12 @@ $(document).ready(function() {
        '/api/game/history/' + PUZZLE_ID,
        new Blob([JSON.stringify({ cells })], { type: 'application/json' })
      );
+     if (IS_AUTHENTICATED) {
+       navigator.sendBeacon(
+         '/api/game/timer/pause',
+         new Blob(['{}'], { type: 'application/json' })
+       );
+     }
    });
 
    function pushAction(action) {
@@ -134,6 +156,89 @@ $(document).ready(function() {
 
    updateHistoryButtons();
    loadAndReplay();
+
+   // ---------------------------------------------------------------------------
+   // TIMER (authenticated users only)
+   // ---------------------------------------------------------------------------
+   const IS_AUTHENTICATED = $('.game-wrapper').attr('data-authenticated') === 'true';
+   const IS_COMPLETED     = $('.game-wrapper').attr('data-completed') === 'true';
+   const COMPLETED_ELAPSED = parseInt($('.game-wrapper').attr('data-elapsed') || '0', 10);
+   let _timerBase = 0;          // elapsedSeconds at last server sync
+   let _timerSegmentStart = null; // Date.now() when current segment started
+   let _timerInterval = null;
+
+   function formatTime(totalSec) {
+     const h = Math.floor(totalSec / 3600);
+     const m = Math.floor((totalSec % 3600) / 60);
+     const s = totalSec % 60;
+     if (h > 0) return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+     return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+   }
+
+   function getClientElapsed() {
+     let elapsed = _timerBase;
+     if (_timerSegmentStart) elapsed += Math.floor((Date.now() - _timerSegmentStart) / 1000);
+     return elapsed;
+   }
+
+   function updateTimerDisplay() {
+     if (!IS_AUTHENTICATED || window._puzzleCompleted) return;
+     $('#game-timer').text(formatTime(getClientElapsed()));
+   }
+
+   function startTimerInterval() {
+     if (_timerInterval) clearInterval(_timerInterval);
+     _timerInterval = setInterval(updateTimerDisplay, 1000);
+   }
+
+   // Exposed globally so game_api.js can freeze the display when the game ends
+   window.stopGameTimer = function(finalSeconds) {
+     if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+     _timerSegmentStart = null;
+     const display = (finalSeconds !== undefined) ? finalSeconds : _timerBase;
+     $('#game-timer').text(formatTime(display));
+   };
+
+   // Freeze grid and buttons after game ends; show restart button
+   window.freezeGame = function() {
+     $('#jokoa').addClass('grid-frozen');
+     $('nav.buttons').addClass('buttons-frozen');
+     $('#restart_btn').show();
+   };
+
+   async function resumeTimerIfAuthenticated() {
+     if (!IS_AUTHENTICATED || window._puzzleCompleted) return;
+     try {
+       const result = await GameAPI.resumeTimer();
+       if (!result.error) {
+         _timerBase = result.elapsedSeconds;
+         _timerSegmentStart = Date.now();
+         updateTimerDisplay();
+         startTimerInterval();
+       }
+     } catch (e) { /* ignore */ }
+   }
+
+   // Initialize timer on page load for authenticated users
+   if (IS_AUTHENTICATED) {
+     if (IS_COMPLETED) {
+       // Game already completed — show final time and freeze without starting timer
+       window._puzzleCompleted = true;
+       _timerBase = COMPLETED_ELAPSED;
+       updateTimerDisplay();
+       // Wait for loadAndReplay to finish painting cells, then freeze
+       setTimeout(function() { window.freezeGame(); }, 50);
+     } else {
+       GameAPI.getStatus().then(function(result) {
+         if (!result.error && result.game) {
+           _timerBase = result.game.elapsedSeconds || 0;
+           _timerSegmentStart = Date.now();
+           updateTimerDisplay();
+           startTimerInterval();
+         }
+       });
+     }
+   }
 
    // ---------------------------------------------------------------------------
    // CHECKER

@@ -18,8 +18,10 @@ block content
 		a(href='/puzzles')
 			button.btn.btn-sm.btn-outline-secondary Atzera jo
 		h2.game-title #{puz.name}
+		if user
+			span#game-timer.game-timer 00:00
 
-	.game-wrapper(data-puzzle-id=puz.id)
+	.game-wrapper(data-puzzle-id=puz.id data-authenticated=user ? 'true' : 'false' data-completed=puz.completed ? 'true' : 'false' data-elapsed=puz.elapsedSeconds || 0)
 		div.puzzle
 			div.grid-block
 				table.grid.unselectable#jokoa(tabindex='-1' style=`--grid-cols: ${puz.width}`)
@@ -76,6 +78,8 @@ block content
 				button#solve_grid.btn.btn-outline-secondary(type='button') Koadroa
 			button#delete_all.btn.btn-outline-danger(type='button') Koadroa garbitu
 			button#check_grid.btn.btn-primary.btn-check-grid(type='button') ✓ Zuzendu koadroa
+			if user
+				button#restart_btn.btn.btn-outline-secondary.btn-restart(type='button' style='display:none') ↺ Berriro jokatu
 
 block footer
 	p #{puz.author} - #{puz.name}
