@@ -73,9 +73,10 @@ td.black                  { background-color: black; }
 td.black:hover            { background-color: black; }
 td.empty-warn             { background-color: #fff9c4 !important; }
 
-/* Correct / wrong letter colours */
-.right  { color: #00c200; }
-.wrong  { color: red; text-decoration: line-through; }
+/* Correct / wrong cell background colours */
+td.right  { background-color: #c8f5c8 !important; }
+td.wrong  { background-color: #ffc8c8 !important; }
+td.wrong .char { opacity: 0.45; }
 .answer { display: none; }
 
 .cell-hint {
@@ -87,16 +88,6 @@ td.empty-warn             { background-color: #fff9c4 !important; }
   font-weight: 700;
   line-height: 1;
   pointer-events: none;
-}
-
-.cell-err-mark {
-  position: absolute;
-  font-size: 0.7em;
-  color: red;
-  font-weight: 700;
-  line-height: 1;
-  pointer-events: none;
-  opacity: 0.7;
 }
 
 /* =============================================================================

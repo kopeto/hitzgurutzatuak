@@ -33,9 +33,8 @@ $(document).ready(function() {
      const $char = $td.find('.char');
      $char.text(value);
      if (value === '') {
-       $char.removeClass('right wrong');
+       $td.removeClass('right wrong');
        $td.find('.cell-hint').remove();
-       $td.find('.cell-err-mark').remove();
      }
    }
 
@@ -268,13 +267,13 @@ $(document).ready(function() {
        var right = $('.selected_cell > .char').text()===$('#c_answer_'+x+'_'+y).text();
        if(right)
        {
-           $('.selected_cell > .char').addClass('right');
-           $('.selected_cell > .char').removeClass('wrong');
+           $('.selected_cell').addClass('right');
+           $('.selected_cell').removeClass('wrong');
        }
        else
        {
-           $('.selected_cell > .char').addClass('wrong');
-           $('.selected_cell > .char').removeClass('right');
+           $('.selected_cell').addClass('wrong');
+           $('.selected_cell').removeClass('right');
        }
    }
 
@@ -289,10 +288,9 @@ $(document).ready(function() {
    // -----------------------------------------------------------------------------
 
    function solveCell(x,y){
-     //console.log('solveCell('+x+','+y+')');
      let cell_id='c_'+x+'_'+y;
-     $('#'+cell_id+'> .char').removeClass('wrong');
-     $('#'+cell_id+'> .char').addClass('right');
+     $('#'+cell_id).removeClass('wrong');
+     $('#'+cell_id).addClass('right');
      $('#'+cell_id+'> .char').text($('#c_answer_'+x+'_'+y).text());
    }
 
@@ -443,7 +441,6 @@ $(document).ready(function() {
        $('.right').removeClass('right');
        $('.wrong').removeClass('wrong');
        $('.cell-hint').remove();
-       $('.cell-err-mark').remove();
    });
 
    // ---------------------------------------------------------------------------
@@ -602,7 +599,6 @@ $(document).ready(function() {
            $('.wrong').removeClass('wrong');
            $('.right').removeClass('right');
            $('.cell-hint').remove();
-           $('.cell-err-mark').remove();
 
            var id = $('.selected_cell').attr('id');
            var splitted = id.split("_");

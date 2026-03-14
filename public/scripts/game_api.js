@@ -245,37 +245,22 @@ const GameUI = {
   markCorrect: function(row, col) {
     const td = document.getElementById(`c_${row}_${col}`);
     if (!td) return;
-    const charSpan = td.querySelector('.char');
-    if (charSpan) {
-      charSpan.classList.add('right');
-      charSpan.classList.remove('wrong');
-    }
+    td.classList.add('right');
+    td.classList.remove('wrong');
     const hint = td.querySelector('.cell-hint');
     if (hint) hint.remove();
-    const mark = td.querySelector('.cell-err-mark');
-    if (mark) mark.remove();
   },
 
   /**
-   * Marks cell as incorrect (red strikethrough) and shows correct letter hint
+   * Marks cell as incorrect (reddish background) and shows correct letter hint
    */
   markIncorrect: function(row, col, correctLetter) {
     const td = document.getElementById(`c_${row}_${col}`);
     if (!td) return;
-    const charSpan = td.querySelector('.char');
+    td.classList.add('wrong');
+    td.classList.remove('right');
     const oldHint = td.querySelector('.cell-hint');
     if (oldHint) oldHint.remove();
-    const oldMark = td.querySelector('.cell-err-mark');
-    if (oldMark) oldMark.remove();
-    if (charSpan && charSpan.textContent.trim()) {
-      charSpan.classList.add('wrong');
-      charSpan.classList.remove('right');
-    } else {
-      const mark = document.createElement('span');
-      mark.className = 'cell-err-mark';
-      mark.textContent = '×';
-      td.appendChild(mark);
-    }
     if (correctLetter) {
       const hint = document.createElement('span');
       hint.className = 'cell-hint';
