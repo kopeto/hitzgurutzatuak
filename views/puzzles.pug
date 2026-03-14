@@ -39,7 +39,7 @@ block styles
       font-size: 0.82rem;
       font-weight: 600;
     }
-    .status-started     { background: #fff3cd; color: #856404; }
+    .status-started     { background: #cfe2ff; color: #084298; border: 1px solid #9ec5fe; }
     .status-completed   { background: #d1e7dd; color: #0a3622; }
     .status-notstarted  { background: #e9ecef; color: #6c757d; }
     .status-errors      { background: #fff3cd; color: #856404; }
@@ -103,11 +103,11 @@ block content
             th
               if user && user.master
                 | Ekintzak
+            if user
+              th(data-sort='status') Egoera #[span.sort-icon ⇅]
             th(data-sort='name') Izena #[span.sort-icon ⇅]
             th(data-sort='author') Egilea #[span.sort-icon ⇅]
             th(data-sort='size') Tamaina #[span.sort-icon ⇅]
-            if user
-              th(data-sort='status') Egoera #[span.sort-icon ⇅]
             th(data-sort='date') Data #[span.sort-icon ⇅]
         tbody
           each puz, i in puzzles
@@ -117,12 +117,6 @@ block content
                 if user && user.master
                   |  
                   button.btn.btn-outline-danger.btn-sm.deletePUZ(data-id=puz._id) Ezabatu
-              td.align-middle(data-value=puz.name)
-                a.puzzle-title(href='/puzzles/game/' + puz.id) #{puz.name}
-              td.align-middle(data-value=puz.author)
-                span.puzzle-author #{puz.author}
-              td.align-middle(data-value=puz.width * puz.height)
-                span.grid-badge #{puz.width}&times;#{puz.height}
               if user
                 - const st0 = statusMap && statusMap[puz._id.toString()]
                 - const sortStatus = st0 ? (st0.status === 'completed' ? 2 : st0.status === 'started' ? 1 : 0) : 0
@@ -151,6 +145,12 @@ block content
                     span.status-badge.status-started ⏳ Jokoan
                   else
                     span.status-badge.status-notstarted Hasi Gabea
+              td.align-middle(data-value=puz.name)
+                a.puzzle-title(href='/puzzles/game/' + puz.id) #{puz.name}
+              td.align-middle(data-value=puz.author)
+                span.puzzle-author #{puz.author}
+              td.align-middle(data-value=puz.width * puz.height)
+                span.grid-badge #{puz.width}&times;#{puz.height}
               - const createdTs = puz.createdAt ? new Date(puz.createdAt).getTime() : 0
               td.align-middle.text-muted.small(data-value=createdTs)
                 - const d = puz.createdAt ? new Date(puz.createdAt) : null
