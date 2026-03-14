@@ -124,6 +124,7 @@ router.get('/game/:id', async (req, res) => {
     let savedElapsed = 0;
     let savedUsedVerify = false;
     let isCompleted = false;
+    let savedCellResults = null;
     if (req.user) {
       const savedState = await GameStateModel.findOne({
         playerId: req.user._id.toString(),
@@ -133,6 +134,9 @@ router.get('/game/:id', async (req, res) => {
         savedElapsed = savedState.elapsedSeconds || 0;
         savedUsedVerify = savedState.usedVerify || false;
         isCompleted = savedState.completed || false;
+        if (savedState.cellResults && savedState.cellResults.length > 0) {
+          savedCellResults = savedState.cellResults;
+        }
       }
     }
 
@@ -170,7 +174,8 @@ router.get('/game/:id', async (req, res) => {
         void_grid:      puzzle.void_grid,
         words:          sanitizeWords(puzzle.words, puzzle.clues),
         completed:      isCompleted,
-        elapsedSeconds: savedElapsed
+        elapsedSeconds: savedElapsed,
+        cellResults:    savedCellResults
       }
     });
   } catch (err) {

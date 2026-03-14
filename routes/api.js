@@ -393,9 +393,16 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
       const finalCells = cells
         .filter(c => c.value && c.value !== '')
         .map(c => ({ row: c.row, col: c.col, value: c.value }));
+      const finalCellResults = cellResults.map(r => ({
+        row:          r.row,
+        col:          r.col,
+        correct:      r.correct,
+        empty:        r.empty || false,
+        correctLetter: r.correct ? undefined : r.correctLetter
+      }));
       await GameStateModel.findOneAndUpdate(
         { playerId: userId, puzzleId },
-        { cells: finalCells, elapsedSeconds: totalElapsed, usedVerify: game.usedVerify || false, completed: true, updatedAt: new Date() },
+        { cells: finalCells, cellResults: finalCellResults, elapsedSeconds: totalElapsed, usedVerify: game.usedVerify || false, completed: true, updatedAt: new Date() },
         { upsert: true }
       );
       await PlaySession.findOneAndUpdate(

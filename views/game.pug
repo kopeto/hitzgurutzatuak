@@ -22,6 +22,8 @@ block content
 			span#game-timer.game-timer 00:00
 
 	.game-wrapper(data-puzzle-id=puz.id data-authenticated=user ? 'true' : 'false' data-completed=puz.completed ? 'true' : 'false' data-elapsed=puz.elapsedSeconds || 0)
+		if puz.completed && puz.cellResults
+			script#cell-results-data(type='application/json') !{JSON.stringify(puz.cellResults)}
 		div.puzzle
 			div.grid-block
 				table.grid.unselectable#jokoa(tabindex='-1' style=`--grid-cols: ${puz.width}`)

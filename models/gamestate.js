@@ -12,6 +12,14 @@ const GameStateSchema = new mongoose.Schema({
     value: String,
     _id:   false
   }],
+  cellResults: [{
+    row:          Number,
+    col:          Number,
+    correct:      Boolean,
+    empty:        Boolean,
+    correctLetter: String,
+    _id:          false
+  }],
   elapsedSeconds: { type: Number, default: 0 },
   usedVerify:     { type: Boolean, default: false },
   completed:      { type: Boolean, default: false },

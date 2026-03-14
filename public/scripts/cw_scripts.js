@@ -157,7 +157,6 @@ $(document).ready(function() {
    }
 
    updateHistoryButtons();
-   loadAndReplay();
 
    // ---------------------------------------------------------------------------
    // TIMER (authenticated users only)
@@ -168,6 +167,10 @@ $(document).ready(function() {
    let _timerBase = 0;          // elapsedSeconds at last server sync
    let _timerSegmentStart = null; // Date.now() when current segment started
    let _timerInterval = null;
+
+   if (!IS_COMPLETED) {
+     loadAndReplay();
+   }
 
    function formatTime(totalSec) {
      const h = Math.floor(totalSec / 3600);
@@ -224,12 +227,25 @@ $(document).ready(function() {
    // Initialize timer on page load for authenticated users
    if (IS_AUTHENTICATED) {
      if (IS_COMPLETED) {
-       // Game already completed — show final time and freeze without starting timer
+       // Game already completed — show final time, load cells, apply corrections, then freeze
        window._puzzleCompleted = true;
-       _timerBase = COMPLETED_ELAPSED;
-       updateTimerDisplay();
-       // Wait for loadAndReplay to finish painting cells, then freeze
-       setTimeout(function() { window.freezeGame(); }, 50);
+       $('#game-timer').text(formatTime(COMPLETED_ELAPSED));
+       loadAndReplay().then(function() {
+         var dataEl = document.getElementById('cell-results-data');
+         if (dataEl) {
+           try {
+             var results = JSON.parse(dataEl.textContent);
+             results.forEach(function(r) {
+               if (r.correct) {
+                 GameUI.markCorrect(r.row, r.col);
+               } else {
+                 GameUI.markIncorrect(r.row, r.col, r.correctLetter);
+               }
+             });
+           } catch(e) { /* ignore */ }
+         }
+         window.freezeGame();
+       });
      } else {
        GameAPI.getStatus().then(function(result) {
          if (!result.error && result.game) {
