@@ -39,9 +39,12 @@ block styles
       font-size: 0.82rem;
       font-weight: 600;
     }
-    .status-started  { background: #fff3cd; color: #856404; }
-    .status-completed { background: #d1e7dd; color: #0a3622; }
-    .status-notstarted { background: #e9ecef; color: #6c757d; }
+    .status-started     { background: #fff3cd; color: #856404; }
+    .status-completed   { background: #d1e7dd; color: #0a3622; }
+    .status-notstarted  { background: #e9ecef; color: #6c757d; }
+    .status-errors      { background: #fff3cd; color: #856404; }
+    .status-help        { background: #fff3cd; color: #856404; }
+    .status-laguntza    { font-style: italic; font-weight: 400; }
     .puzzle-title {
       font-weight: 600;
       color: #212529;
@@ -106,10 +109,27 @@ block content
               if user
                 td.align-middle
                   - const st = statusMap && statusMap[puz._id.toString()]
-                  if st === 'completed'
-                    span.status-badge.status-completed ✓ Osatua
-                  else if st === 'started'
-                    span.status-badge.status-started ⏳ Hasia
+                  if st && st.status === 'completed'
+                    - const sec = st.elapsedSeconds || 0
+                    - const h = Math.floor(sec / 3600)
+                    - const m = Math.floor((sec % 3600) / 60)
+                    - const s = sec % 60
+                    - const timeStr = (h > 0 ? h+':'+String(m).padStart(2,'0') : String(m).padStart(2,'0')) + ':' + String(s).padStart(2,'0')
+                    - const perfect = st.errorCount === 0 && !st.usedVerify && !st.usedHints
+                    - const hasHelp = st.usedVerify || st.usedHints
+                    - const hasErrors = st.errorCount > 0
+                    if perfect
+                      span.status-badge.status-completed ✓ #{timeStr} · 0 akats
+                    else if hasErrors && !hasHelp
+                      span.status-badge.status-errors ✓ #{timeStr} · #{st.errorCount} akats
+                    else if !hasErrors && hasHelp
+                      span.status-badge.status-help ✓ #{timeStr} · 0 akats · 
+                        em.status-laguntza laguntza
+                    else
+                      span.status-badge.status-help ✓ #{timeStr} · #{st.errorCount} akats · 
+                        em.status-laguntza laguntza
+                  else if st && st.status === 'started'
+                    span.status-badge.status-started ⏳ Jokoan
                   else
                     span.status-badge.status-notstarted Hasi Gabea
               td.align-middle.text-right
