@@ -30,7 +30,7 @@ block styles
       color: #495057;
     }
     .play-btn {
-      width: 90px;
+      white-space: nowrap;
     }
     .status-badge {
       display: inline-block;
@@ -59,6 +59,21 @@ block styles
       padding: 1.2rem 1.5rem;
       border: 1px solid #dee2e6;
     }
+    .puzzle-table thead th[data-sort] {
+      cursor: pointer;
+      user-select: none;
+    }
+    .puzzle-table thead th[data-sort]:hover {
+      background: #495057;
+    }
+    .sort-icon {
+      margin-left: 5px;
+      opacity: 0.5;
+      font-size: 0.8em;
+    }
+    .sort-icon.active {
+      opacity: 1;
+    }
 
 block content
   .d-flex.align-items-center.justify-content-between.mb-4
@@ -85,30 +100,34 @@ block content
       table.table.table-hover.puzzle-table.mb-0
         thead
           tr
-            th #
-            th Izena
-            th Egilea
-            th Tamaina
-            th Hitzak
-            if user
-              th Egoera
             th
               if user && user.master
                 | Ekintzak
+            th(data-sort='name') Izena #[span.sort-icon ⇅]
+            th(data-sort='author') Egilea #[span.sort-icon ⇅]
+            th(data-sort='size') Tamaina #[span.sort-icon ⇅]
+            if user
+              th(data-sort='status') Egoera #[span.sort-icon ⇅]
+            th(data-sort='date') Data #[span.sort-icon ⇅]
         tbody
           each puz, i in puzzles
             tr
-              td.align-middle.text-muted.small #{i + 1}
-              td.align-middle
+              td.align-middle.text-right(style='width:1%;white-space:nowrap')
+                a.btn.btn-primary.btn-sm.play-btn(href='/puzzles/game/' + puz.id) Jokatu
+                if user && user.master
+                  |  
+                  button.btn.btn-outline-danger.btn-sm.deletePUZ(data-id=puz._id) Ezabatu
+              td.align-middle(data-value=puz.name)
                 a.puzzle-title(href='/puzzles/game/' + puz.id) #{puz.name}
-              td.align-middle
+              td.align-middle(data-value=puz.author)
                 span.puzzle-author #{puz.author}
-              td.align-middle
+              td.align-middle(data-value=puz.width * puz.height)
                 span.grid-badge #{puz.width}&times;#{puz.height}
-              td.align-middle.text-center #{puz.words.length}
               if user
-                td.align-middle
-                  - const st = statusMap && statusMap[puz._id.toString()]
+                - const st0 = statusMap && statusMap[puz._id.toString()]
+                - const sortStatus = st0 ? (st0.status === 'completed' ? 2 : st0.status === 'started' ? 1 : 0) : 0
+                td.align-middle(data-value=sortStatus)
+                  - const st = st0
                   if st && st.status === 'completed'
                     - const sec = st.elapsedSeconds || 0
                     - const h = Math.floor(sec / 3600)
@@ -132,8 +151,60 @@ block content
                     span.status-badge.status-started ⏳ Jokoan
                   else
                     span.status-badge.status-notstarted Hasi Gabea
-              td.align-middle.text-right
-                a.btn.btn-primary.btn-sm.play-btn(href='/puzzles/game/' + puz.id) &#9654; Jokatu
-                if user && user.master
-                  |  
-                  button.btn.btn-outline-danger.btn-sm.deletePUZ(data-id=puz._id) Ezabatu
+              - const createdTs = puz.createdAt ? new Date(puz.createdAt).getTime() : 0
+              td.align-middle.text-muted.small(data-value=createdTs)
+                - const d = puz.createdAt ? new Date(puz.createdAt) : null
+                | #{d ? d.toLocaleDateString('eu-EU') : ''}
+
+block scripts
+  script.
+    document.addEventListener('DOMContentLoaded', function () {
+      var sortState = { col: null, asc: true };
+      var ths = document.querySelectorAll('.puzzle-table thead th[data-sort]');
+      ths.forEach(function (th, thIdx) {
+        th.addEventListener('click', function () {
+          var colKey = th.dataset.sort;
+          // Determine actual td index: first th has no data-sort (actions), so offset by 1
+          var allThs = Array.from(th.closest('tr').querySelectorAll('th'));
+          var tdIdx = allThs.indexOf(th);
+
+          if (sortState.col === colKey) {
+            sortState.asc = !sortState.asc;
+          } else {
+            sortState.col = colKey;
+            sortState.asc = true;
+          }
+
+          // Update icons
+          ths.forEach(function (t) {
+            var icon = t.querySelector('.sort-icon');
+            if (!icon) return;
+            if (t === th) {
+              icon.textContent = sortState.asc ? '↑' : '↓';
+              icon.classList.add('active');
+            } else {
+              icon.textContent = '⇅';
+              icon.classList.remove('active');
+            }
+          });
+
+          var tbody = th.closest('table').querySelector('tbody');
+          var rows = Array.from(tbody.querySelectorAll('tr'));
+          rows.sort(function (a, b) {
+            var aCell = a.querySelectorAll('td')[tdIdx];
+            var bCell = b.querySelectorAll('td')[tdIdx];
+            var aVal = aCell ? (aCell.dataset.value !== undefined ? aCell.dataset.value : aCell.textContent.trim()) : '';
+            var bVal = bCell ? (bCell.dataset.value !== undefined ? bCell.dataset.value : bCell.textContent.trim()) : '';
+            var aNum = parseFloat(aVal), bNum = parseFloat(bVal);
+            var cmp;
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+              cmp = aNum - bNum;
+            } else {
+              cmp = String(aVal).localeCompare(String(bVal));
+            }
+            return sortState.asc ? cmp : -cmp;
+          });
+          rows.forEach(function (r) { tbody.appendChild(r); });
+        });
+      });
+    });
