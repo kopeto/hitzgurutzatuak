@@ -77,6 +77,17 @@ td.empty-warn             { background-color: #fff9c4 !important; }
 td.right  { background-color: #c8f5c8 !important; }
 td.wrong  { background-color: #ffc8c8 !important; }
 td.wrong .char { opacity: 0.45; }
+/* Higher-specificity !important rules restore interaction states */
+td.right:hover, td.wrong:hover                                         { background-color: #ffe066 !important; }
+td.right.focus_across, td.right.focus_down,
+td.wrong.focus_across, td.wrong.focus_down                             { background-color: #b8d8e8 !important; }
+td.right.focus_across:hover, td.right.focus_down:hover,
+td.wrong.focus_across:hover, td.wrong.focus_down:hover                 { background-color: #ffe066 !important; }
+td.right.selected_cell, td.wrong.selected_cell                         { background-color: #ffd700 !important; }
+/* Restore char opacity when cell is interacted with */
+td.wrong:hover .char,
+td.wrong.focus_across .char, td.wrong.focus_down .char,
+td.wrong.selected_cell .char                           { opacity: 1; }
 .answer { display: none; }
 
 .cell-hint {
