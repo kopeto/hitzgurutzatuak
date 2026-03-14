@@ -6,10 +6,14 @@ const mongoose = require('mongoose');
  * updated with completedAt when they verify the full grid correctly.
  */
 const playSessionSchema = mongoose.Schema({
-  userId:      { type: String, required: true },
-  puzzleId:    { type: String, required: true },
-  startedAt:   { type: Date, default: Date.now },
-  completedAt: { type: Date, default: null }
+  userId:         { type: String, required: true },
+  puzzleId:       { type: String, required: true },
+  startedAt:      { type: Date, default: Date.now },
+  completedAt:    { type: Date, default: null },
+  elapsedSeconds: { type: Number, default: 0 },
+  errorCount:     { type: Number, default: 0 },
+  usedVerify:     { type: Boolean, default: false },
+  usedHints:      { type: Boolean, default: false }
 });
 
 playSessionSchema.index({ userId: 1, puzzleId: 1 }, { unique: true });

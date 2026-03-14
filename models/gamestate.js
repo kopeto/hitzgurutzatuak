@@ -12,6 +12,9 @@ const GameStateSchema = new mongoose.Schema({
     value: String,
     _id:   false
   }],
+  elapsedSeconds: { type: Number, default: 0 },
+  usedVerify:     { type: Boolean, default: false },
+  completed:      { type: Boolean, default: false },
   updatedAt: { type: Date, default: Date.now }
 });
 

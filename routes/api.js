@@ -131,6 +131,10 @@ router.post('/check-cell', actionLimiter, requireGameSession, async (req, res) =
     }
 
     req.session.currentGame.checkCount++;
+    if (!isCorrect) {
+      req.session.currentGame.errorCount = (req.session.currentGame.errorCount || 0) + 1;
+    }
+    req.session.currentGame.usedVerify = true;
 
     res.json({
       success: true,
@@ -190,6 +194,9 @@ router.post('/check-word', actionLimiter, requireGameSession, async (req, res) =
       return { row, col, correct };
     });
 
+    const wrongCount = cellResults.filter(r => !r.correct).length;
+    req.session.currentGame.errorCount = (req.session.currentGame.errorCount || 0) + wrongCount;
+    req.session.currentGame.usedVerify = true;
     req.session.currentGame.checkCount++;
 
     res.json({
@@ -350,8 +357,8 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
       if (correct) {
         correctCells++;
         req.session.currentGame.userGrid[row][col] = correctVal;
-      } else if (!empty) {
-        errorCount++;
+      } else {
+        errorCount++; // both wrong and empty cells count as errors
       }
 
       cellResults.push({ row, col, correct, empty });
@@ -361,17 +368,41 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
     const progress = Math.round((correctCells / totalCells) * 100);
     req.session.currentGame.checkCount++;
 
-    // Puzlea osatu gisa markatu eta gordetako koadroa ezabatu
-    if (isComplete && req.user) {
+    // Stop the game timer
+    const game = req.session.currentGame;
+    if (game.timerStartedAt) {
+      const delta = Math.floor((Date.now() - new Date(game.timerStartedAt).getTime()) / 1000);
+      game.elapsedSeconds = (game.elapsedSeconds || 0) + delta;
+      game.timerStartedAt = null;
+    }
+    const totalElapsed = game.elapsedSeconds || 0;
+
+    // Save stats to PlaySession for authenticated users (always, not only on complete)
+    if (req.user) {
       const userId = req.user._id.toString();
-      const puzzleId = req.session.currentGame.puzzleId;
-      await PlaySession.findOneAndUpdate(
-        { userId, puzzleId },
-        { $set: { completedAt: new Date() } },
+      const puzzleId = game.puzzleId;
+      const sessionUpdate = {
+        elapsedSeconds: totalElapsed,
+        errorCount:     errorCount,
+        usedVerify:     game.usedVerify || false,
+        usedHints:      (game.hintCount || 0) > 0
+      };
+      // check-grid always ends the game
+      sessionUpdate.completedAt = new Date();
+      // Save submitted cells as the final completed state (so returning to game shows frozen result)
+      const finalCells = cells
+        .filter(c => c.value && c.value !== '')
+        .map(c => ({ row: c.row, col: c.col, value: c.value }));
+      await GameStateModel.findOneAndUpdate(
+        { playerId: userId, puzzleId },
+        { cells: finalCells, elapsedSeconds: totalElapsed, usedVerify: game.usedVerify || false, completed: true, updatedAt: new Date() },
         { upsert: true }
       );
-      // Clear persisted grid so next play starts clean
-      await GameStateModel.deleteOne({ playerId: userId, puzzleId });
+      await PlaySession.findOneAndUpdate(
+        { userId, puzzleId },
+        { $set: sessionUpdate },
+        { upsert: true }
+      );
     }
 
     const responseData = {
@@ -382,18 +413,16 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
       totalCells,
       hasErrors: errorCount > 0,
       errorCount,
-      cellResults
+      cellResults,
+      stats: {
+        durationSec: totalElapsed,
+        checks:      game.checkCount,
+        hints:       game.hintCount,
+        errors:      errorCount,
+        usedVerify:  game.usedVerify || false,
+        usedHints:   (game.hintCount || 0) > 0
+      }
     };
-
-    // Joko estatistikak gehitu puzlea osatzen denean
-    if (isComplete) {
-      const elapsed = Math.floor((Date.now() - new Date(req.session.currentGame.startedAt).getTime()) / 1000);
-      responseData.stats = {
-        durationSec: elapsed,
-        checks: req.session.currentGame.checkCount,
-        hints: req.session.currentGame.hintCount
-      };
-    }
 
     res.json(responseData);
 
@@ -411,14 +440,17 @@ router.post('/check-grid', actionLimiter, requireGameSession, async (req, res) =
  * Gets current game state
  */
 router.get('/status', requireGameSession, (req, res) => {
+  const game = req.session.currentGame;
   res.json({
     success: true,
     game: {
-      puzzleId: req.session.currentGame.puzzleId,
-      startedAt: req.session.currentGame.startedAt,
-      checkCount: req.session.currentGame.checkCount,
-      hintCount: req.session.currentGame.hintCount,
-      userGrid: req.session.currentGame.userGrid
+      puzzleId:       game.puzzleId,
+      startedAt:      game.startedAt,
+      checkCount:     game.checkCount,
+      hintCount:      game.hintCount,
+      userGrid:       game.userGrid,
+      elapsedSeconds: game.elapsedSeconds || 0,
+      timerStartedAt: game.timerStartedAt || null
     }
   });
 });
@@ -487,6 +519,38 @@ router.post('/end', requireGameSession, (req, res) => {
   });
 });
 
+/**
+ * POST /api/game/timer/pause
+ * Freezes the game timer: accumulates elapsed seconds and clears timerStartedAt.
+ * Persists elapsed time to GameStateModel for authenticated users.
+ */
+router.post('/timer/pause', requireGameSession, async (req, res) => {
+  const game = req.session.currentGame;
+  if (game.timerStartedAt) {
+    const delta = Math.floor((Date.now() - new Date(game.timerStartedAt).getTime()) / 1000);
+    game.elapsedSeconds = (game.elapsedSeconds || 0) + delta;
+    game.timerStartedAt = null;
+  }
+  if (req.user) {
+    GameStateModel.findOneAndUpdate(
+      { playerId: req.user._id.toString(), puzzleId: game.puzzleId },
+      { elapsedSeconds: game.elapsedSeconds, usedVerify: game.usedVerify || false, updatedAt: new Date() },
+      { upsert: true }
+    ).catch(err => logError(err));
+  }
+  res.json({ success: true, elapsedSeconds: game.elapsedSeconds || 0 });
+});
+
+/**
+ * POST /api/game/timer/resume
+ * Restarts the game timer from the current accumulated time.
+ */
+router.post('/timer/resume', requireGameSession, (req, res) => {
+  const game = req.session.currentGame;
+  game.timerStartedAt = new Date();
+  res.json({ success: true, elapsedSeconds: game.elapsedSeconds || 0 });
+});
+
 // Helper functions
 
 /**
@@ -536,6 +600,32 @@ router.post('/history/:puzzleId', actionLimiter, async (req, res) => {
   } catch (err) {
     logError(err);
     res.status(500).json({ error: true, message: 'Errorea historia gordetzean' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+
+/**
+ * DELETE /api/game/reset/:puzzleId
+ * Wipes PlaySession and GameState so the player can start fresh.
+ * Only available for authenticated users.
+ */
+router.delete('/reset/:puzzleId', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: true, message: 'Saioa hasi behar duzu' });
+  }
+  try {
+    const userId = req.user._id.toString();
+    const puzzleId = req.params.puzzleId;
+    await Promise.all([
+      PlaySession.deleteOne({ userId, puzzleId }),
+      GameStateModel.deleteOne({ playerId: userId, puzzleId })
+    ]);
+    delete req.session.currentGame;
+    res.json({ success: true });
+  } catch (err) {
+    logError(err);
+    res.status(500).json({ error: true, message: 'Errorea berrabiaraztean' });
   }
 });
 

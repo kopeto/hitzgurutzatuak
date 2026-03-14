@@ -9,6 +9,7 @@ const Crossword = require('../cw/crossword.js');
 // Models
 const CrosswordModel = require('../models/crosswords');
 const PlaySession = require('../models/playsession');
+const GameStateModel = require('../models/gamestate');
 
 const flash = require('connect-flash');
 
@@ -39,13 +40,19 @@ router.get('/', async (req, res) => {
   try {
     const puzzles = await CrosswordModel.find({});
 
-    // For logged-in users build a map puzzleId → status
+    // For logged-in users build a map puzzleId → session info
     let statusMap = {};
     if (req.user) {
       const userId = req.user._id.toString();
       const sessions = await PlaySession.find({ userId, puzzleId: { $in: puzzles.map(p => p._id.toString()) } });
       sessions.forEach(s => {
-        statusMap[s.puzzleId] = s.completedAt ? 'completed' : 'started';
+        statusMap[s.puzzleId] = {
+          status:         s.completedAt ? 'completed' : 'started',
+          elapsedSeconds: s.elapsedSeconds || 0,
+          errorCount:     s.errorCount || 0,
+          usedVerify:     s.usedVerify || false,
+          usedHints:      s.usedHints || false
+        };
       });
     }
 
@@ -113,17 +120,37 @@ router.get('/game/:id', async (req, res) => {
       return res.redirect('/puzzles');
     }
 
+    // Load persisted state for authenticated users
+    let savedElapsed = 0;
+    let savedUsedVerify = false;
+    let isCompleted = false;
+    if (req.user) {
+      const savedState = await GameStateModel.findOne({
+        playerId: req.user._id.toString(),
+        puzzleId: puzzle._id.toString()
+      });
+      if (savedState) {
+        savedElapsed = savedState.elapsedSeconds || 0;
+        savedUsedVerify = savedState.usedVerify || false;
+        isCompleted = savedState.completed || false;
+      }
+    }
+
     // Store solution in session — never sent to client
     req.session.currentGame = {
-      puzzleId:   puzzle._id.toString(),
-      startedAt:  new Date(),
-      userGrid:   createEmptyGrid(puzzle.void_grid),
-      checkCount: 0,
-      hintCount:  0
+      puzzleId:       puzzle._id.toString(),
+      startedAt:      new Date(),
+      userGrid:       createEmptyGrid(puzzle.void_grid),
+      checkCount:     0,
+      hintCount:      0,
+      elapsedSeconds: savedElapsed,
+      timerStartedAt: isCompleted ? null : new Date(),
+      errorCount:     0,
+      usedVerify:     savedUsedVerify
     };
 
-    // Record play start for logged-in users. Never overwrites completedAt.
-    if (req.user) {
+    // Record play start for logged-in users (only if not already completed)
+    if (req.user && !isCompleted) {
       await PlaySession.findOneAndUpdate(
         { userId: req.user._id.toString(), puzzleId: puzzle._id.toString() },
         { $set: { startedAt: new Date() } },
@@ -135,13 +162,15 @@ router.get('/game/:id', async (req, res) => {
     res.render('game', {
       title: 'JOKOA',
       puz: {
-        id:        puzzle._id.toString(),
-        name:      puzzle.name,
-        author:    puzzle.author,
-        width:     puzzle.width,
-        height:    puzzle.height,
-        void_grid: puzzle.void_grid,
-        words:     sanitizeWords(puzzle.words, puzzle.clues)
+        id:             puzzle._id.toString(),
+        name:           puzzle.name,
+        author:         puzzle.author,
+        width:          puzzle.width,
+        height:         puzzle.height,
+        void_grid:      puzzle.void_grid,
+        words:          sanitizeWords(puzzle.words, puzzle.clues),
+        completed:      isCompleted,
+        elapsedSeconds: savedElapsed
       }
     });
   } catch (err) {
