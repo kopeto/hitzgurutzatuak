@@ -539,9 +539,16 @@ router.post('/timer/pause', requireGameSession, async (req, res) => {
     game.timerStartedAt = null;
   }
   if (req.user) {
+    const userId = req.user._id.toString();
+    const puzzleId = game.puzzleId;
     GameStateModel.findOneAndUpdate(
-      { playerId: req.user._id.toString(), puzzleId: game.puzzleId },
+      { playerId: userId, puzzleId },
       { elapsedSeconds: game.elapsedSeconds, usedVerify: game.usedVerify || false, updatedAt: new Date() },
+      { upsert: true }
+    ).catch(err => logError(err));
+    PlaySession.findOneAndUpdate(
+      { userId, puzzleId },
+      { $set: { elapsedSeconds: game.elapsedSeconds } },
       { upsert: true }
     ).catch(err => logError(err));
   }
