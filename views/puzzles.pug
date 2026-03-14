@@ -142,7 +142,12 @@ block content
                       span.status-badge.status-help ✓ #{timeStr} · #{st.errorCount} akats · 
                         em.status-laguntza laguntza
                   else if st && st.status === 'started'
-                    span.status-badge.status-started ⏳ Jokoan
+                    - const esec = st.elapsedSeconds || 0
+                    - const eh = Math.floor(esec / 3600)
+                    - const em = Math.floor((esec % 3600) / 60)
+                    - const es = esec % 60
+                    - const etimeStr = (eh > 0 ? eh+':'+String(em).padStart(2,'0') : String(em).padStart(2,'0')) + ':' + String(es).padStart(2,'0')
+                    span.status-badge.status-started ⏳ Jokoan · #{etimeStr}
                   else
                     span.status-badge.status-notstarted Hasi Gabea
               td.align-middle(data-value=puz.name)
