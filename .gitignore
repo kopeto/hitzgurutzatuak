@@ -1,6 +1,51 @@
+### Node
 node_modules/
-uploads/*.puz
-.npm-debug.log
-public/bower_components/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+### Env files
 .env
+.env.*.local
+
+### Logs
+logs/
+*.log
+
+### Build / temp
+/dist/
+/build/
+/tmp/
+/temp/
+/coverage/
+
+### Uploads / downloads
+uploads/*.puz
 downloads/
+
+### Public vendor
+public/bower_components/
+
+### OS files
+.DS_Store
+Thumbs.db
+
+### IDEs / editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+### Archives / binaries
+*.tgz
+*.zip
+*.exe
+
+### Misc
+.cache/
+npm-debug.log
+
+*.exe
