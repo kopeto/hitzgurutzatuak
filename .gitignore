@@ -21,7 +21,7 @@ logs/
 
 ### Uploads / downloads
 uploads/*.puz
-downloads/
+
 
 ### Public vendor
 public/bower_components/
@@ -48,4 +48,3 @@ Thumbs.db
 .cache/
 npm-debug.log
 
-*.exe
