@@ -10,9 +10,15 @@ $(document).ready(function() {
    //   $('#in').click();
    // });
 
-   $('#c_0_0').addClass('selected_cell');
-   selectWordAcross(0,0);
-   selectClue(getClueId(0,0,'across'));
+   const initialCell = $('td:not(.black)').first();
+   if (initialCell.length) {
+     const initialParts = initialCell.attr('id').split('_');
+     const initialRow = parseInt(initialParts[1], 10);
+     const initialCol = parseInt(initialParts[2], 10);
+     initialCell.addClass('selected_cell');
+     selectWordAcross(initialRow, initialCol);
+     selectClue(getClueId(initialRow, initialCol, 'across'));
+   }
 
    // ---------------------------------------------------------------------------
    // UNDO / REDO STACK

@@ -1,215 +1,78 @@
 extends layout
 
-block styles
-  style.
-    .puzzle-table {
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 4px 18px rgba(0,0,0,0.10);
-    }
-    .puzzle-table thead {
-      background: #343a40;
-      color: #fff;
-      letter-spacing: 0.04em;
-      font-size: 0.93rem;
-    }
-    .puzzle-table tbody tr {
-      transition: background 0.15s;
-    }
-    .puzzle-table tbody tr:hover {
-      background: #f0f4ff;
-    }
-    .grid-badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 20px;
-      background: #e9ecef;
-      font-family: monospace;
-      font-size: 0.92rem;
-      font-weight: 600;
-      color: #495057;
-    }
-    .play-btn {
-      white-space: nowrap;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 2px 9px;
-      border-radius: 20px;
-      font-size: 0.82rem;
-      font-weight: 600;
-    }
-    .status-started     { background: #cfe2ff; color: #084298; border: 1px solid #9ec5fe; }
-    .status-completed   { background: #d1e7dd; color: #0a3622; }
-    .status-notstarted  { background: #e9ecef; color: #6c757d; }
-    .status-errors      { background: #fff3cd; color: #856404; }
-    .status-help        { background: #fff3cd; color: #856404; }
-    .status-laguntza    { font-style: italic; font-weight: 400; }
-    .puzzle-title {
-      font-weight: 600;
-      color: #212529;
-    }
-    .puzzle-author {
-      color: #6c757d;
-      font-size: 0.9rem;
-    }
-    .upload-panel {
-      background: #f8f9fa;
-      border-radius: 10px;
-      padding: 1.2rem 1.5rem;
-      border: 1px solid #dee2e6;
-    }
-    .puzzle-table thead th[data-sort] {
-      cursor: pointer;
-      user-select: none;
-    }
-    .puzzle-table thead th[data-sort]:hover {
-      background: #495057;
-    }
-    .sort-icon {
-      margin-left: 5px;
-      opacity: 0.5;
-      font-size: 0.8em;
-    }
-    .sort-icon.active {
-      opacity: 1;
-    }
-
 block content
-  .d-flex.align-items-center.justify-content-between.mb-4
-    h2.mb-0 #{title}
+  section.page-heading
+    .page-heading-copy
+      p.eyebrow #{t('catalog.eyebrow')}
+      h1 #{t('catalog.title')}
+      p #{t('catalog.intro')}
     if user && user.master
-      button.btn.btn-sm.btn-outline-secondary(type='button' data-toggle='collapse' data-target='#uploadPanel') 
-        | &#8679; Kargatu puzlea
+      a.btn.btn-outline-primary(href='/puzzles/upload') #{t('catalog.upload')}
 
   if user && user.master
-    .collapse.mb-4#uploadPanel
-      .upload-panel
-        form(method='POST', action='/puzzles/upload', enctype='multipart/form-data')
-          .form-row.align-items-end
-            .col-auto
-              label.sr-only(for='fileInput') Fitxategia
-              input.form-control#fileInput(name='filename', type='file', accept='.puz', required)
-            .col-auto
-              input.btn.btn-primary(type='submit', value='Kargatu')
+    aside.admin-note
+      strong #{t('catalog.adminMode')}
+      |  #{t('catalog.adminText')}
 
   if puzzles.length === 0
-    .alert.alert-info Ez dago puzlerik oraindik.
+    .empty-state
+      h2 #{t('catalog.emptyTitle')}
+      if user && user.master
+        p #{t('catalog.emptyAdmin')}
+        a.btn.btn-primary(href='/puzzles/upload') #{t('catalog.upload')}
+      else
+        p #{t('catalog.emptyPlayer')}
   else
-    .table-responsive
-      table.table.table-hover.puzzle-table.mb-0
-        thead
-          tr
-            th
-              if user && user.master
-                | Ekintzak
-            if user
-              th(data-sort='status') Egoera #[span.sort-icon ⇅]
-            th(data-sort='name') Izena #[span.sort-icon ⇅]
-            th(data-sort='author') Egilea #[span.sort-icon ⇅]
-            th(data-sort='size') Tamaina #[span.sort-icon ⇅]
-            th(data-sort='date') Data #[span.sort-icon ⇅]
-        tbody
-          each puz, i in puzzles
-            tr
-              td.align-middle.text-right(style='width:1%;white-space:nowrap')
-                a.btn.btn-primary.btn-sm.play-btn(href='/puzzles/game/' + puz.id) Jokatu
-                if user && user.master
-                  |  
-                  button.btn.btn-outline-danger.btn-sm.deletePUZ(data-id=puz._id) Ezabatu
-              if user
-                - const st0 = statusMap && statusMap[puz._id.toString()]
-                - const sortStatus = st0 ? (st0.status === 'completed' ? 2 : st0.status === 'started' ? 1 : 0) : 0
-                td.align-middle(data-value=sortStatus)
-                  - const st = st0
-                  if st && st.status === 'completed'
-                    - const sec = st.elapsedSeconds || 0
-                    - const h = Math.floor(sec / 3600)
-                    - const m = Math.floor((sec % 3600) / 60)
-                    - const s = sec % 60
-                    - const timeStr = (h > 0 ? h+':'+String(m).padStart(2,'0') : String(m).padStart(2,'0')) + ':' + String(s).padStart(2,'0')
-                    - const perfect = st.errorCount === 0 && !st.usedVerify && !st.usedHints
-                    - const hasHelp = st.usedVerify || st.usedHints
-                    - const hasErrors = st.errorCount > 0
-                    if perfect
-                      span.status-badge.status-completed ✓ #{timeStr} · 0 akats
-                    else if hasErrors && !hasHelp
-                      span.status-badge.status-errors ✓ #{timeStr} · #{st.errorCount} akats
-                    else if !hasErrors && hasHelp
-                      span.status-badge.status-help ✓ #{timeStr} · 0 akats · 
-                        em.status-laguntza laguntza
-                    else
-                      span.status-badge.status-help ✓ #{timeStr} · #{st.errorCount} akats · 
-                        em.status-laguntza laguntza
-                  else if st && st.status === 'started'
-                    - const esec = st.elapsedSeconds || 0
-                    - const eh = Math.floor(esec / 3600)
-                    - const em = Math.floor((esec % 3600) / 60)
-                    - const es = esec % 60
-                    - const etimeStr = (eh > 0 ? eh+':'+String(em).padStart(2,'0') : String(em).padStart(2,'0')) + ':' + String(es).padStart(2,'0')
-                    span.status-badge.status-started ⏳ Jokoan · #{etimeStr}
-                  else
-                    span.status-badge.status-notstarted Hasi Gabea
-              td.align-middle(data-value=puz.name)
-                a.puzzle-title(href='/puzzles/game/' + puz.id) #{puz.name}
-              td.align-middle(data-value=puz.author)
-                span.puzzle-author #{puz.author}
-              td.align-middle(data-value=puz.width * puz.height)
-                span.grid-badge #{puz.width}&times;#{puz.height}
-              - const createdTs = puz.createdAt ? new Date(puz.createdAt).getTime() : 0
-              td.align-middle.text-muted.small(data-value=createdTs)
-                - const d = puz.createdAt ? new Date(puz.createdAt) : null
-                | #{d ? d.toLocaleDateString('eu-EU') : ''}
+    .catalog-controls(data-catalog-controls)
+      label.search-field(for='puzzleSearch')
+        span #{t('catalog.search')}
+        input#puzzleSearch.form-control(type='search' placeholder=t('catalog.searchPlaceholder') autocomplete='off' data-puzzle-search)
+      if user
+        label.filter-field(for='puzzleStatus')
+          span #{t('catalog.status')}
+          select#puzzleStatus.form-control(data-puzzle-status)
+            option(value='all') #{t('common.all')}
+            option(value='started') #{t('catalog.inProgress')}
+            option(value='completed') #{t('catalog.completed')}
+            option(value='notstarted') #{t('catalog.notStarted')}
+      p.catalog-count(data-catalog-count) #{puzzles.length} puzle
 
-block scripts
-  script.
-    document.addEventListener('DOMContentLoaded', function () {
-      var sortState = { col: null, asc: true };
-      var ths = document.querySelectorAll('.puzzle-table thead th[data-sort]');
-      ths.forEach(function (th, thIdx) {
-        th.addEventListener('click', function () {
-          var colKey = th.dataset.sort;
-          // Determine actual td index: first th has no data-sort (actions), so offset by 1
-          var allThs = Array.from(th.closest('tr').querySelectorAll('th'));
-          var tdIdx = allThs.indexOf(th);
-
-          if (sortState.col === colKey) {
-            sortState.asc = !sortState.asc;
-          } else {
-            sortState.col = colKey;
-            sortState.asc = true;
-          }
-
-          // Update icons
-          ths.forEach(function (t) {
-            var icon = t.querySelector('.sort-icon');
-            if (!icon) return;
-            if (t === th) {
-              icon.textContent = sortState.asc ? '↑' : '↓';
-              icon.classList.add('active');
-            } else {
-              icon.textContent = '⇅';
-              icon.classList.remove('active');
-            }
-          });
-
-          var tbody = th.closest('table').querySelector('tbody');
-          var rows = Array.from(tbody.querySelectorAll('tr'));
-          rows.sort(function (a, b) {
-            var aCell = a.querySelectorAll('td')[tdIdx];
-            var bCell = b.querySelectorAll('td')[tdIdx];
-            var aVal = aCell ? (aCell.dataset.value !== undefined ? aCell.dataset.value : aCell.textContent.trim()) : '';
-            var bVal = bCell ? (bCell.dataset.value !== undefined ? bCell.dataset.value : bCell.textContent.trim()) : '';
-            var aNum = parseFloat(aVal), bNum = parseFloat(bVal);
-            var cmp;
-            if (!isNaN(aNum) && !isNaN(bNum)) {
-              cmp = aNum - bNum;
-            } else {
-              cmp = String(aVal).localeCompare(String(bVal));
-            }
-            return sortState.asc ? cmp : -cmp;
-          });
-          rows.forEach(function (r) { tbody.appendChild(r); });
-        });
-      });
-    });
+    .puzzle-list(data-puzzle-catalog)
+      each puz in puzzles
+        - const st = user && statusMap ? statusMap[puz._id.toString()] : null
+        - const status = st ? st.status : 'notstarted'
+        article.puzzle-list-item(data-puzzle-card data-search=`${puz.name} ${puz.author || ''}` data-status=status)
+          .puzzle-list-dimension #{puz.width}×#{puz.height}
+          .puzzle-list-content
+            h2
+              a(href=`/puzzles/game/${puz._id}`) #{puz.name}
+            p.puzzle-author #{puz.author || t('common.unknownAuthor')}
+            .puzzle-list-details
+              if st && status === 'completed'
+                - const totalSeconds = st.elapsedSeconds || 0
+                - const minutes = Math.floor(totalSeconds / 60)
+                - const seconds = totalSeconds % 60
+                span ✓ #{minutes} min #{String(seconds).padStart(2, '0')} s
+                if st.errorCount
+                  span #{st.errorCount} #{t('catalog.errors')}
+                else if !st.usedVerify && !st.usedHints
+                  span #{t('catalog.perfect')}
+              else if st && status === 'started'
+                span #{t('catalog.savedGame')}
+              else
+                span #{t('catalog.ready')}
+              span #{puz.createdAt ? new Date(puz.createdAt).toLocaleDateString('eu') : '—'}
+          .puzzle-list-status
+            if status === 'completed'
+              span.status-pill.status-pill--complete #{t('catalog.completed')}
+            else if status === 'started'
+              span.status-pill.status-pill--progress #{t('catalog.inProgress')}
+            else
+              span.status-pill #{t('catalog.notStarted')}
+          .puzzle-list-actions
+            if user && status === 'started'
+              a.btn.btn-primary(href=`/puzzles/game/${puz._id}`) #{t('common.continue')}
+            else
+              a.btn.btn-primary(href=`/puzzles/game/${puz._id}`) #{t('common.play')}
+            if user && user.master
+              button.btn.btn-outline-danger.deletePUZ(type='button' data-id=puz._id data-name=puz.name) #{t('common.delete')}

@@ -2,28 +2,33 @@ extends layout
 
 block content
   .dashboard
-    h2.dashboard-title Nire panela
+    .page-heading
+      .page-heading-copy
+        p.eyebrow #{t('dashboard.eyebrow')}
+        h1.dashboard-title #{t('dashboard.title')}
+        p #{t('dashboard.intro')}
+      a.btn.btn-outline-primary(href='/puzzles') #{t('home.browse')}
 
     .dashboard-stats-row
       .stat-card
         .stat-value #{stats.completed}
-        .stat-label Osatutakoak
+        .stat-label #{t('dashboard.completed')}
       .stat-card
         .stat-value #{stats.inProgress}
-        .stat-label Abian
+        .stat-label #{t('dashboard.inProgress')}
       .stat-card
         .stat-value #{stats.total}
-        .stat-label Guztira
+        .stat-label #{t('dashboard.all')}
 
     if completed.length
-      h4.dashboard-section-title ✓ Osatutako puzleak
+      h2.dashboard-section-title ✓ #{t('dashboard.completed')}
       table.table.table-sm.table-hover
         thead
           tr
-            th Izena
-            th Neurria
-            th Osatu zen
-            th Iraupena
+            th #{t('common.name')}
+            th #{t('common.size')}
+            th #{t('dashboard.completedAt')}
+            th #{t('dashboard.duration')}
         tbody
           each s in completed
             tr
@@ -32,19 +37,21 @@ block content
               td #{s.puzzle ? s.puzzle.width + '×' + s.puzzle.height : '—'}
               td #{new Date(s.completedAt).toLocaleDateString('eu')}
               td
-                if s.durationMin != null
-                  | #{s.durationMin} min
+                if s.durationSeconds != null
+                  - const minutes = Math.floor(s.durationSeconds / 60)
+                  - const seconds = s.durationSeconds % 60
+                  | #{minutes} min #{String(seconds).padStart(2, '0')} s
                 else
                   | —
 
     if inProgress.length
-      h4.dashboard-section-title ⏳ Abian dauden puzleak
+      h2.dashboard-section-title ⏳ #{t('dashboard.inProgress')}
       table.table.table-sm.table-hover
         thead
           tr
-            th Izena
-            th Neurria
-            th Hasi zen
+            th #{t('common.name')}
+            th #{t('common.size')}
+            th #{t('dashboard.startedAt')}
             th
         tbody
           each s in inProgress
@@ -53,8 +60,8 @@ block content
               td #{s.puzzle ? s.puzzle.width + '×' + s.puzzle.height : '—'}
               td #{new Date(s.startedAt).toLocaleDateString('eu')}
               td
-                a.btn.btn-sm.btn-outline-primary(href=`/puzzles/game/${s.puzzleId}`) Jarraitu
+                a.btn.btn-sm.btn-outline-primary(href=`/puzzles/game/${s.puzzleId}`) #{t('common.continue')}
 
     if !completed.length && !inProgress.length
-      p.text-muted Oraindik ez duzu puzlerik jokatu.
-      a.btn.btn-primary(href='/puzzles') Puzleak ikusi
+      p.text-muted #{t('dashboard.empty')}
+      a.btn.btn-primary(href='/puzzles') #{t('dashboard.viewPuzzles')}

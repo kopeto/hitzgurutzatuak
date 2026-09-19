@@ -276,8 +276,8 @@ const GameUI = {
     const statusDiv = document.getElementById('game-status');
     if (statusDiv) {
       statusDiv.innerHTML = `
-        <strong>Aurrerapena:</strong> ${progress}% 
-        (${correctCells}/${totalCells} zelula zuzen)
+        <strong>${t('game.progress')}</strong> ${progress}%
+        (${t('game.correctCells', { correct: correctCells, total: totalCells })})
       `;
     }
   },
@@ -288,10 +288,10 @@ const GameUI = {
   showVictory: function(stats) {
     const message = `
       <div class="victory-message">
-        <h2>Zorionak! 🎉</h2>
-        <p>Hitzgurutzatua osatu duzu</p>
-        <p>Egiaztapenak: ${stats.checks}</p>
-        <p>Erabilitako pistak: ${stats.hints}</p>
+        <h2>${t('game.congratulations')}</h2>
+        <p>${t('game.completed')}</p>
+        <p>${t('game.checksUsed', { count: stats.checks })}</p>
+        <p>${t('game.hintsUsed', { count: stats.hints })}</p>
       </div>
     `;
     
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Use selected_cell which is the class used by cw_scripts.js
       const focusedCell = document.querySelector('td.selected_cell');
       if (!focusedCell) {
-        GameUI.showNotification('Lehenengo zelula bat hautatu', 'warning');
+        GameUI.showNotification(t('game.selectCell'), 'warning');
         return;
       }
       
@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const value = charSpan ? charSpan.textContent.trim() : '';
       
       if (!value) {
-        GameUI.showNotification('Zelula hutsik dago', 'warning');
+        GameUI.showNotification(t('game.emptyCell'), 'warning');
         return;
       }
       
@@ -358,10 +358,10 @@ document.addEventListener('DOMContentLoaded', function() {
         GameUI.showNotification(result.message, 'error');
       } else if (result.correct) {
         GameUI.markCorrect(row, col);
-        GameUI.showNotification('Zuzena! ✓', 'success');
+        GameUI.showNotification(t('game.correct'), 'success');
       } else {
         GameUI.markIncorrect(row, col, result.correctLetter);
-        GameUI.showNotification('Okerra ✗', 'error');
+        GameUI.showNotification(t('game.incorrect'), 'error');
       }
     });
   }
@@ -376,14 +376,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const isAcross = document.querySelector('td.focus_across') !== null;
       const focusedCells = document.querySelectorAll(isAcross ? '.focus_across' : '.focus_down');
       if (focusedCells.length === 0) {
-        GameUI.showNotification('Lehenengo hitz bat hautatu', 'warning');
+        GameUI.showNotification(t('game.selectWord'), 'warning');
         return;
       }
 
       // Get word index from selected clue id: clueacross_N_x_y or cluedown_N_x_y
       const activeClue = document.querySelector('.selected_clue');
       if (!activeClue) {
-        GameUI.showNotification('Lehenengo pista bat hautatu', 'warning');
+        GameUI.showNotification(t('game.selectClue'), 'warning');
         return;
       }
 
@@ -418,9 +418,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (result.correct) {
-          GameUI.showNotification('Hitz zuzena! ✓', 'success');
+          GameUI.showNotification(t('game.wordCorrect'), 'success');
         } else {
-          GameUI.showNotification('Hitzak akatsak ditu ✗', 'error');
+          GameUI.showNotification(t('game.wordIncorrect'), 'error');
         }
       }
     });
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const focusedCell = document.querySelector('td.selected_cell');
       if (!focusedCell) {
-        GameUI.showNotification('Lehenengo zelula bat hautatu', 'warning');
+        GameUI.showNotification(t('game.selectCell'), 'warning');
         return;
       }
       
@@ -453,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
           charSpan.textContent = result.value;
         }
         GameUI.markCorrect(row, col);
-        GameUI.showNotification('Pista agerian', 'info');
+        GameUI.showNotification(t('game.hintShown'), 'info');
       }
     });
   }
@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const activeClue = document.querySelector('.selected_clue');
       if (!activeClue) {
-        GameUI.showNotification('Lehenengo hitz bat hautatu', 'warning');
+        GameUI.showNotification(t('game.selectWord'), 'warning');
         return;
       }
 
@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
         });
-        GameUI.showNotification('Hitza erabat agerian', 'info');
+        GameUI.showNotification(t('game.wordShown'), 'info');
       }
     });
   }
@@ -548,13 +548,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
           if (result.complete) {
             GameUI.showNotification(
-              '\u2713 Zorionak! ' + timeStr + ' \xb7 ' + s.errors + ' akats',
+              t('game.completedStats', { time: timeStr, errors: s.errors }),
               'success',
               true
             );
           } else {
             GameUI.showNotification(
-              'Bidalia: ' + timeStr + ' \xb7 ' + s.errors + ' akats',
+              t('game.submittedStats', { time: timeStr, errors: s.errors }),
               'info',
               true
             );
@@ -563,9 +563,9 @@ document.addEventListener('DOMContentLoaded', function() {
           const emptyCount = result.cellResults.filter(c => c.empty).length;
           const parts = [];
           if (result.errorCount > 0)
-            parts.push(`${result.errorCount} akats${result.errorCount > 1 ? '' : ''}`);
+            parts.push(t('game.errorCount', { count: result.errorCount }));
           if (emptyCount > 0)
-            parts.push(`${emptyCount} hutsune`);
+            parts.push(t('game.emptyCount', { count: emptyCount }));
           GameUI.showNotification(parts.join(' · '), 'error');
         }
       }
@@ -578,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function() {
     solveGridBtn.addEventListener('click', async function(e) {
       e.preventDefault();
       
-      if (!confirm('Ziur zaude erantzun guztiak ikusi nahi dituzula? Honek jokoa amaitu egingo du.')) {
+      if (!confirm(t('game.solveConfirm'))) {
         return;
       }
       
@@ -597,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
         });
-        GameUI.showNotification('Puzlea erabat ebatzi da', 'info');
+        GameUI.showNotification(t('game.gridSolved'), 'info');
       }
     });
   }

@@ -2,45 +2,45 @@ extends layout
 
 block content
   .dashboard
-    h2.dashboard-title ⚙️ Master panela
+    .page-heading
+      .page-heading-copy
+        p.eyebrow #{t('upload.eyebrow')}
+        h1.dashboard-title #{t('master.title')}
+        p #{t('master.intro')}
 
     .dashboard-stats-row
       .stat-card
         .stat-value #{stats.puzzles}
-        .stat-label Puzle guztira
+        .stat-label #{t('master.puzzleCount')}
       .stat-card
         .stat-value #{stats.users}
-        .stat-label Erabiltzaile
+        .stat-label #{t('master.userCount')}
       .stat-card
         .stat-value #{stats.completions}
-        .stat-label Osatze guztira
+        .stat-label #{t('master.completionCount')}
       .stat-card
         .stat-value #{stats.activeSessions}
-        .stat-label Abian
+        .stat-label #{t('common.active')}
 
     .dashboard-actions
-      a.btn.btn-primary(href='/puzzles/upload') ⬆ Puzle berria igo
-    h4.dashboard-section-title 🔑 API kanpokoa
+      a.btn.btn-primary(href='/puzzles/upload') #{t('master.upload')}
+    h4.dashboard-section-title #{t('master.externalApi')}
     .card.mb-4
       .card-body
-        p.mb-2 Kanpoko programetatik puzleak igotzeko API gakoa:
-        .d-flex.align-items-center
-          button.btn.btn-sm.btn-outline-secondary.mr-2#toggleApiKey(type='button', onclick='toggleApiKey()') 👁 Erakutsi
-          code#apiKeyValue(style='display:none; word-break:break-all; background:#f5f5f5; padding:4px 8px; border-radius:4px; flex:1') #{externalApiKey}
-          button.btn.btn-sm.btn-outline-primary.ml-2#copyApiKey(type='button', style='display:none', onclick='copyApiKey()') 📋 Kopiatu
-        small#copyFeedback.text-success.d-block.mt-1(style='display:none !important')
+        p.mb-2 #{t('master.apiDescription')}
+        p.mb-0.text-muted #{t('master.apiSecret')}
 
-    //- Downloads list (only visible to master users since route is protected)
-    h5.mt-3 Fitxategiak deskargatzeko
+    //- Deskargak master erabiltzaileentzat soilik daude ikusgai.
+    h5.mt-3 #{t('master.downloads')}
     if downloadsFiles && downloadsFiles.length
       .card.mb-3
         .card-body.p-2
           table.table.table-sm.mb-0
             thead
               tr
-                th Izena
-                th.text-right Neurria
-                th Data
+                th #{t('common.name')}
+                th.text-right #{t('common.size')}
+                th #{t('common.date')}
             tbody
               each f in downloadsFiles
                 tr
@@ -49,17 +49,17 @@ block content
                   td.text-right #{f.sizeDisplay}
                   td #{f.mtimeDisplay}
     else
-      p.text-muted.mb-4 Ez da fitxategirik `/downloads` karpetan.
+      p.text-muted.mb-4 #{t('master.downloadsEmpty')}
 
-    h4.dashboard-section-title Puzleak
+    h4.dashboard-section-title #{t('nav.puzzles')}
     table.table.table-sm.table-hover
       thead
         tr
-          th Izena
-          th Neurria
-          th Egilea
-          th Osatze kop.
-          th Argitaratua
+          th #{t('common.name')}
+          th #{t('common.size')}
+          th #{t('common.author')}
+          th #{t('master.completionCountShort')}
+          th #{t('master.published')}
           th
       tbody
         each p in puzzles
@@ -70,17 +70,17 @@ block content
             td.text-center #{completionMap[p._id] || 0}
             td #{p.createdAt ? new Date(p.createdAt).toLocaleDateString('eu') : '—'}
             td
-              a.btn.btn-sm.btn-outline-secondary(href=`/puzzles/game/${p._id}`) Jokatu
+              a.btn.btn-sm.btn-outline-secondary(href=`/puzzles/game/${p._id}`) #{t('common.play')}
 
-    h4.dashboard-section-title Erabiltzaileak
+    h4.dashboard-section-title #{t('master.users')}
     table.table.table-sm.table-hover
       thead
         tr
-          th Erabiltzailea
-          th Posta
-          th Master
-          th Osatutakoak
-          th Abian
+          th #{t('auth.username')}
+          th #{t('common.authorEmail')}
+          th #{t('common.manager')}
+          th #{t('dashboard.completed')}
+          th #{t('common.active')}
       tbody
         each u in users
           tr
@@ -88,53 +88,20 @@ block content
             td #{u.email}
             td
               if u.master
-                span.badge.badge-warning Master
+                span.badge.badge-warning #{t('common.authorized')}
             td.text-center #{userStats[u._id] ? userStats[u._id].completed : 0}
             td.text-center #{userStats[u._id] ? userStats[u._id].inProgress : 0}
 
-    h4.dashboard-section-title.mt-4 Azken osatze (#{recentCompletions.length})
-
-    h4.dashboard-section-title Azken osatze (#{recentCompletions.length})
+    h4.dashboard-section-title #{t('master.recentCompletions', { count: recentCompletions.length })}
     table.table.table-sm
       thead
         tr
-          th Erabiltzailea
-          th Puzlea
-          th Data
+          th #{t('auth.username')}
+          th #{t('nav.puzzles')}
+          th #{t('common.date')}
       tbody
         each s in recentCompletions
           tr
             td #{s.username || s.userId}
             td #{s.puzzleName || s.puzzleId}
             td #{new Date(s.completedAt).toLocaleDateString('eu')}
-
-  script.
-    function toggleApiKey() {
-      var val = document.getElementById('apiKeyValue');
-      var btn = document.getElementById('toggleApiKey');
-      var copyBtn = document.getElementById('copyApiKey');
-      if (!val) return;
-      if (val.style.display === 'none' || val.style.display === '') {
-        val.style.display = 'inline';
-        if (copyBtn) copyBtn.style.display = 'inline-block';
-        if (btn) btn.textContent = '🙈 Ezkutatu';
-      } else {
-        val.style.display = 'none';
-        if (copyBtn) copyBtn.style.display = 'none';
-        if (btn) btn.textContent = '👁 Erakutsi';
-      }
-    }
-    function copyApiKey() {
-      var el = document.getElementById('apiKeyValue');
-      if (!el) return;
-      var text = el.textContent || el.innerText || '';
-      if (!navigator.clipboard) return;
-      navigator.clipboard.writeText(text).then(function() {
-        var fb = document.getElementById('copyFeedback');
-        if (fb) {
-          fb.textContent = '✓ Kopiatuta!';
-          fb.style.display = 'block';
-          setTimeout(function() { fb.style.display = 'none'; }, 2000);
-        }
-      }).catch(function(err){ console.error('Clipboard error', err); });
-    }

@@ -1,9 +1,17 @@
 extends layout
 
 block content
-  h1 PUZ fitxategia kargatu
-  form(method='POST', action='/puzzles/upload', enctype='multipart/form-data')
-    label Puz Fitxategia    
-    input.form-control(name='filename', type='file' required)
-    br
-    input.btn.btn-primary(type='submit', value='Puzlea kargatu')
+  section.form-page
+    .page-heading
+      .page-heading-copy
+        p.eyebrow #{t('upload.eyebrow')}
+        h1 #{t('upload.title')}
+        p #{t('upload.intro')}
+      a.btn.btn-outline-primary(href='/puzzles') #{t('upload.backToCatalog')}
+    .upload-card
+      form.auth-form(method='POST', action='/puzzles/upload', enctype='multipart/form-data')
+        .form-group
+          label(for='filename') #{t('upload.file')}
+          input#filename.form-control(name='filename', type='file', accept='.puz', required)
+          small.form-hint #{t('upload.hint')}
+        button.btn.btn-primary(type='submit') #{t('upload.submit')}

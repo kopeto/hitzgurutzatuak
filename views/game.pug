@@ -1,87 +1,88 @@
 extends layout
 
 block scripts
-	script(src='/vendor/jquery/jquery.min.js')
-	script(src='/scripts/game_api.js')
-	script(src='/scripts/cw_scripts.js')
-	script(src='/scripts/jquery_scrollto.js')
+  script(src='/vendor/jquery/jquery.min.js')
+  script(src='/scripts/game_api.js')
+  script(src='/scripts/cw_scripts.js')
+  script(src='/scripts/jquery_scrollto.js')
+
 block meta
-	meta(name='description' content=`${puz.name} — ${puz.author} — ${puz.width}×${puz.height} — Hitzgurutzatuak`)
-	meta(property='og:title' content=`${puz.name} | Hitzgurutzatuak`)
-	meta(property='og:description' content=`${puz.author}en hitz-gurutzatua — Hitz jokoen jokoa`)
-	meta(property='og:type' content='website')
+  meta(name='description' content=t('game.metaDescription', { name: puz.name, author: puz.author, width: puz.width, height: puz.height }))
+  meta(property='og:title' content=t('game.metaTitle', { name: puz.name }))
+  meta(property='og:description' content=t('game.metaOpenGraphDescription', { author: puz.author }))
+  meta(property='og:type' content='website')
+
 block styles
-	link(rel='stylesheet', href='/style/cw.css')
+  link(rel='stylesheet', href='/style/cw.css')
 
 block content
-	.game-topbar
-		a(href='/puzzles')
-			button.btn.btn-sm.btn-outline-secondary Atzera jo
-		h2.game-title #{puz.name}
-		if user
-			span#game-timer.game-timer 00:00
+  .game-topbar
+    a(href='/puzzles')
+      button.btn.btn-sm.btn-outline-secondary #{t('common.back')}
+    h2.game-title #{puz.name}
+    if user
+      span#game-timer.game-timer 00:00
 
-	.game-wrapper(data-puzzle-id=puz.id data-authenticated=user ? 'true' : 'false' data-completed=puz.completed ? 'true' : 'false' data-elapsed=puz.elapsedSeconds || 0)
-		if puz.completed && puz.cellResults
-			script#cell-results-data(type='application/json') !{JSON.stringify(puz.cellResults)}
-		div.puzzle
-			div.grid-block
-				table.grid.unselectable#jokoa(tabindex='-1' style=`--grid-cols: ${puz.width}`)
-					tbody
-						each row,i in puz.void_grid
-							tr
-								each cell,j in row
-									- let id='c_'+i+'_'+j
-									if cell=='.'
-										td.black(id=id)
-									else
-										- let cellNum = null
-										for word in puz.words
-											if word.x == i && word.y == j && cellNum === null
-												- cellNum = word.number
-										td(id=id)
-											if cellNum !== null
-												span.i_words #{cellNum}
-											span.char
-												
-				div#active-clue.active-clue-bar &nbsp;
-				div.history-bar
-					button#undo_btn.btn.btn-sm.btn-outline-secondary(type='button' disabled) &#8630; Desegin
-					button#redo_btn.btn.btn-sm.btn-outline-secondary(type='button' disabled) &#8631; Berregin
+  .game-wrapper(data-puzzle-id=puz.id data-authenticated=user ? 'true' : 'false' data-completed=puz.completed ? 'true' : 'false' data-elapsed=puz.elapsedSeconds || 0)
+    if puz.completed && puz.cellResults
+      script#cell-results-data(type='application/json') !{JSON.stringify(puz.cellResults)}
+    .puzzle
+      .grid-block
+        table.grid.unselectable#jokoa(tabindex='0' role='grid' aria-label=t('game.gridLabel', { name: puz.name }) style=`--grid-cols: ${puz.width}`)
+          tbody
+            each row, i in puz.void_grid
+              tr
+                each cell, j in row
+                  - let id = 'c_' + i + '_' + j
+                  if cell == '.'
+                    td.black(id=id role='presentation' aria-hidden='true')
+                  else
+                    - let cellNum = null
+                    for word in puz.words
+                      if word.x == i && word.y == j && cellNum === null
+                        - cellNum = word.number
+                    td(id=id role='gridcell' aria-label=`${i + 1}. errenkada, ${j + 1}. zutabea`)
+                      if cellNum !== null
+                        span.i_words #{cellNum}
+                      span.char
+        #active-clue.active-clue-bar(role='status' aria-live='polite') &nbsp;
+        .history-bar
+          button#undo_btn.btn.btn-sm.btn-outline-secondary(type='button' disabled) #{t('game.undo')}
+          button#redo_btn.btn.btn-sm.btn-outline-secondary(type='button' disabled) #{t('game.redo')}
 
-			div.clues.unselectable
-				- const acrossWords = puz.words.filter(w => w.dir === 'right').sort((a,b) => a.number - b.number)
-				- const downWords   = puz.words.filter(w => w.dir === 'down').sort((a,b) => a.number - b.number)
-				strong EZKER ESKUIN
-				div.clues_across
-					each word in acrossWords
-						- let id = 'clueacross_'+word.number+'_'+word.x+'_'+word.y;
-						div(id=id)
-							span.clue-num #{word.number}.
-							|  #{word.clue || '—'}
-				strong GOITIK BEHERA
-				div.clues_down
-					each word in downWords
-						- let id = 'cluedown_'+word.number+'_'+word.x+'_'+word.y;
-						div(id=id)
-							span.clue-num #{word.number}.
-							|  #{word.clue || '—'}
-		#game-notification.game-notification-bar
+      .clues.unselectable(aria-label=t('game.cluesLabel'))
+        - const acrossWords = puz.words.filter(w => w.dir === 'right').sort((a, b) => a.number - b.number)
+        - const downWords = puz.words.filter(w => w.dir === 'down').sort((a, b) => a.number - b.number)
+        h2.clues-heading #{t('game.across')}
+        .clues_across
+          each word in acrossWords
+            - let clueId = 'clueacross_' + word.number + '_' + word.x + '_' + word.y
+            div(id=clueId)
+              span.clue-num #{word.number}.
+              |  #{word.clue || '—'}
+        h2.clues-heading #{t('game.down')}
+        .clues_down
+          each word in downWords
+            - let clueId = 'cluedown_' + word.number + '_' + word.x + '_' + word.y
+            div(id=clueId)
+              span.clue-num #{word.number}.
+              |  #{word.clue || '—'}
+    #game-notification.game-notification-bar(role='status' aria-live='polite')
 
-		nav.buttons
-			div.btn-section
-				span.btn-section-label Zuzendu
-				button#check_cell.btn.btn-outline-secondary(type='button') Hizkia
-				button#check_word.btn.btn-outline-secondary(type='button') Hitza
-			div.btn-section
-				span.btn-section-label Bete
-				button#solve_cell.btn.btn-outline-secondary(type='button') Hizkia
-				button#solve_word.btn.btn-outline-secondary(type='button') Hitza
-				button#solve_grid.btn.btn-outline-secondary(type='button') Koadroa
-			button#delete_all.btn.btn-outline-danger(type='button') Koadroa garbitu
-			button#check_grid.btn.btn-primary.btn-check-grid(type='button') ✓ Zuzendu koadroa
-			if user
-				button#restart_btn.btn.btn-outline-secondary.btn-restart(type='button' style='display:none') ↺ Berriro jokatu
+    nav.buttons
+      .btn-section
+        span.btn-section-label #{t('game.check')}
+        button#check_cell.btn.btn-outline-secondary(type='button') #{t('game.letter')}
+        button#check_word.btn.btn-outline-secondary(type='button') #{t('game.word')}
+      .btn-section
+        span.btn-section-label #{t('game.fill')}
+        button#solve_cell.btn.btn-outline-secondary(type='button') #{t('game.letter')}
+        button#solve_word.btn.btn-outline-secondary(type='button') #{t('game.word')}
+        button#solve_grid.btn.btn-outline-secondary(type='button') #{t('game.grid')}
+      button#delete_all.btn.btn-outline-danger(type='button') #{t('game.clearGrid')}
+      button#check_grid.btn.btn-primary.btn-check-grid(type='button') #{t('game.checkGrid')}
+      if user
+        button#restart_btn.btn.btn-outline-secondary.btn-restart(type='button' style='display:none') #{t('game.playAgain')}
 
 block footer
-	p #{puz.author} - #{puz.name}
+  p #{puz.author} - #{puz.name}

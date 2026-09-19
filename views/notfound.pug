@@ -1,6 +1,8 @@
 extends layout
 
 block content
-  div.jumbotron.info
-    h4 Bilatzen ari zaren orria ez dago eskuragarri.
-    h5 '#{url}' ez dugu aurkitu. 
+  section.empty-state.error-state
+    p.eyebrow #{t('notFound.eyebrow')}
+    h1 #{t('notFound.title')}
+    p #{t('notFound.text', { url })}
+    a.btn.btn-primary(href='/puzzles') #{t('dashboard.viewPuzzles')}
