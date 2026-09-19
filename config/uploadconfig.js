@@ -1,42 +1,72 @@
+const crypto = require('crypto');
+const fs = require('fs');
 const multer = require('multer');
 const path = require('path');
 
-const checkIfPuz = (req, file, cb) =>{
-  //console.log('CHECK IF PUZ.');
-  if(file.originalname.split('.').pop() != 'puz'){
-    //console.log('PuzFileCheck failed.');
-    req.uploadErrors = [{
-      filename: file.originalname,
-      message: 'Ez da puz fitxategia'
-    }];
-    // cb(new Error( 'Ez da puz fitxategia'), false);
-    cb(null, false);
+const uploadDirectory = path.resolve(__dirname, '..', 'uploads');
+const configuredMaxSize = Number.parseInt(process.env.MAX_PUZ_UPLOAD_BYTES || '5242880', 10);
+const maxFileSize = Number.isFinite(configuredMaxSize) && configuredMaxSize > 0
+  ? configuredMaxSize
+  : 5242880;
 
+fs.mkdirSync(uploadDirectory, { recursive: true });
+
+function sanitizeOriginalFilename(filename) {
+  const baseName = path.basename(filename || '').normalize('NFKC');
+  const safeName = baseName
+    .replace(/[^\p{L}\p{N}._ -]/gu, '_')
+    .slice(0, 180);
+
+  return safeName || 'puzlea.puz';
+}
+
+function isPuzFilename(filename) {
+  return path.extname(filename).toLowerCase() === '.puz';
+}
+
+function fileFilter(req, file, callback) {
+  const safeName = sanitizeOriginalFilename(file.originalname);
+  file.originalname = safeName;
+
+  if (!isPuzFilename(safeName)) {
+    req.uploadErrors = [{
+      filename: safeName,
+      message: 'Fitxategiak .puz luzapena izan behar du.'
+    }];
+    return callback(null, false);
   }
-  else{
-    //console.log('PuzFileChack passed.');
-    cb(null, true);
-  }
-  // You can always pass an error if something goes wrong:
-  //cb(new Error('I don\'t have a clue!'))
+
+  return callback(null, true);
 }
 
 const storage = multer.diskStorage({
-	destination: (req,file,cb)=>{
-		cb(null, 'uploads');
-	},
-	filename: (req,file,cb)=>{
-    //console.log(file)
-    //cb(null,'probarako');
-		cb(null, file.originalname);
-	}
+  destination: (req, file, callback) => callback(null, uploadDirectory),
+  filename: (req, file, callback) => callback(null, `${crypto.randomUUID()}.puz`)
 });
 
-const upload = multer({
-	storage: storage,
-  fileFilter: checkIfPuz
+const multerUpload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    files: 1,
+    fileSize: maxFileSize
+  }
 });
 
+function uploadPuzzle(req, res, next) {
+  multerUpload.single('filename')(req, res, error => {
+    if (error) {
+      const message = error.code === 'LIMIT_FILE_SIZE'
+        ? 'Fitxategia handiegia da.'
+        : 'Ezin izan da fitxategia kargatu.';
+      req.uploadErrors = [{ filename: '', message }];
+    }
+    next();
+  });
+}
 
+uploadPuzzle.uploadDirectory = uploadDirectory;
+uploadPuzzle.maxFileSize = maxFileSize;
+uploadPuzzle.sanitizeOriginalFilename = sanitizeOriginalFilename;
 
-module.exports = upload;
+module.exports = uploadPuzzle;

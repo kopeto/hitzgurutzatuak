@@ -6,7 +6,6 @@ const PlaySession = require('../models/playsession');
 const fs = require('fs');
 const path = require('path');
 
-// Middleware: only master users
 function requireMaster(req, res, next) {
   if (req.isAuthenticated() && req.user.master) return next();
   res.status(403).render('message', { message: 'Sarbidea ukatua', type: 'danger' });
@@ -20,7 +19,6 @@ router.get('/', requireMaster, async (req, res) => {
       PlaySession.find({}).lean()
     ]);
 
-    // Completion count per puzzle
     const completionMap = {};
     allSessions.forEach(s => {
       if (s.completedAt) {
@@ -29,7 +27,6 @@ router.get('/', requireMaster, async (req, res) => {
       }
     });
 
-    // Per-user stats
     const userStats = {};
     allSessions.forEach(s => {
       const key = s.userId.toString();
@@ -38,7 +35,6 @@ router.get('/', requireMaster, async (req, res) => {
       else userStats[key].inProgress++;
     });
 
-    // Recent 20 completions enriched with names
     const puzzleNameMap = {};
     puzzles.forEach(p => { puzzleNameMap[p._id.toString()] = p.name; });
     const usernameMap = {};
@@ -61,7 +57,6 @@ router.get('/', requireMaster, async (req, res) => {
       activeSessions: allSessions.filter(s => !s.completedAt).length
     };
 
-    // Ensure downloads directory exists and list files
     const downloadsDir = path.join(__dirname, '..', 'downloads');
     try {
       await fs.promises.mkdir(downloadsDir, { recursive: true });
@@ -71,7 +66,6 @@ router.get('/', requireMaster, async (req, res) => {
     let downloadsFiles = [];
     try {
       const names = (await fs.promises.readdir(downloadsDir)).filter(f => !f.startsWith('.'));
-      // Collect stats for each file
       const fileInfos = await Promise.all(names.map(async (f) => {
         const p = path.join(downloadsDir, f);
         try {
@@ -85,7 +79,6 @@ router.get('/', requireMaster, async (req, res) => {
           return { name: f };
         }
       }));
-      // humanize size
       function humanize(bytes) {
         if (!bytes && bytes !== 0) return '';
         const units = ['B','KB','MB','GB','TB'];
@@ -106,15 +99,14 @@ router.get('/', requireMaster, async (req, res) => {
     }
 
     res.render('master', {
-      title: 'Master panela',
+      title: res.locals.t('page.master'),
       stats,
       puzzles,
       users,
       completionMap,
       userStats,
       recentCompletions,
-      externalApiKey: process.env.EXTERNAL_API_KEY || ''
-      , downloadsFiles
+      downloadsFiles
     });
   } catch (err) {
     console.error(err);
@@ -122,7 +114,6 @@ router.get('/', requireMaster, async (req, res) => {
   }
 });
 
-// Secure download endpoint for master users
 router.get('/download/:name', requireMaster, (req, res) => {
   const name = req.params.name;
   if (!name || name.includes('..') || name.includes('/') || name.includes('\\')) return res.status(400).render('message', { message: 'Izena baliogabea', type: 'danger' });
@@ -140,7 +131,6 @@ router.get('/download/:name', requireMaster, (req, res) => {
 
 module.exports = router;
 
-// Delete file (master only)
 router.post('/download/:name/delete', requireMaster, async (req, res) => {
   const name = req.params.name;
   if (!name || name.includes('..') || name.includes('/') || name.includes('\\')) {

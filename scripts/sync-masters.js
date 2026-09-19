@@ -1,10 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Script para sincronizar usuarios master desde .env con la BD
- * Uso: node scripts/sync-masters.js
- */
-
 require('dotenv/config');
 const mongoose = require('mongoose');
 const config = require('../config/database');
@@ -12,52 +7,49 @@ const UserModel = require('../models/user');
 
 const colors = require('colors/safe');
 
-console.log(colors.cyan('\n🔄 Sincronizando usuarios master...\n'));
+console.log(colors.cyan('\n🔄 Master erabiltzaileak sinkronizatzen...\n'));
 
-// Conectar a MongoDB
 mongoose.connect(config.database, config.db_options);
 const db = mongoose.connection;
 
 const syncMasters = async () => {
-  console.log(colors.green('✅ Conectado a MongoDB'));
+  console.log(colors.green('✅ MongoDBra konektatuta'));
   
   try {
-    const masters = process.env.MASTERS ? process.env.MASTERS.split(' ') : [];
-    console.log(colors.cyan(`📋 Masters definidos en .env: ${masters.join(', ')}`));
-    
-    if (masters.length === 0) {
-      console.log(colors.yellow('⚠️  No hay usuarios master definidos en .env'));
+    const configuredIds = process.env.MASTER_USER_IDS
+      ? process.env.MASTER_USER_IDS.split(/[\s,]+/).filter(Boolean)
+      : [];
+    const masterIds = configuredIds.filter(id => mongoose.isObjectIdOrHexString(id));
+
+    if (masterIds.length === 0) {
+      console.log(colors.yellow('⚠️  MASTER_USER_IDS aldagaian ez dago baliozko erabiltzaile ID-rik.'));
       process.exit(0);
     }
 
-    // Actualizar todos los usuarios: master=true si están en la lista, master=false si no
+    if (masterIds.length !== configuredIds.length) {
+      console.log(colors.yellow('⚠️  Baliogabeko erabiltzaile ID batzuk baztertu dira.'));
+    }
+
     const updateMasters = await UserModel.updateMany(
-      { username: { $in: masters } },
+      { _id: { $in: masterIds } },
       { $set: { master: true } }
     );
 
-    const updateNonMasters = await UserModel.updateMany(
-      { username: { $nin: masters } },
-      { $set: { master: false } }
-    );
+    console.log(colors.green(`\n✅ ${updateMasters.modifiedCount} erabiltzaile master bihurtu dira.`));
 
-    console.log(colors.green(`\n✅ ${updateMasters.modifiedCount} usuario(s) promovido(s) a master`));
-    console.log(colors.yellow(`⚠️  ${updateNonMasters.modifiedCount} usuario(s) sin permisos master\n`));
-
-    // Mostrar usuarios master actuales
     const masterUsers = await UserModel.find({ master: true }, 'username email');
     if (masterUsers.length > 0) {
-      console.log(colors.cyan('👑 Usuarios master actuales:'));
+      console.log(colors.cyan('👑 Uneko master erabiltzaileak:'));
       masterUsers.forEach(user => {
         console.log(`   - ${user.username} (${user.email})`);
       });
     }
 
-    console.log(colors.green('\n✅ Sincronización completada\n'));
+    console.log(colors.green('\n✅ Sinkronizazioa amaitu da.\n'));
     process.exit(0);
 
   } catch (err) {
-    console.error(colors.red('❌ Error:'), err.message);
+    console.error(colors.red('❌ Errorea:'), err.message);
     process.exit(1);
   }
 };
@@ -65,6 +57,6 @@ const syncMasters = async () => {
 db.once('open', syncMasters);
 
 db.on('error', (err) => {
-  console.error(colors.red('❌ Error de conexión:'), err.message);
+  console.error(colors.red('❌ Konexio-errorea:'), err.message);
   process.exit(1);
 });

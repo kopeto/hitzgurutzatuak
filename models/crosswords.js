@@ -2,6 +2,11 @@ let mongoose = require('mongoose');
 
 let cwSchema = mongoose.Schema({
   filename: String,
+  fileHash: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   width: Number,
   height: Number,
   filled_grid: [[String]],

@@ -1,0 +1,41 @@
+extends layout
+
+block content
+  section.hero
+    .hero-copy
+      p.eyebrow #{t('home.eyebrow')}
+      h1 #{t('home.title')}
+      p.hero-text #{t('home.intro')}
+      .hero-actions
+        a.btn.btn-primary.btn-lg(href='/puzzles') #{t('home.browse')}
+        if !user
+          a.btn.btn-outline-light.btn-lg(href='/users/register') #{t('nav.createAccount')}
+    .hero-panel(aria-hidden='true')
+      .hero-grid
+        - const cells = ['H','I','T','Z','','G','U','R','U','T','Z','','A','K','']
+        each cell, index in cells
+          span(class=cell ? 'hero-cell' : 'hero-cell hero-cell--dark') #{cell}
+
+  section.section-heading
+    .section-heading-copy
+      p.eyebrow #{t('home.latestEyebrow')}
+      h2 #{t('home.latest')}
+    a.section-link(href='/puzzles') #{t('home.allCatalog')}
+
+  if puzzles.length
+    .puzzle-list
+      each puz in puzzles
+        article.puzzle-list-item
+          .puzzle-list-dimension #{puz.width}×#{puz.height}
+          .puzzle-list-content
+            h3
+              a(href=`/puzzles/game/${puz._id}`) #{puz.name}
+            p.puzzle-author #{puz.author || t('common.unknownAuthor')}
+          .puzzle-list-meta
+            span.puzzle-new #{t('home.new')}
+            span #{puz.createdAt ? new Date(puz.createdAt).toLocaleDateString('eu') : '—'}
+          a.btn.btn-primary.btn-sm(href=`/puzzles/game/${puz._id}` aria-label=t('home.playAria', { name: puz.name })) #{t('common.play')}
+  else
+    .empty-state
+      h2 #{t('home.emptyTitle')}
+      p #{t('home.emptyText')}

@@ -7,10 +7,10 @@ require('dotenv/config');
 
 
 module.exports = (passport)=>{
-  // Local strategy — async/await, no callbacks (Mongoose 9)
   passport.use(new LocalStrategy(async (username, password, done)=>{
     try {
-      const user = await UserModel.findOne({ username });
+      const normalizedUsername = String(username || '').trim().toLowerCase();
+      const user = await UserModel.findOne({ username: normalizedUsername });
       if (!user) {
         return done(null, false, { message: 'Ez da erabiltzailerik aurkitu' });
       }

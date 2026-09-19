@@ -17,13 +17,12 @@
 
 const express = require('express');
 const router = express.Router();
-const path = require('path');
 const rateLimit = require('express-rate-limit');
 
 const requireApiKey = require('../auth/apikey');
 const upload = require('../config/uploadconfig');
-const Crossword = require('../cw/crossword');
 const CrosswordModel = require('../models/crosswords');
+const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import');
 const { logError, logInfo } = require('../utils');
 
 // Max 30 requests per minute per IP
@@ -42,8 +41,7 @@ router.use(requireApiKey);
 // ---------------------------------------------------------------------------
 // POST /external/puzzle  — upload a .puz file
 // ---------------------------------------------------------------------------
-router.post('/puzzle', upload.single('filename'), async (req, res) => {
-  // uploadconfig sets req.uploadErrors if file is not .puz
+router.post('/puzzle', upload, async (req, res) => {
   if (req.uploadErrors) {
     return res.status(400).json({
       error: true,
@@ -56,21 +54,7 @@ router.post('/puzzle', upload.single('filename'), async (req, res) => {
   }
 
   try {
-    const filePath = path.join(__dirname, '../uploads', req.file.originalname);
-    const crossword = new Crossword(filePath);
-
-    const cw = new CrosswordModel();
-    cw.filename    = req.file.originalname;
-    cw.width       = crossword.width;
-    cw.height      = crossword.height;
-    cw.words       = crossword.words;
-    cw.clues       = crossword.clues;
-    cw.void_grid   = crossword.void_grid;
-    cw.filled_grid = crossword.filled_grid;
-    cw.name        = crossword.cw_name  === 'Unknown' ? 'Izengabea'    : crossword.cw_name;
-    cw.author      = crossword.cw_author === 'Unknown' ? 'Joxan Elosegi' : crossword.cw_author;
-
-    await cw.save();
+    const cw = await importPuzzle(req.file);
     logInfo(`[external API] Puzzle berria kargatu da: ${cw.filename}`);
 
     return res.status(201).json({
@@ -85,8 +69,11 @@ router.post('/puzzle', upload.single('filename'), async (req, res) => {
       }
     });
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({ error: true, message: 'Puzle hau dagoeneko badago sisteman.' });
+    if (err instanceof PuzzleImportError || err.code === 11000) {
+      return res.status(err.statusCode || 409).json({
+        error: true,
+        message: err.message || 'Puzle hau dagoeneko sisteman dago.'
+      });
     }
     logError(err);
     return res.status(500).json({ error: true, message: 'Zerbitzari errorea.' });

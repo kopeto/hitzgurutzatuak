@@ -2,18 +2,11 @@ const {logDate, logError} = require('../utils.js');
 const checkAuth = require('../auth/authenticate.js');
 const express = require('express');
 const router = express.Router();
-const path = require('path');
-
-// Crossword Class
-const Crossword = require('../cw/crossword.js');
-// Models
 const CrosswordModel = require('../models/crosswords');
 const PlaySession = require('../models/playsession');
 const GameStateModel = require('../models/gamestate');
-
-const flash = require('connect-flash');
-
 const upload = require('../config/uploadconfig');
+const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import');
 
 // Helper: strip solution data before sending to client.
 // clues[] is the flat DB array (always populated); w.clue is a per-word copy (only on newer uploads).
@@ -57,24 +50,24 @@ router.get('/', async (req, res) => {
     }
 
     res.render('puzzles', {
-      title: 'Puzleak',
+      title: res.locals.t('page.puzzles'),
       puzzles: puzzles,
       statusMap
     });
   } catch (err) {
     logError(err);
-    res.render('puzzles', { title: 'Puzleak', puzzles: [], statusMap: {} });
+    res.render('puzzles', { title: res.locals.t('page.puzzles'), puzzles: [], statusMap: {} });
   }
 });
 
 router.get('/upload', checkAuth, (req, res) => {
   res.render('upload', {
-    title: 'Puz fitxategia kargatu',
+    title: res.locals.t('page.upload'),
     errors: {}
   });
 });
 
-router.post('/upload', checkAuth, upload.single('filename'), async (req, res, next) => {
+router.post('/upload', checkAuth, upload, async (req, res) => {
   if (req.uploadErrors !== undefined) {
     req.uploadErrors.forEach((err) => {
       req.flash('danger', '\'' + err.filename + '\' ' + err.message);
@@ -83,30 +76,15 @@ router.post('/upload', checkAuth, upload.single('filename'), async (req, res, ne
   }
 
   try {
-    const filePath = path.join(path.join(__dirname, '../uploads'), req.file.originalname);
-    const crossword = new Crossword(filePath);
-    const cw = new CrosswordModel();
-
-    cw.filename   = req.file.originalname;
-    cw.width      = crossword.width;
-    cw.height     = crossword.height;
-    cw.words      = crossword.words;
-    cw.clues      = crossword.clues;
-    cw.void_grid  = crossword.void_grid;
-    cw.filled_grid = crossword.filled_grid;
-    cw.name       = crossword.cw_name === 'Unknown' ? 'Izengabea' : crossword.cw_name;
-    cw.author     = crossword.cw_author === 'Unknown' ? 'Joxan Elosegi' : crossword.cw_author;
-
-    await cw.save();
+    await importPuzzle(req.file);
     req.flash('success', 'Puzlea Kargatuta');
     res.redirect('/puzzles');
   } catch (err) {
-    if (err.name === 'MongoError' && err.code === 11000) {
-      logError({ message: err.name + ': Key duplicate error' });
-      req.flash('danger', err.name + ': \'' + req.file.filename + '\' errepikatuta dago.');
+    if (err instanceof PuzzleImportError || err.code === 11000) {
+      req.flash('danger', err.message || 'Puzle hau dagoeneko sisteman dago.');
     } else {
       logError(err);
-      req.flash('danger', 'Erroreren bat izan da');
+      req.flash('danger', 'Ezin izan da puzlea kargatu.');
     }
     res.redirect('/puzzles');
   }
@@ -164,7 +142,7 @@ router.get('/game/:id', async (req, res) => {
 
     // Send sanitized puzzle to view (no filled_grid, no word answers)
     res.render('game', {
-      title: 'JOKOA',
+      title: res.locals.t('page.game'),
       puz: {
         id:             puzzle._id.toString(),
         name:           puzzle.name,
