@@ -26,7 +26,7 @@ router.post('/register',[
     .isLength({ min: 3, max: 40 }).withMessage('Erabiltzaileak 3 eta 40 karaktere artean izan behar ditu.')
     .matches(/^[\p{L}\p{N}._-]+$/u).withMessage('Erabiltzaileak letrak, zenbakiak, puntuak, marratxoak edo azpimarrak soilik izan ditzake.'),
   body('password')
-    .isLength({ min: 10 }).withMessage('Pasahitzak gutxienez 10 karaktere izan behar ditu.'),
+    .isLength({ min: 4 }).withMessage('Pasahitzak gutxienez 4 karaktere izan behar ditu.'),
   body('password2')
     .notEmpty().withMessage('Pasahitzaren egiaztapena beharrezkoa da.')
     .custom((value, { req }) => value === req.body.password)

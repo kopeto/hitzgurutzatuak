@@ -18,10 +18,11 @@ block content
           small.form-hint #{t('auth.usernameHint')}
         .form-group
           label(for='password') #{t('auth.password')}
-          input#password.form-control(name='password', type='password', autocomplete='new-password', minlength='10', required)
+          input#password.form-control(name='password', type='password', autocomplete='new-password', minlength='4', required)
           small.form-hint #{t('auth.passwordHint')}
         .form-group
           label(for='password2') #{t('auth.repeatPassword')}
           input#password2.form-control(name='password2', type='password', autocomplete='new-password', required)
         button.btn.btn-primary.btn-block(type='submit') #{t('nav.createAccount')}
       p.auth-footer #{t('auth.haveAccount')} #[a(href='/users/login') #{t('nav.signIn')}]
+

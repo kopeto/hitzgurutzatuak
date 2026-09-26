@@ -2,7 +2,7 @@
   "site": {
     "name": "Hitz gurutzatuak",
     "description": "Hitz gurutzatuak — Hitz jokoen jokoa",
-    "footer": "Hitz jokoak euskaraz, lasai gozatzeko.",
+    "footer": "Hitz jokoak euskaraz.",
     "homeLinkLabel": "Hitz gurutzatuen hasiera",
     "footerNavigation": "Oineko nabigazioa"
   },
@@ -37,7 +37,7 @@
   "home": {
     "eyebrow": "HITZ JOKOAK EUSKARAZ",
     "title": "Hitzak lotu, burua piztu.",
-    "intro": "Hitz gurutzatuak lasai gozatzeko gunea: aukeratu joko bat, hasi zure erritmoan eta jarraitu nahi duzunean.",
+    "intro": "Hitz gurutzatuak euskaraz, jokatu nahi adina.",
     "browse": "Jokoak arakatu",
     "latestEyebrow": "JOKATU EZAZU",
     "latest": "Azken jokoak",
@@ -83,7 +83,7 @@
     "registerText": "Partida bertan behera utzita, datorrenean abiapuntu beretik jarraitu ahal izango duzu.",
     "email": "Posta elektronikoa",
     "usernameHint": "3 eta 40 karaktere artean.",
-    "passwordHint": "Gutxienez 10 karaktere.",
+    "passwordHint": "Gutxienez 4 karaktere.",
     "repeatPassword": "Pasahitza berriz",
     "haveAccount": "Baduzu erabiltzailerik?"
   },

@@ -39,10 +39,10 @@ html(lang='eu')
             if user
               span.navigation-user #{user.username}
               a.nav-login(href='/users/dashboard') #{t('nav.profile')}
-              a.btn.btn-sm.btn-outline-light(href='/users/logout') #{t('nav.signOut')}
+              a.nav-login(href='/users/logout') #{t('nav.signOut')}
             else
               a.nav-login(href='/users/login') #{t('nav.signIn')}
-              a.btn.btn-sm.btn-primary(href='/users/register') #{t('nav.createAccount')}
+              a.nav-login(href='/users/register') #{t('nav.createAccount')}
     main.site-main
       .site-shell
         != messages('message', locals)
