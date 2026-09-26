@@ -42,7 +42,7 @@
       inwardClues: '',
       outwardClues: '',
       answer: '',
-      cellCount: 100,
+      cellCount: 64,
       cellSize: 60,
       showNumbers: true
     };
@@ -1067,11 +1067,7 @@
       });
     }
 
-    if (!window.localStorage.getItem(storageKey)) {
-      setState(defaultState);
-    } else {
-      loadDraft();
-    }
+    setState(defaultState);
     updatePreview();
   }
 

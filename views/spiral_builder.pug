@@ -34,15 +34,17 @@ block content
 
         .builder-row
           .builder-field
-            label(for='builderInwardClues') #{t('spiralBuilder.inward')}
+            .clue-editor-heading
+              label(for='builderInwardClues') #{t('spiralBuilder.inward')}
+              button.clue-add-btn.btn.btn-outline-secondary.btn-sm(type='button' data-add-clue='inward' aria-label=t('spiralBuilder.addDefinition') title=t('spiralBuilder.addDefinition')) +
             .clue-editor(data-direction='inward')
               .clue-editor-list#builderInwardCluesList(data-clue-list='inward')
-              button.btn.btn-outline-secondary.btn-sm(type='button' data-add-clue='inward') #{t('spiralBuilder.addDefinition')}
           .builder-field
-            label(for='builderOutwardClues') #{t('spiralBuilder.outward')}
+            .clue-editor-heading
+              label(for='builderOutwardClues') #{t('spiralBuilder.outward')}
+              button.clue-add-btn.btn.btn-outline-secondary.btn-sm(type='button' data-add-clue='outward' aria-label=t('spiralBuilder.addDefinition') title=t('spiralBuilder.addDefinition')) +
             .clue-editor(data-direction='outward')
               .clue-editor-list#builderOutwardCluesList(data-clue-list='outward')
-              button.btn.btn-outline-secondary.btn-sm(type='button' data-add-clue='outward') #{t('spiralBuilder.addDefinition')}
 
         .builder-field
           label(for='builderAnswer') #{t('spiralBuilder.answer')}
@@ -54,17 +56,11 @@ block content
 
         #warning.spiral-builder-warning(role='alert')
 
-        details.builder-actions-panel
-          summary Ekintzak
+        .builder-actions-panel
+          .builder-actions-title Ekintzak
           .spiral-builder-actions
-            button.btn.btn-primary(type='button' data-download-button) #{t('spiralBuilder.download')}
-            button.btn.btn-outline-primary(type='button' data-download-html) #{t('spiralBuilder.downloadHtml')}
-            button.btn.btn-outline-secondary(type='button' data-save-draft) #{t('spiralBuilder.saveDraft')}
-            button.btn.btn-outline-secondary(type='button' data-load-draft) #{t('spiralBuilder.loadDraft')}
-            button.btn.btn-outline-secondary(type='button' data-load-example) #{t('spiralBuilder.loadExample')}
-            button.btn.btn-outline-danger(type='button' data-reset-builder) #{t('spiralBuilder.reset')}
-            label.btn.btn-outline-secondary(for='spiral-import-file') #{t('spiralBuilder.import')}
-            input#spiral-import-file.spiral-builder-file(type='file', accept='.spl', data-import-file)
+            button.btn.btn-primary(type='button' data-download-button) SPL-a deskargatu
+            button.btn.btn-outline-danger(type='button' data-reset-builder) Reset
 
     main.spiral-builder-main
       article.spiral-page

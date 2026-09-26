@@ -87,12 +87,15 @@ body.site-body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
+  align-items: start;
 }
 
 .builder-field {
   display: grid;
   gap: 0.2rem;
   min-width: 0;
+  align-content: start;
+  align-self: start;
 }
 
 .clue-editor {
@@ -100,6 +103,33 @@ body.site-body {
   gap: 0;
   align-content: start;
   min-width: 0;
+}
+
+.clue-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  align-self: start;
+}
+
+.clue-editor-heading label {
+  margin: 0;
+}
+
+.clue-add-btn {
+  min-width: 26px;
+  width: 26px;
+  height: 26px;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px;
+  font-size: 1rem;
+  line-height: 1 !important;
+  font-weight: 700;
+  text-align: center;
 }
 
 .clue-editor > [data-add-clue] {
@@ -133,7 +163,7 @@ body.site-body {
 
 .clue-row-head {
   display: grid;
-  grid-template-columns: 70px 70px minmax(0, 1fr);
+  grid-template-columns: 62px 62px minmax(0, 1fr);
   gap: 4px;
   align-items: center;
 }
@@ -141,6 +171,10 @@ body.site-body {
 .clue-start,
 .clue-end {
   min-width: 0;
+  text-align: center;
+  height: 30px;
+  padding: 4px 4px;
+  font-size: 0.78rem;
 }
 
 .clue-text {
@@ -244,7 +278,7 @@ body.site-body {
 
 .spiral-builder-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -256,21 +290,11 @@ body.site-body {
   background: #f8fbff;
 }
 
-.builder-actions-panel summary {
-  cursor: pointer;
-  list-style: none;
+.builder-actions-title {
   padding: 6px 8px;
   color: #245bb6;
   font-size: 0.78rem;
   font-weight: 700;
-  user-select: none;
-}
-
-.builder-actions-panel summary::-webkit-details-marker {
-  display: none;
-}
-
-.builder-actions-panel[open] summary {
   border-bottom: 1px solid #d8e4f7;
 }
 
@@ -289,7 +313,6 @@ body.site-body {
   color: #fff;
   border-color: #174a91;
   background: #245bb6;
-  grid-column: 1 / -1;
 }
 
 .spiral-builder-actions .btn:hover {
