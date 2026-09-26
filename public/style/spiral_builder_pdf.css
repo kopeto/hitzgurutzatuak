@@ -1,0 +1,499 @@
+* {
+  box-sizing: border-box;
+}
+
+body.site-body {
+  overflow: hidden;
+}
+
+.site-main {
+  padding: 0 !important;
+}
+
+.site-main > .site-shell {
+  max-width: none;
+  width: 100%;
+  padding: 0;
+}
+
+.site-footer {
+  display: none;
+}
+
+.spiral-builder-shell {
+  height: calc(100dvh - 72px);
+  min-height: 640px;
+  display: grid;
+  grid-template-columns: minmax(520px, 680px) 1fr;
+  background: #ecebe7;
+  color: #171717;
+  overflow: hidden;
+}
+
+.spiral-builder-aside {
+  padding: 12px 14px;
+  background: #fff;
+  box-shadow: 2px 0 18px #0002;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.spiral-builder-main {
+  min-width: 0;
+  display: grid;
+  place-items: start center;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.spiral-builder-aside h1 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.spiral-builder-intro {
+  line-height: 1.2;
+  font-size: 0.84rem;
+  color: #555;
+  margin: 0 0 0.45rem;
+}
+
+.spiral-builder-status {
+  min-height: 1.1em;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: #245bb6;
+  margin: 0.08rem 0 0.15rem;
+}
+
+.spiral-builder-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: #46524a;
+}
+
+#spiral-builder-form {
+  display: grid;
+  gap: 0.32rem;
+  align-content: start;
+}
+
+.builder-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.builder-field {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.clue-editor {
+  display: grid;
+  gap: 0;
+  align-content: start;
+  min-width: 0;
+}
+
+.clue-editor > [data-add-clue] {
+  width: 100%;
+  min-height: 34px;
+  max-height: 34px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.clue-editor-list {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.clue-row {
+  border: 1px solid #dbe2ef;
+  border-radius: 6px;
+  background: #f9fbff;
+  padding: 5px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.clue-row-head {
+  display: grid;
+  grid-template-columns: 70px 70px minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+}
+
+.clue-start,
+.clue-end {
+  min-width: 0;
+}
+
+.clue-text {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 58px;
+  resize: vertical;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  text-transform: none !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.clue-word-preview {
+  color: #245bb6;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: Consolas, monospace;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.clue-remove {
+  justify-self: end;
+  padding: 4px 6px;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+#spiral-builder-form label {
+  display: block;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+#spiral-builder-form textarea,
+#spiral-builder-form input[type='text'],
+#spiral-builder-form input[type='number'] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #777;
+  border-radius: 5px;
+  background: #fff;
+  color: #171717;
+  font: 700 0.84rem/1.25 Consolas, monospace;
+}
+
+#spiral-builder-form textarea::placeholder,
+#spiral-builder-form input[type='text']::placeholder,
+#spiral-builder-form input[type='number']::placeholder {
+  color: #8f96a3;
+  opacity: 1;
+}
+
+#spiral-builder-form textarea {
+  min-height: 0;
+  resize: vertical;
+  text-transform: uppercase;
+}
+
+#builderInwardClues,
+#builderOutwardClues {
+  height: 76px;
+}
+
+#builderAnswer {
+  height: 48px;
+}
+
+#spiral-builder-form textarea:focus,
+#spiral-builder-form input:focus {
+  outline: 2px solid #7aa7ff66;
+  border-color: #245bb6;
+}
+
+.spiral-builder-switch {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.spiral-builder-switch input {
+  margin-top: 3px;
+}
+
+.spiral-builder-warning {
+  color: #b12121;
+  min-height: 1.05em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.spiral-builder-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.builder-actions-panel {
+  border: 1px solid #c8d3e6;
+  border-radius: 6px;
+  margin-top: 2px;
+  padding: 0;
+  background: #f8fbff;
+}
+
+.builder-actions-panel summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 6px 8px;
+  color: #245bb6;
+  font-size: 0.78rem;
+  font-weight: 700;
+  user-select: none;
+}
+
+.builder-actions-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.builder-actions-panel[open] summary {
+  border-bottom: 1px solid #d8e4f7;
+}
+
+.builder-actions-panel .spiral-builder-actions {
+  padding: 6px;
+}
+
+.spiral-builder-actions .btn {
+  padding: 5px 6px;
+  font-size: 0.72rem;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.spiral-builder-actions .btn-primary {
+  color: #fff;
+  border-color: #174a91;
+  background: #245bb6;
+  grid-column: 1 / -1;
+}
+
+.spiral-builder-actions .btn:hover {
+  filter: brightness(.96);
+}
+
+.spiral-builder-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.spiral-page {
+  width: min(100%, 900px);
+  max-height: 100%;
+  background: #fff;
+  box-shadow: 0 5px 22px #0002;
+  overflow: hidden;
+}
+
+.spiral-page-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 9px 12px 7px;
+  background: #245bb6;
+  color: #fff;
+}
+
+.spiral-page-header__title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.spiral-page-header__author {
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.spiral-page-body {
+  padding: 6px 8px 0;
+}
+
+.spiral-page-intro {
+  margin: 0 0 12px;
+  padding: 0 0 0 0;
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.spiral-page-art {
+  display: grid;
+  place-items: center;
+  padding: 0 4px 4px;
+}
+
+.spiral-builder-preview {
+  display: block;
+  width: min(100%, 640px);
+  height: auto;
+}
+
+.spiral-preview-cell {
+  fill: #fff;
+  stroke: #2c2c2c;
+  stroke-width: 1.1;
+  stroke-linejoin: miter;
+  stroke-linecap: butt;
+}
+
+.spiral-preview-cell.is-odd {
+  fill: #f8f8f5;
+}
+
+.spiral-preview-number {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 7pt;
+  font-weight: 600;
+  fill: #666;
+  pointer-events: none;
+}
+
+.spiral-preview-letter {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 18pt;
+  font-weight: 700;
+  fill: #151515;
+  pointer-events: none;
+}
+
+.spiral-preview-accent {
+  fill: none;
+  stroke: #b7cff3;
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.spiral-page-clues {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  padding: 2px 10px 8px;
+}
+
+.spiral-clue-column h2 {
+  margin: 0 0 3px;
+  color: #245bb6;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.spiral-clue-column ol {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  color: #222;
+  font-size: 0.69rem;
+  line-height: 1.16;
+  max-height: 90px;
+  overflow: auto;
+}
+
+.spiral-clue-column li {
+  margin: 0.08rem 0;
+}
+
+@media (max-width: 980px) {
+  body.site-body {
+    overflow: auto;
+  }
+
+  .site-footer {
+    display: block;
+  }
+
+  .spiral-builder-shell {
+    height: auto;
+    min-height: calc(100vh - 2rem);
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .spiral-builder-main {
+    padding: 10px;
+    overflow: visible;
+  }
+
+  .spiral-builder-aside {
+    overflow: visible;
+  }
+
+  #spiral-builder-form {
+    height: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .spiral-page-clues {
+    grid-template-columns: 1fr;
+  }
+
+  .spiral-page-header {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .spiral-page-header__author {
+    text-align: left;
+  }
+}
+
+@media print {
+  .spiral-builder-aside {
+    display: none;
+  }
+
+  .spiral-builder-shell {
+    display: block;
+    background: white;
+  }
+
+  .spiral-builder-main {
+    padding: 0;
+  }
+
+  .spiral-page {
+    width: 100%;
+    box-shadow: none;
+  }
+}
