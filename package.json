@@ -32,7 +32,8 @@
     "dev": "nodemon app.js",
     "start": "node app.js",
     "start:prod": "node app.js",
-    "user:grant-master": "node scripts/grant-master.js"
+    "user:grant-master": "node scripts/grant-master.js",
+    "build:spl": "node scripts/build-spl-from-svg-html.js"
   },
   "author": "",
   "license": ""

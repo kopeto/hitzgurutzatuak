@@ -4,6 +4,7 @@ const path = require('path');
 
 const Crossword = require('../cw/crossword');
 const iPuzCrossword = require('../cw/ipuz');
+const SpiralPuzzle = require('../cw/spiral');
 const CrosswordModel = require('../models/crosswords');
 
 class PuzzleImportError extends Error {
@@ -55,12 +56,15 @@ async function removeTemporaryFile(filePath) {
 
 /**
  * Detect file format based on extension
- * Returns 'puz' or 'ipuz'
+ * Returns 'puz', 'ipuz' or 'spl'
  */
 function detectFormat(filename) {
   const ext = path.extname(filename).toLowerCase();
   if (ext === '.ipuz') {
     return 'ipuz';
+  }
+  if (ext === '.spl') {
+    return 'spl';
   }
   return 'puz';
 }
@@ -85,6 +89,8 @@ async function importPuzzle(uploadedFile) {
 
     if (format === 'ipuz') {
       crossword = new iPuzCrossword(uploadedFile.path);
+    } else if (format === 'spl') {
+      crossword = new SpiralPuzzle(uploadedFile.path);
     } else {
       crossword = new Crossword(uploadedFile.path);
     }
@@ -101,7 +107,9 @@ async function importPuzzle(uploadedFile) {
       filled_grid: crossword.filled_grid,
       name: normalizedMetadata(crossword.cw_name, 'Izengabea', 200),
       author: normalizedMetadata(crossword.cw_author, 'Ezezaguna', 120),
+      gameType: crossword.gameType || 'crossword',
       format: format,
+      spiral: crossword.spiral || null,
       fileHash
     });
 

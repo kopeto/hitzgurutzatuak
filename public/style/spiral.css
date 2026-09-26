@@ -1,0 +1,84 @@
+.spiral-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1rem;
+}
+
+.spiral-board-card {
+  padding: 1rem;
+  border: 1px solid #d9dfd7;
+  border-radius: 1rem;
+  background: #fff;
+}
+
+#spiral-board {
+  width: 100%;
+  height: auto;
+  max-height: 78vh;
+  display: block;
+}
+
+.spiral-cell {
+  fill: #f8f8f5;
+  stroke: #1e1e1e;
+  stroke-width: 1.1;
+  cursor: pointer;
+}
+
+.spiral-cell.is-selected {
+  fill: #ffe08a;
+}
+
+.spiral-cell.is-correct {
+  fill: #c8f5c8;
+}
+
+.spiral-cell.is-wrong {
+  fill: #ffc8c8;
+}
+
+.spiral-order {
+  font: 600 8px Arial, sans-serif;
+  fill: #777;
+  pointer-events: none;
+}
+
+.spiral-letter {
+  font: 700 18px Arial, sans-serif;
+  fill: #151515;
+  pointer-events: none;
+}
+
+.spiral-panel {
+  border: 1px solid #d9dfd7;
+  border-radius: 1rem;
+  background: #fff;
+  padding: 1rem;
+}
+
+.spiral-panel-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.spiral-clues {
+  margin: 0;
+  padding-left: 1.2rem;
+  max-height: 45vh;
+  overflow: auto;
+}
+
+.spiral-status {
+  margin-top: 1rem;
+}
+
+.spiral-actions {
+  display: grid;
+  gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .spiral-layout {
+    grid-template-columns: 1fr;
+  }
+}

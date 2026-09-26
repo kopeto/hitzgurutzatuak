@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
  * Test script for puzzle import service
- * Verifies that both .puz and .ipuz formats are handled correctly
+ * Verifies that .puz, .ipuz and .spl formats are handled correctly
  */
 
 const path = require('path');
 const { validateCrossword } = require('./services/puzzle-import');
 const Crossword = require('./cw/crossword');
 const iPuzCrossword = require('./cw/ipuz');
+const SpiralPuzzle = require('./cw/spiral');
 
 console.log('Testing Puzzle Import Service...\n');
 
@@ -77,7 +78,36 @@ try {
 }
 
 // Test 3: Format detection
-console.log('Test 3: Format Detection');
+console.log('Test 3: SPL Format (.spl)');
+console.log('=' .repeat(40));
+try {
+  const fs = require('fs');
+  const splDir = path.join(__dirname, 'jokoak');
+  const splFile = fs.readdirSync(splDir).find(f => f.toLowerCase().endsWith('.spl'));
+
+  if (!splFile) {
+    console.warn('⚠ No .spl files found for testing (this is OK)');
+  } else {
+    const splPath = path.join(splDir, splFile);
+    const spl = new SpiralPuzzle(splPath);
+
+    console.log(`✓ Successfully parsed: ${path.basename(splPath)}`);
+    console.log(`  Format: ${spl.format}`);
+    console.log(`  Game type: ${spl.gameType}`);
+    console.log(`  Cells: ${spl.spiral.cellCount}`);
+    console.log(`  Name: ${spl.cw_name}`);
+
+    validateCrossword(spl);
+    console.log('✓ Validation passed');
+  }
+  console.log();
+} catch (err) {
+  console.error(`✗ Test failed: ${err.message}`);
+  process.exit(1);
+}
+
+// Test 4: Format detection
+console.log('Test 4: Format Detection');
 console.log('=' .repeat(40));
 const path_util = require('path');
 function detectFormat(filename) {
@@ -85,14 +115,19 @@ function detectFormat(filename) {
   if (ext === '.ipuz') {
     return 'ipuz';
   }
+  if (ext === '.spl') {
+    return 'spl';
+  }
   return 'puz';
 }
 
 const testCases = [
   { filename: 'puzzle.puz', expected: 'puz' },
   { filename: 'puzzle.ipuz', expected: 'ipuz' },
+  { filename: 'puzzle.spl', expected: 'spl' },
   { filename: 'my-crossword.PUZ', expected: 'puz' },
-  { filename: 'my-crossword.IPUZ', expected: 'ipuz' }
+  { filename: 'my-crossword.IPUZ', expected: 'ipuz' },
+  { filename: 'my-spiral.SPL', expected: 'spl' }
 ];
 
 testCases.forEach(test => {

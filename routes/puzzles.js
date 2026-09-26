@@ -8,6 +8,11 @@ const GameStateModel = require('../models/gamestate');
 const upload = require('../config/uploadconfig');
 const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import');
 
+function requireMaster(req, res, next) {
+  if (req.isAuthenticated() && req.user.master) return next();
+  return res.status(403).render('message', { message: 'Sarbidea ukatua', type: 'danger' });
+}
+
 // Helper: strip solution data before sending to client.
 // clues[] is the flat DB array (always populated); w.clue is a per-word copy (only on newer uploads).
 function sanitizeWords(words, clues) {
@@ -67,6 +72,12 @@ router.get('/upload', checkAuth, (req, res) => {
   });
 });
 
+router.get('/spiral-builder', checkAuth, requireMaster, (req, res) => {
+  res.render('spiral_builder', {
+    title: res.locals.t('page.spiralBuilder')
+  });
+});
+
 router.post('/upload', checkAuth, upload, async (req, res) => {
   if (req.uploadErrors !== undefined) {
     req.uploadErrors.forEach((err) => {
@@ -119,8 +130,11 @@ router.get('/game/:id', async (req, res) => {
     }
 
     // Store solution in session — never sent to client
+    const gameType = puzzle.gameType || (puzzle.format === 'spl' ? 'spiral' : 'crossword');
+
     req.session.currentGame = {
       puzzleId:       puzzle._id.toString(),
+      gameType,
       startedAt:      new Date(),
       userGrid:       createEmptyGrid(puzzle.void_grid),
       checkCount:     0,
@@ -140,22 +154,33 @@ router.get('/game/:id', async (req, res) => {
       );
     }
 
-    // Send sanitized puzzle to view (no filled_grid, no word answers)
+    const gamePayload = {
+      id:             puzzle._id.toString(),
+      name:           puzzle.name,
+      author:         puzzle.author,
+      width:          puzzle.width,
+      height:         puzzle.height,
+      void_grid:      puzzle.void_grid,
+      words:          sanitizeWords(puzzle.words, puzzle.clues),
+      completed:      isCompleted,
+      elapsedSeconds: savedElapsed,
+      cellResults:    savedCellResults,
+      format:         puzzle.format || 'puz',
+      gameType,
+      spiral:         puzzle.spiral || null
+    };
+
+    if (gamePayload.gameType === 'spiral') {
+      return res.render('spiral_game', {
+        title: res.locals.t('page.game'),
+        puz: gamePayload
+      });
+    }
+
+    // Send sanitized puzzle to crossword view (no filled_grid, no word answers)
     res.render('game', {
       title: res.locals.t('page.game'),
-      puz: {
-        id:             puzzle._id.toString(),
-        name:           puzzle.name,
-        author:         puzzle.author,
-        width:          puzzle.width,
-        height:         puzzle.height,
-        void_grid:      puzzle.void_grid,
-        words:          sanitizeWords(puzzle.words, puzzle.clues),
-        completed:      isCompleted,
-        elapsedSeconds: savedElapsed,
-        cellResults:    savedCellResults,
-        format:         puzzle.format || 'puz'
-      }
+      puz: gamePayload
     });
   } catch (err) {
     logError(err);

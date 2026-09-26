@@ -62,8 +62,11 @@ router.post('/start/:id', startLimiter, async (req, res) => {
     }
 
     // Create game state in session
+    const gameType = puzzle.gameType || (puzzle.format === 'spl' ? 'spiral' : 'crossword');
+
     req.session.currentGame = {
       puzzleId: puzzle._id.toString(),
+      gameType,
       startedAt: new Date(),
       userGrid: createEmptyGrid(puzzle.void_grid),
       checkCount: 0,
@@ -79,9 +82,11 @@ router.post('/start/:id', startLimiter, async (req, res) => {
         author: puzzle.author,
         width: puzzle.width,
         height: puzzle.height,
+        gameType,
         void_grid: puzzle.void_grid,  // Only black cells
         words: sanitizeWords(puzzle.words), // Without answers
-        clues: puzzle.clues
+        clues: puzzle.clues,
+        spiral: puzzle.spiral || null
       }
     });
 
@@ -452,6 +457,7 @@ router.get('/status', requireGameSession, (req, res) => {
     success: true,
     game: {
       puzzleId:       game.puzzleId,
+      gameType:       game.gameType || 'crossword',
       startedAt:      game.startedAt,
       checkCount:     game.checkCount,
       hintCount:      game.hintCount,

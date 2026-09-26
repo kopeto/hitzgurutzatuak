@@ -70,6 +70,7 @@ echo =========================================
 echo   APLIKAZIOA ABIARAZTEN
 echo =========================================
 echo.
+set NODE_ENV=development
 echo URL: http://localhost:3000
 echo Erabiltzailea: master
 echo Pasahitza: 1234
@@ -77,4 +78,4 @@ echo.
 echo Sakatu Ctrl+C gelditzeko
 echo.
 
-call npm start
+call npm run dev

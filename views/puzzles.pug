@@ -27,6 +27,12 @@ block content
       label.search-field(for='puzzleSearch')
         span #{t('catalog.search')}
         input#puzzleSearch.form-control(type='search' placeholder=t('catalog.searchPlaceholder') autocomplete='off' data-puzzle-search)
+      label.filter-field(for='puzzleType')
+        span #{t('catalog.type')}
+        select#puzzleType.form-control(data-puzzle-type)
+          option(value='all') #{t('common.all')}
+          option(value='crossword') #{t('catalog.crosswordType')}
+          option(value='spiral') #{t('catalog.spiralType')}
       if user
         label.filter-field(for='puzzleStatus')
           span #{t('catalog.status')}
@@ -41,13 +47,18 @@ block content
       each puz in puzzles
         - const st = user && statusMap ? statusMap[puz._id.toString()] : null
         - const status = st ? st.status : 'notstarted'
-        article.puzzle-list-item(data-puzzle-card data-search=`${puz.name} ${puz.author || ''}` data-status=status)
+        - const gameType = puz.gameType || (puz.format === 'spl' ? 'spiral' : 'crossword')
+        article.puzzle-list-item(data-puzzle-card data-search=`${puz.name} ${puz.author || ''}` data-status=status data-type=gameType)
           .puzzle-list-dimension #{puz.width}×#{puz.height}
           .puzzle-list-content
             h2
               a(href=`/jokoak/game/${puz._id}`) #{puz.name}
             p.puzzle-author #{puz.author || t('common.unknownAuthor')}
             .puzzle-list-details
+              if gameType === 'spiral'
+                span.game-type-pill.game-type-pill--spiral #{t('catalog.spiralType')}
+              else
+                span.game-type-pill #{t('catalog.crosswordType')}
               if st && status === 'completed'
                 - const totalSeconds = st.elapsedSeconds || 0
                 - const minutes = Math.floor(totalSeconds / 60)

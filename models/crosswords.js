@@ -23,10 +23,19 @@ let cwSchema = mongoose.Schema({
   clues: [String],
   name: String,
   author: String,
+  gameType: {
+    type: String,
+    enum: ['crossword', 'spiral'],
+    default: 'crossword'
+  },
   format: {
     type: String,
-    enum: ['puz', 'ipuz'],
+    enum: ['puz', 'ipuz', 'spl'],
     default: 'puz'
+  },
+  spiral: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   }
 }, { timestamps: true });
 

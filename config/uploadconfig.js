@@ -22,7 +22,7 @@ function sanitizeOriginalFilename(filename) {
 
 function isAllowedPuzzleFilename(filename) {
   const ext = path.extname(filename).toLowerCase();
-  return ext === '.puz' || ext === '.ipuz';
+  return ext === '.puz' || ext === '.ipuz' || ext === '.spl';
 }
 
 function fileFilter(req, file, callback) {
@@ -32,7 +32,7 @@ function fileFilter(req, file, callback) {
   if (!isAllowedPuzzleFilename(safeName)) {
     req.uploadErrors = [{
       filename: safeName,
-      message: 'Fitxategiak .puz edo .ipuz luzapena izan behar du.'
+      message: 'Fitxategiak .puz, .ipuz edo .spl luzapena izan behar du.'
     }];
     return callback(null, false);
   }

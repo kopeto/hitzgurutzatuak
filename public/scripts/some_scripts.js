@@ -32,18 +32,21 @@ $(document).ready(() => {
 
   const searchInput = document.querySelector('[data-puzzle-search]');
   const statusFilter = document.querySelector('[data-puzzle-status]');
+  const typeFilter = document.querySelector('[data-puzzle-type]');
   const cards = Array.from(document.querySelectorAll('[data-puzzle-card]'));
   const count = document.querySelector('[data-catalog-count]');
 
   function filterCatalog() {
     const query = (searchInput ? searchInput.value : '').trim().toLocaleLowerCase('eu');
     const wantedStatus = statusFilter ? statusFilter.value : 'all';
+    const wantedType = typeFilter ? typeFilter.value : 'all';
     let visibleCount = 0;
 
     cards.forEach(card => {
       const matchesQuery = card.dataset.search.toLocaleLowerCase('eu').includes(query);
       const matchesStatus = wantedStatus === 'all' || card.dataset.status === wantedStatus;
-      const isVisible = matchesQuery && matchesStatus;
+      const matchesType = wantedType === 'all' || card.dataset.type === wantedType;
+      const isVisible = matchesQuery && matchesStatus && matchesType;
       card.hidden = !isVisible;
       if (isVisible) visibleCount += 1;
     });
@@ -55,4 +58,5 @@ $(document).ready(() => {
 
   if (searchInput) searchInput.addEventListener('input', filterCatalog);
   if (statusFilter) statusFilter.addEventListener('change', filterCatalog);
+  if (typeFilter) typeFilter.addEventListener('change', filterCatalog);
 });

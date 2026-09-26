@@ -58,6 +58,7 @@ echo "========================================="
 echo "   APLIKAZIOA ABIARAZTEN"
 echo "========================================="
 echo ""
+export NODE_ENV=development
 echo "URL: http://localhost:3000"
 echo "Erabiltzailea: master"
 echo "Pasahitza: 1234"
@@ -65,4 +66,4 @@ echo ""
 echo "Sakatu Ctrl+C gelditzeko"
 echo ""
 
-npm start
+npm run dev
