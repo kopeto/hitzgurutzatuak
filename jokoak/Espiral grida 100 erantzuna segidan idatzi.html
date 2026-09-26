@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="eu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Espiral grida 100 — erantzuna segidan idatzi</title>
+<style>
+  :root { font-family: Arial, Helvetica, sans-serif; color: #171717; background: #ecebe7; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; grid-template-columns: minmax(290px, 390px) 1fr; }
+  aside { padding: 28px; background: #fff; box-shadow: 2px 0 18px #0002; z-index: 1; }
+  main { min-width: 0; display: grid; place-items: center; padding: 22px; }
+  h1 { margin: 0 0 8px; font-size: 1.35rem; }
+  p { line-height: 1.42; color: #555; }
+  label { display: block; margin: 20px 0 7px; font-weight: 700; }
+  textarea { width: 100%; min-height: 170px; padding: 12px; resize: vertical; border: 2px solid #777; border-radius: 7px; font: 700 1.15rem/1.5 Consolas, monospace; text-transform: uppercase; }
+  textarea:focus { outline: 3px solid #7aa7ff66; border-color: #245bb6; }
+  .option { display: flex; gap: 9px; align-items: flex-start; margin: 12px 0; font-weight: 400; }
+  .option input { margin-top: 3px; }
+  .status { display: flex; justify-content: space-between; margin: 8px 0 18px; font-variant-numeric: tabular-nums; }
+  #warning { color: #b12121; min-height: 1.3em; font-weight: 700; }
+  .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  button { padding: 11px 9px; border: 1px solid #555; border-radius: 6px; background: #f7f7f7; cursor: pointer; font-weight: 700; }
+  button.primary { color: #fff; border-color: #174a91; background: #245bb6; grid-column: 1 / -1; }
+  button:hover { filter: brightness(.96); }
+  svg { display: block; width: min(100%, 850px); height: auto; background: white; box-shadow: 0 5px 22px #0002; }
+  #ERANTZUNA_EDITAGARRIA text { cursor: pointer; }
+  #ERANTZUNA_EDITAGARRIA text:hover { fill: #245bb6; }
+  @media (max-width: 800px) { body { grid-template-columns: 1fr; } aside { box-shadow: 0 2px 12px #0002; } main { padding: 10px; } }
+  @media print { aside { display: none; } body { display: block; background: white; } main { padding: 0; } svg { width: 100%; box-shadow: none; } }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Espiral grida 100</h1>
+  <p>Idatzi erantzuna segidan. Karaktere bakoitza automatikoki hurrengo laukian sartuko da, 1etik 100era.</p>
+  <label for="answer">Erantzunaren testua</label>
+  <textarea id="answer" autofocus spellcheck="false" placeholder="IDATZI HEMEN…"></textarea>
+  <label class="option"><input id="ignoreSpaces" type="checkbox" checked> <span>Ez zenbatu hitzen arteko hutsuneak (gomendatua)</span></label>
+  <div class="status"><span id="counter">0 / 100</span><span id="remaining">100 libre</span></div>
+  <div id="warning" role="alert"></div>
+  <div class="buttons">
+    <button id="clear" type="button">Garbitu</button>
+    <button id="print" type="button">Inprimatu</button>
+    <button id="download" class="primary" type="button">SVG betea deskargatu</button>
+  </div>
+  <p><small>Lauki batean klik eginez gero, kurtsorea posizio horretara joango da. Deskargatutako SVGa Affinityn ireki eta <b>.af</b> gisa gorde daiteke.</small></p>
+</aside>
+<main>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="760" viewBox="0 0 760 760" role="img" aria-label="100 laukiko espiral grida, erantzuna idazteko prestatua">
+  <title>Espiral grida 100 — erantzun editagarria</title>
+  <desc>Affinityn, ireki ERANTZUNA_EDITAGARRIA taldea eta ordezkatu erdiko puntuak letrekin, 01etik aurrera, kanpotik barrurantz.</desc>
+  <g id="grida">
+    <path d="M 220.66 219.70 L 246.37 199.15 L 224.87 167.81 L 195.01 191.67 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_001" />
+    <path d="M 246.37 199.15 L 274.69 182.62 L 257.98 148.48 L 224.87 167.81 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_002" />
+    <path d="M 274.69 182.62 L 305.10 170.41 L 293.59 134.20 L 257.98 148.48 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_003" />
+    <path d="M 305.10 170.41 L 336.97 162.81 L 330.91 125.30 L 293.59 134.20 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_004" />
+    <path d="M 336.97 162.81 L 369.60 160.00 L 369.15 122.00 L 330.91 125.30 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_005" />
+    <path d="M 369.60 160.00 L 402.26 162.06 L 407.48 124.42 L 369.15 122.00 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_006" />
+    <path d="M 402.26 162.06 L 434.25 168.96 L 445.03 132.52 L 407.48 124.42 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_007" />
+    <path d="M 434.25 168.96 L 464.82 180.57 L 480.95 146.17 L 445.03 132.52 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_008" />
+    <path d="M 464.82 180.57 L 493.29 196.65 L 514.42 165.07 L 480.95 146.17 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_009" />
+    <path d="M 493.29 196.65 L 518.98 216.83 L 544.66 188.82 L 514.42 165.07 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_010" />
+    <path d="M 518.98 216.83 L 541.29 240.68 L 570.95 216.91 L 544.66 188.82 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_011" />
+    <path d="M 541.29 240.68 L 559.69 267.64 L 592.64 248.70 L 570.95 216.91 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_012" />
+    <path d="M 559.69 267.64 L 573.72 297.10 L 609.19 283.46 L 592.64 248.70 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_013" />
+    <path d="M 573.72 297.10 L 583.03 328.36 L 620.18 320.37 L 609.19 283.46 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_014" />
+    <path d="M 583.03 328.36 L 587.37 360.66 L 625.32 358.56 L 620.18 320.37 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_015" />
+    <path d="M 587.37 360.66 L 586.62 393.23 L 624.42 397.09 L 625.32 358.56 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_016" />
+    <path d="M 586.62 393.23 L 580.76 425.26 L 617.49 435.03 L 624.42 397.09 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_017" />
+    <path d="M 580.76 425.26 L 569.93 455.95 L 604.65 471.41 L 617.49 435.03 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_018" />
+    <path d="M 569.93 455.95 L 554.38 484.52 L 586.19 505.30 L 604.65 471.41 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_019" />
+    <path d="M 554.38 484.52 L 534.47 510.23 L 562.56 535.83 L 586.19 505.30 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_020" />
+    <path d="M 534.47 510.23 L 510.72 532.40 L 534.31 562.18 L 562.56 535.83 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_021" />
+    <path d="M 510.72 532.40 L 483.71 550.43 L 502.17 583.64 L 534.31 562.18 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_022" />
+    <path d="M 483.71 550.43 L 454.15 563.83 L 466.96 599.61 L 502.17 583.64 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_023" />
+    <path d="M 454.15 563.83 L 422.82 572.22 L 429.60 609.61 L 466.96 599.61 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_024" />
+    <path d="M 422.82 572.22 L 390.55 575.35 L 391.08 613.35 L 429.60 609.61 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_025" />
+    <path d="M 390.55 575.35 L 358.23 573.11 L 352.45 610.67 L 391.08 613.35 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_026" />
+    <path d="M 358.23 573.11 L 326.75 565.53 L 314.79 601.60 L 352.45 610.67 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_027" />
+    <path d="M 326.75 565.53 L 297.00 552.80 L 279.16 586.35 L 314.79 601.60 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_028" />
+    <path d="M 297.00 552.80 L 269.84 535.26 L 246.59 565.31 L 279.16 586.35 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_029" />
+    <path d="M 269.84 535.26 L 246.05 513.38 L 218.03 539.05 L 246.59 565.31 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_030" />
+    <path d="M 246.05 513.38 L 226.35 487.79 L 194.36 508.29 L 218.03 539.05 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_031" />
+    <path d="M 226.35 487.79 L 211.35 459.21 L 176.30 473.91 L 194.36 508.29 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_032" />
+    <path d="M 211.35 459.21 L 201.51 428.50 L 164.45 436.90 L 176.30 473.91 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_033" />
+    <path d="M 201.51 428.50 L 197.16 396.57 L 159.20 398.38 L 164.45 436.90 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_034" />
+    <path d="M 197.16 396.57 L 198.46 364.39 L 160.78 359.51 L 159.20 398.38 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_035" />
+    <path d="M 198.46 364.39 L 205.41 332.97 L 169.18 321.50 L 160.78 359.51 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_036" />
+    <path d="M 205.41 332.97 L 217.81 303.30 L 184.20 285.57 L 169.18 321.50 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_037" />
+    <path d="M 217.81 303.30 L 235.29 276.34 L 205.41 252.87 L 184.20 285.57 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_038" />
+    <path d="M 235.29 276.34 L 257.33 252.99 L 232.17 224.51 L 205.41 252.87 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_039" />
+    <path d="M 257.33 252.99 L 283.20 234.03 L 263.64 201.45 L 232.17 224.51 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_040" />
+    <path d="M 283.20 234.03 L 312.08 220.12 L 298.82 184.51 L 263.64 201.45 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_041" />
+    <path d="M 312.08 220.12 L 343.00 211.77 L 336.54 174.32 L 298.82 184.51 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_042" />
+    <path d="M 343.00 211.77 L 374.90 209.29 L 375.52 171.30 L 336.54 174.32 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_043" />
+    <path d="M 374.90 209.29 L 406.68 212.81 L 414.40 175.60 L 375.52 171.30 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_044" />
+    <path d="M 406.68 212.81 L 437.20 222.23 L 451.81 187.15 L 414.40 175.60 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_045" />
+    <path d="M 437.20 222.23 L 465.36 237.25 L 486.37 205.59 L 451.81 187.15 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_046" />
+    <path d="M 465.36 237.25 L 490.10 257.36 L 516.80 230.32 L 486.37 205.59 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_047" />
+    <path d="M 490.10 257.36 L 510.48 281.83 L 541.91 260.47 L 516.80 230.32 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_048" />
+    <path d="M 510.48 281.83 L 525.70 309.77 L 560.69 294.95 L 541.91 260.47 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_049" />
+    <path d="M 525.70 309.77 L 535.15 340.12 L 572.37 332.47 L 560.69 294.95 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_050" />
+    <path d="M 535.15 340.12 L 538.41 371.70 L 576.41 371.59 L 572.37 332.47 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_051" />
+    <path d="M 538.41 371.70 L 535.32 403.27 L 572.57 410.77 L 576.41 371.59 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_052" />
+    <path d="M 535.32 403.27 L 525.95 433.53 L 560.92 448.40 L 572.57 410.77 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_053" />
+    <path d="M 525.95 433.53 L 510.66 461.24 L 541.86 482.92 L 560.92 448.40 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_054" />
+    <path d="M 510.66 461.24 L 490.04 485.19 L 516.12 512.83 L 541.86 482.92 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_055" />
+    <path d="M 490.04 485.19 L 464.95 504.35 L 484.72 536.80 L 516.12 512.83 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_056" />
+    <path d="M 464.95 504.35 L 436.45 517.83 L 448.98 553.70 L 484.72 536.80 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_057" />
+    <path d="M 436.45 517.83 L 405.79 524.99 L 410.44 562.71 L 448.98 553.70 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_058" />
+    <path d="M 405.79 524.99 L 374.35 525.47 L 370.83 563.31 L 410.44 562.71 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_059" />
+    <path d="M 374.35 525.47 L 343.58 519.19 L 331.97 555.38 L 370.83 563.31 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_060" />
+    <path d="M 343.58 519.19 L 314.95 506.40 L 295.73 539.18 L 331.97 555.38 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_061" />
+    <path d="M 314.95 506.40 L 289.87 487.67 L 263.89 515.40 L 295.73 539.18 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_062" />
+    <path d="M 289.87 487.67 L 269.59 463.88 L 238.08 485.12 L 263.89 515.40 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_063" />
+    <path d="M 269.59 463.88 L 255.19 436.19 L 219.70 449.77 L 238.08 485.12 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_064" />
+    <path d="M 255.19 436.19 L 247.45 406.00 L 209.80 411.14 L 219.70 449.77 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_065" />
+    <path d="M 247.45 406.00 L 246.84 374.90 L 209.02 371.22 L 209.80 411.14 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_066" />
+    <path d="M 246.84 374.90 L 253.46 344.56 L 217.54 332.15 L 209.02 371.22 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_067" />
+    <path d="M 253.46 344.56 L 266.99 316.68 L 235.02 296.13 L 217.54 332.15 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_068" />
+    <path d="M 266.99 316.68 L 286.72 292.86 L 260.60 265.26 L 235.02 296.13 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_069" />
+    <path d="M 286.72 292.86 L 311.56 274.52 L 292.90 241.42 L 260.60 265.26 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_070" />
+    <path d="M 311.56 274.52 L 340.06 262.82 L 330.10 226.15 L 292.90 241.42 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_071" />
+    <path d="M 340.06 262.82 L 370.50 258.54 L 369.97 220.54 L 330.10 226.15 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_072" />
+    <path d="M 370.50 258.54 L 400.97 262.01 L 410.05 225.11 L 369.97 220.54 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_073" />
+    <path d="M 400.97 262.01 L 429.49 273.08 L 447.71 239.74 L 410.05 225.11 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_074" />
+    <path d="M 429.49 273.08 L 454.13 291.09 L 480.39 263.62 L 447.71 239.74 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_075" />
+    <path d="M 454.13 291.09 L 473.16 314.85 L 505.73 295.28 L 480.39 263.62 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_076" />
+    <path d="M 473.16 314.85 L 485.15 342.74 L 521.77 332.60 L 505.73 295.28 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_077" />
+    <path d="M 485.15 342.74 L 489.16 372.74 L 527.16 372.94 L 521.77 332.60 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_078" />
+    <path d="M 489.16 372.74 L 484.81 402.60 L 521.27 413.30 L 527.16 372.94 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_079" />
+    <path d="M 484.81 402.60 L 472.33 429.97 L 504.31 450.50 L 521.27 413.30 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_080" />
+    <path d="M 472.33 429.97 L 452.67 452.60 L 477.43 481.42 L 504.31 450.50 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_081" />
+    <path d="M 452.67 452.60 L 427.40 468.51 L 442.67 503.31 L 477.43 481.42 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_082" />
+    <path d="M 427.40 468.51 L 398.68 476.25 L 402.91 514.02 L 442.67 503.31 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_083" />
+    <path d="M 398.68 476.25 L 369.07 475.02 L 361.66 512.29 L 402.91 514.02 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_084" />
+    <path d="M 369.07 475.02 L 341.40 464.82 L 322.81 497.96 L 361.66 512.29 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_085" />
+    <path d="M 341.40 464.82 L 318.41 446.55 L 290.29 472.11 L 322.81 497.96 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_086" />
+    <path d="M 318.41 446.55 L 302.56 422.03 L 267.68 437.11 L 290.29 472.11 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_087" />
+    <path d="M 302.56 422.03 L 295.65 393.81 L 257.74 396.50 L 267.68 437.11 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_088" />
+    <path d="M 295.65 393.81 L 298.58 365.09 L 262.01 354.74 L 257.74 396.50 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_089" />
+    <path d="M 298.58 365.09 L 311.12 339.30 L 280.46 316.86 L 262.01 354.74 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_090" />
+    <path d="M 311.12 339.30 L 331.82 319.74 L 311.23 287.80 L 280.46 316.86 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_091" />
+    <path d="M 331.82 319.74 L 358.01 309.12 L 350.64 271.84 L 311.23 287.80 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_092" />
+    <path d="M 358.01 309.12 L 386.02 309.07 L 393.38 271.79 L 350.64 271.84 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_093" />
+    <path d="M 386.02 309.07 L 411.62 319.75 L 433.03 288.35 L 393.38 271.79 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_094" />
+    <path d="M 411.62 319.75 L 430.62 339.55 L 462.95 319.58 L 433.03 288.35 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_095" />
+    <path d="M 430.62 339.55 L 439.58 365.12 L 477.32 360.67 L 462.95 319.58 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_096" />
+    <path d="M 439.58 365.12 L 436.70 391.67 L 472.54 404.29 L 477.32 360.67 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_097" />
+    <path d="M 436.70 391.67 L 422.42 413.72 L 448.45 441.41 L 472.54 404.29 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_098" />
+    <path d="M 422.42 413.72 L 399.89 426.20 L 409.33 463.02 L 448.45 441.41 Z" fill="#fefefd" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_099" />
+    <path d="M 399.89 426.20 L 374.64 425.86 L 364.23 462.41 L 409.33 463.02 Z" fill="#f6f6f3" stroke="#151515" stroke-width="1.1" stroke-linejoin="round" id="gelaxka_100" />
+  </g>
+  <g id="NORABIDE_GIDA_EZ_INPRIMATU" display="none">
+    <polyline points="221.73,194.58 250.98,174.51 282.84,158.93 316.64,148.18 351.66,142.53 387.12,142.12 422.25,146.99 456.26,157.06 488.37,172.12 517.84,191.84 543.97,215.81 566.14,243.48 583.81,274.23 596.53,307.32 603.98,341.99 605.93,377.38 602.32,412.65 593.21,446.91 578.79,479.30 559.40,508.97 535.51,535.16 507.73,557.16 476.75,574.38 443.38,586.32 408.51,592.63 373.08,593.12 338.06,587.73 304.43,576.57 273.15,559.93 245.13,538.25 221.20,512.13 202.09,482.30 188.40,449.63 180.58,415.09 178.90,379.71 183.46,344.59 194.15,310.84 210.68,279.52 232.55,251.68 259.08,228.25 289.44,210.03 322.61,197.68 357.49,191.67 392.88,192.25 427.52,199.45 460.19,213.06 489.66,232.63 514.82,257.50 534.70,286.75 548.48,319.33 555.59,353.97 555.68,389.33 548.69,423.99 534.85,456.52 514.67,485.55 488.96,509.79 458.77,528.17 425.42,539.81 390.35,544.12 355.18,540.84 321.56,530.04 291.11,512.16 265.36,488.02 245.64,458.74 233.03,425.77 228.28,390.81 231.72,355.71 243.25,322.38 262.33,292.73 287.94,268.51 318.65,251.23 352.66,242.01 387.87,241.55 422.06,249.99 452.93,266.88 478.35,291.21 496.45,321.37 505.81,355.25 505.60,390.39 495.68,424.09 476.69,453.62 450.04,476.46 417.92,490.52 383.08,494.39 348.74,487.52 318.23,470.36 294.74,444.45 280.91,412.36 278.50,377.53 288.04,344.00 308.66,315.93 337.93,297.12 372.01,290.45 406.01,297.24 434.56,316.81 452.62,346.23 456.53,380.44 445.03,412.77 420.02,436.09 387.02,444.37" fill="none" stroke="#e04444" stroke-width="1.4" stroke-dasharray="5 4" />
+  </g>
+  <g id="ZENBAKI_TXIKIAK">
+    <text id="ordena_001" x="206.23" y="192.89" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">1</text>
+    <text id="ordena_002" x="235.84" y="170.63" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">2</text>
+    <text id="ordena_003" x="268.42" y="152.87" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">3</text>
+    <text id="ordena_004" x="303.27" y="140.07" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">4</text>
+    <text id="ordena_005" x="339.62" y="132.54" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">5</text>
+    <text id="ordena_006" x="376.70" y="130.45" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">6</text>
+    <text id="ordena_007" x="413.69" y="133.90" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">7</text>
+    <text id="ordena_008" x="449.75" y="142.82" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">8</text>
+    <text id="ordena_009" x="484.07" y="157.07" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">9</text>
+    <text id="ordena_010" x="515.86" y="176.31" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">10</text>
+    <text id="ordena_011" x="544.37" y="200.16" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">11</text>
+    <text id="ordena_012" x="551.73" y="241.86" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">12</text>
+    <text id="ordena_013" x="569.82" y="270.41" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">13</text>
+    <text id="ordena_014" x="583.30" y="301.39" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">14</text>
+    <text id="ordena_015" x="591.83" y="334.08" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">15</text>
+    <text id="ordena_016" x="595.17" y="367.68" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">16</text>
+    <text id="ordena_017" x="593.22" y="401.39" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">17</text>
+    <text id="ordena_018" x="585.99" y="434.35" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">18</text>
+    <text id="ordena_019" x="573.65" y="465.75" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">19</text>
+    <text id="ordena_020" x="556.49" y="494.79" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">20</text>
+    <text id="ordena_021" x="521.13" y="533.56" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">21</text>
+    <text id="ordena_022" x="493.80" y="553.26" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">22</text>
+    <text id="ordena_023" x="463.64" y="568.26" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">23</text>
+    <text id="ordena_024" x="431.46" y="578.14" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">24</text>
+    <text id="ordena_025" x="398.09" y="582.61" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">25</text>
+    <text id="ordena_026" x="364.47" y="581.51" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">26</text>
+    <text id="ordena_027" x="331.50" y="574.85" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">27</text>
+    <text id="ordena_028" x="300.12" y="562.78" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">28</text>
+    <text id="ordena_029" x="271.23" y="545.62" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">29</text>
+    <text id="ordena_030" x="229.41" y="538.71" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">30</text>
+    <text id="ordena_031" x="205.63" y="509.90" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">31</text>
+    <text id="ordena_032" x="187.13" y="477.43" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">32</text>
+    <text id="ordena_033" x="174.51" y="442.25" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">33</text>
+    <text id="ordena_034" x="168.18" y="405.40" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">34</text>
+    <text id="ordena_035" x="168.39" y="368.00" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">35</text>
+    <text id="ordena_036" x="175.18" y="331.20" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">36</text>
+    <text id="ordena_037" x="188.38" y="296.18" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">37</text>
+    <text id="ordena_038" x="207.62" y="264.06" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">38</text>
+    <text id="ordena_039" x="232.33" y="235.92" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">39</text>
+    <text id="ordena_040" x="243.47" y="226.08" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">40</text>
+    <text id="ordena_041" x="274.47" y="205.05" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">41</text>
+    <text id="ordena_042" x="308.81" y="190.04" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">42</text>
+    <text id="ordena_043" x="345.34" y="181.61" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">43</text>
+    <text id="ordena_044" x="382.81" y="180.10" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">44</text>
+    <text id="ordena_045" x="419.91" y="185.62" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">45</text>
+    <text id="ordena_046" x="455.33" y="198.03" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">46</text>
+    <text id="ordena_047" x="487.75" y="216.95" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">47</text>
+    <text id="ordena_048" x="515.97" y="241.73" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">48</text>
+    <text id="ordena_049" x="520.65" y="283.90" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">49</text>
+    <text id="ordena_050" x="535.27" y="313.78" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">50</text>
+    <text id="ordena_051" x="543.73" y="345.94" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">51</text>
+    <text id="ordena_052" x="545.66" y="379.11" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">52</text>
+    <text id="ordena_053" x="540.94" y="411.97" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">53</text>
+    <text id="ordena_054" x="529.69" y="443.19" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">54</text>
+    <text id="ordena_055" x="512.34" y="471.45" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">55</text>
+    <text id="ordena_056" x="475.03" y="506.64" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">56</text>
+    <text id="ordena_057" x="445.83" y="522.17" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">57</text>
+    <text id="ordena_058" x="414.03" y="531.21" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">58</text>
+    <text id="ordena_059" x="381.07" y="533.30" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">59</text>
+    <text id="ordena_060" x="348.45" y="528.28" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">60</text>
+    <text id="ordena_061" x="317.73" y="516.33" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">61</text>
+    <text id="ordena_062" x="290.39" y="497.96" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">62</text>
+    <text id="ordena_063" x="249.54" y="486.34" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">63</text>
+    <text id="ordena_064" x="230.59" y="453.54" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">64</text>
+    <text id="ordena_065" x="219.56" y="417.29" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">65</text>
+    <text id="ordena_066" x="217.11" y="379.45" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">66</text>
+    <text id="ordena_067" x="223.49" y="342.04" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">67</text>
+    <text id="ordena_068" x="238.48" y="307.15" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">68</text>
+    <text id="ordena_069" x="261.33" y="276.80" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">69</text>
+    <text id="ordena_070" x="272.08" y="266.63" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">70</text>
+    <text id="ordena_071" x="303.72" y="245.54" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">71</text>
+    <text id="ordena_072" x="339.57" y="232.81" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">72</text>
+    <text id="ordena_073" x="377.49" y="229.36" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">73</text>
+    <text id="ordena_074" x="415.09" y="235.56" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">74</text>
+    <text id="ordena_075" x="449.90" y="251.14" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">75</text>
+    <text id="ordena_076" x="479.53" y="275.21" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">76</text>
+    <text id="ordena_077" x="482.94" y="317.59" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">77</text>
+    <text id="ordena_078" x="493.83" y="348.00" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">78</text>
+    <text id="ordena_079" x="496.06" y="380.16" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">79</text>
+    <text id="ordena_080" x="489.38" y="411.63" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">80</text>
+    <text id="ordena_081" x="474.16" y="439.90" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">81</text>
+    <text id="ordena_082" x="436.91" y="471.85" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">82</text>
+    <text id="ordena_083" x="406.76" y="482.24" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">83</text>
+    <text id="ordena_084" x="374.95" y="483.16" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">84</text>
+    <text id="ordena_085" x="344.48" y="474.36" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">85</text>
+    <text id="ordena_086" x="302.02" y="471.38" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">86</text>
+    <text id="ordena_087" x="279.04" y="440.19" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">87</text>
+    <text id="ordena_088" x="267.47" y="403.16" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">88</text>
+    <text id="ordena_089" x="268.93" y="364.31" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">89</text>
+    <text id="ordena_090" x="283.64" y="328.26" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">90</text>
+    <text id="ordena_091" x="292.30" y="316.47" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">91</text>
+    <text id="ordena_092" x="322.44" y="291.72" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">92</text>
+    <text id="ordena_093" x="359.62" y="279.66" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">93</text>
+    <text id="ordena_094" x="398.69" y="282.48" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">94</text>
+    <text id="ordena_095" x="433.67" y="300.30" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">95</text>
+    <text id="ordena_096" x="439.86" y="342.36" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">96</text>
+    <text id="ordena_097" x="446.70" y="371.55" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">97</text>
+    <text id="ordena_098" x="440.20" y="400.53" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">98</text>
+    <text id="ordena_099" x="408.35" y="430.35" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">99</text>
+    <text id="ordena_100" x="379.84" y="433.64" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5pt" font-weight="600" fill="#777777">100</text>
+  </g>
+  <g id="ERANTZUNA_EDITAGARRIA">
+    <text id="LETRA_001" x="221.73" y="198.58" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_002" x="250.98" y="178.51" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_003" x="282.84" y="162.93" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_004" x="316.64" y="152.18" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_005" x="351.66" y="146.53" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_006" x="387.12" y="146.12" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_007" x="422.25" y="150.99" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_008" x="456.26" y="161.06" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_009" x="488.37" y="176.12" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_010" x="517.84" y="195.84" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_011" x="543.97" y="219.81" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_012" x="566.14" y="247.48" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_013" x="583.81" y="278.23" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_014" x="596.53" y="311.32" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_015" x="603.98" y="345.99" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_016" x="605.93" y="381.38" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_017" x="602.32" y="416.65" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_018" x="593.21" y="450.91" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_019" x="578.79" y="483.30" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_020" x="559.40" y="512.97" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_021" x="535.51" y="539.16" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_022" x="507.73" y="561.16" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_023" x="476.75" y="578.38" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_024" x="443.38" y="590.32" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_025" x="408.51" y="596.63" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_026" x="373.08" y="597.12" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_027" x="338.06" y="591.73" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_028" x="304.43" y="580.57" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_029" x="273.15" y="563.93" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_030" x="245.13" y="542.25" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_031" x="221.20" y="516.13" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_032" x="202.09" y="486.30" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_033" x="188.40" y="453.63" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_034" x="180.58" y="419.09" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_035" x="178.90" y="383.71" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_036" x="183.46" y="348.59" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_037" x="194.15" y="314.84" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_038" x="210.68" y="283.52" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_039" x="232.55" y="255.68" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_040" x="259.08" y="232.25" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_041" x="289.44" y="214.03" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_042" x="322.61" y="201.68" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_043" x="357.49" y="195.67" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_044" x="392.88" y="196.25" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_045" x="427.52" y="203.45" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_046" x="460.19" y="217.06" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_047" x="489.66" y="236.63" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_048" x="514.82" y="261.50" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_049" x="534.70" y="290.75" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_050" x="548.48" y="323.33" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_051" x="555.59" y="357.97" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_052" x="555.68" y="393.33" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_053" x="548.69" y="427.99" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_054" x="534.85" y="460.52" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_055" x="514.67" y="489.55" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_056" x="488.96" y="513.79" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_057" x="458.77" y="532.17" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_058" x="425.42" y="543.81" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_059" x="390.35" y="548.12" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_060" x="355.18" y="544.84" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_061" x="321.56" y="534.04" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_062" x="291.11" y="516.16" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_063" x="265.36" y="492.02" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_064" x="245.64" y="462.74" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_065" x="233.03" y="429.77" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_066" x="228.28" y="394.81" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_067" x="231.72" y="359.71" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_068" x="243.25" y="326.38" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_069" x="262.33" y="296.73" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_070" x="287.94" y="272.51" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_071" x="318.65" y="255.23" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_072" x="352.66" y="246.01" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_073" x="387.87" y="245.55" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_074" x="422.06" y="253.99" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_075" x="452.93" y="270.88" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_076" x="478.35" y="295.21" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_077" x="496.45" y="325.37" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_078" x="505.81" y="359.25" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_079" x="505.60" y="394.39" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_080" x="495.68" y="428.09" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_081" x="476.69" y="457.62" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_082" x="450.04" y="480.46" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_083" x="417.92" y="494.52" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_084" x="383.08" y="498.39" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_085" x="348.74" y="491.52" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_086" x="318.23" y="474.36" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_087" x="294.74" y="448.45" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_088" x="280.91" y="416.36" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_089" x="278.50" y="381.53" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_090" x="288.04" y="348.00" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_091" x="308.66" y="319.93" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_092" x="337.93" y="301.12" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_093" x="372.01" y="294.45" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_094" x="406.01" y="301.24" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_095" x="434.56" y="320.81" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_096" x="452.62" y="350.23" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_097" x="456.53" y="384.44" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_098" x="445.03" y="416.77" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_099" x="420.02" y="440.09" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+    <text id="LETRA_100" x="387.02" y="448.37" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="15pt" font-weight="700" fill="#151515">·</text>
+  </g>
+</svg>
+</main>
+<script>
+(() => {
+  const COUNT = 100;
+  const input = document.getElementById('answer');
+  const ignoreSpaces = document.getElementById('ignoreSpaces');
+  const counter = document.getElementById('counter');
+  const remaining = document.getElementById('remaining');
+  const warning = document.getElementById('warning');
+  const svg = document.querySelector('main svg');
+  const letters = Array.from({length: COUNT}, (_, i) =>
+    svg.querySelector(`#LETRA_${String(i + 1).padStart(3, '0')}`)
+  );
+
+  function characters() {
+    let value = input.value.toLocaleUpperCase('eu');
+    if (ignoreSpaces.checked) value = value.replace(/\s+/g, '');
+    else value = value.replace(/[\r\n\t]+/g, ' ');
+    return Array.from(value);
+  }
+
+  function update() {
+    const chars = characters();
+    letters.forEach((node, i) => { node.textContent = chars[i] ?? '·'; });
+    const used = Math.min(chars.length, COUNT);
+    counter.textContent = `${used} / ${COUNT}`;
+    remaining.textContent = `${COUNT - used} libre`;
+    warning.textContent = chars.length > COUNT
+      ? `${chars.length - COUNT} karaktere soberan; ez dira gridan sartuko.`
+      : '';
+    localStorage.setItem(`espiral-grida-${COUNT}-testua`, input.value);
+    localStorage.setItem(`espiral-grida-${COUNT}-hutsuneak`, String(ignoreSpaces.checked));
+  }
+
+  input.addEventListener('input', update);
+  ignoreSpaces.addEventListener('change', update);
+  document.getElementById('clear').addEventListener('click', () => {
+    input.value = '';
+    input.focus();
+    update();
+  });
+  document.getElementById('print').addEventListener('click', () => window.print());
+
+  letters.forEach((node, i) => node.addEventListener('click', () => {
+    input.focus();
+    input.setSelectionRange(Math.min(i, input.value.length), Math.min(i, input.value.length));
+  }));
+
+  document.getElementById('download').addEventListener('click', async () => {
+    update();
+    const copy = svg.cloneNode(true);
+    copy.removeAttribute('style');
+    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(copy);
+    const blob = new Blob([xml], {type: 'image/svg+xml;charset=utf-8'});
+    const filename = 'Espiral grida 100 erantzuna betea.svg';
+
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{
+            description: 'SVG irudia',
+            accept: {'image/svg+xml': ['.svg']}
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        warning.style.color = '#187036';
+        warning.textContent = 'SVG fitxategia ongi gorde da.';
+        return;
+      } catch (error) {
+        if (error && error.name === 'AbortError') return;
+        console.error(error);
+      }
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    warning.style.color = '#187036';
+    warning.textContent = 'Deskarga abiatu da; begiratu nabigatzailearen Deskargak atala.';
+  });
+
+  const testValue = new URLSearchParams(location.search).get('test');
+  input.value = testValue ?? localStorage.getItem(`espiral-grida-${COUNT}-testua`) ?? '';
+  const savedSpaces = localStorage.getItem(`espiral-grida-${COUNT}-hutsuneak`);
+  if (savedSpaces !== null) ignoreSpaces.checked = savedSpaces === 'true';
+  update();
+  document.body.dataset.ready = 'true';
+})();
+</script>
+</body>
+</html>
