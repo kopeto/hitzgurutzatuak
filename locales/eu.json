@@ -14,7 +14,7 @@
     "profile": "Nire gunea",
     "signOut": "Saioa itxi",
     "signIn": "Saioa hasi",
-    "createAccount": "Kontua sortu"
+    "createAccount": "Erabiltzailea sortu"
   },
   "common": {
     "name": "Izena",
@@ -79,13 +79,13 @@
     "enter": "Sartu",
     "noAccount": "Ez duzu konturik?",
     "registerEyebrow": "ZURE HITZ GUNEA",
-    "registerTitle": "Sortu kontua eta gorde zure aurrerapena.",
-    "registerText": "Partida bat erdian uzten baduzu, hurrengoan leku beretik jarraitu ahal izango duzu.",
+    "registerTitle": "Erabiltzailua sortu eta zure aurrerapenak gorde.",
+    "registerText": "Partida bertan behera utzita, datorrenean abiapuntu beretik jarraitu ahal izango duzu.",
     "email": "Posta elektronikoa",
     "usernameHint": "3 eta 40 karaktere artean.",
     "passwordHint": "Gutxienez 10 karaktere.",
     "repeatPassword": "Pasahitza berriz",
-    "haveAccount": "Baduzu konturik?"
+    "haveAccount": "Baduzu erabiltzailerik?"
   },
   "game": {
     "gridLabel": "{name} hitz gurutzatuko taula",
