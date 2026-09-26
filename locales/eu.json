@@ -121,7 +121,7 @@
     "completedStats": "✓ Zorionak! {time} · {errors}",
     "submittedStats": "Bidalia: {time} · {errors}",
     "errorCount": "{count} akats",
-    "oneError": "akatsa bakarra",
+    "oneError": "akats bakarra",
     "emptyCount": "{count} hutsune",
     "solveConfirm": "Ziur zaude erantzun guztiak ikusi nahi dituzula? Honek jokoa amaitu egingo du.",
     "gridSolved": "jokoa erabat ebatzi da",
