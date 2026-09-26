@@ -7,11 +7,11 @@ block content
         p.eyebrow #{t('upload.eyebrow')}
         h1 #{t('upload.title')}
         p #{t('upload.intro')}
-      a.btn.btn-outline-primary(href='/puzzles') #{t('upload.backToCatalog')}
+      a.btn.btn-outline-primary(href='/jokoak') #{t('upload.backToCatalog')}
     .upload-card
-      form.auth-form(method='POST', action='/puzzles/upload', enctype='multipart/form-data')
+      form.auth-form(method='POST', action='/jokoak/upload', enctype='multipart/form-data')
         .form-group
           label(for='filename') #{t('upload.file')}
-          input#filename.form-control(name='filename', type='file', accept='.puz', required)
+          input#filename.form-control(name='filename', type='file', accept='.ipuz,.puz', required)
           small.form-hint #{t('upload.hint')}
         button.btn.btn-primary(type='submit') #{t('upload.submit')}

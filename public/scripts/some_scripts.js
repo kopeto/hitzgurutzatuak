@@ -17,7 +17,7 @@ $(document).ready(() => {
     button.prop('disabled', true).text(t('client.deleting'));
     $.ajax({
       type: 'DELETE',
-      url: `/puzzles/game/${id}`,
+      url: `/jokoak/game/${id}`,
       success: () => window.location.reload(),
       error: () => {
         button.prop('disabled', false).text(t('client.delete'));

@@ -17,7 +17,7 @@ block styles
 
 block content
   .game-topbar
-    a(href='/puzzles')
+    a(href='/jokoak')
       button.btn.btn-sm.btn-outline-secondary #{t('common.back')}
     h2.game-title #{puz.name}
     if user
@@ -28,23 +28,44 @@ block content
       script#cell-results-data(type='application/json') !{JSON.stringify(puz.cellResults)}
     .puzzle
       .grid-block
-        table.grid.unselectable#jokoa(tabindex='0' role='grid' aria-label=t('game.gridLabel', { name: puz.name }) style=`--grid-cols: ${puz.width}`)
-          tbody
-            each row, i in puz.void_grid
-              tr
-                each cell, j in row
-                  - let id = 'c_' + i + '_' + j
-                  if cell == '.'
-                    td.black(id=id role='presentation' aria-hidden='true')
-                  else
-                    - let cellNum = null
-                    for word in puz.words
-                      if word.x == i && word.y == j && cellNum === null
-                        - cellNum = word.number
-                    td(id=id role='gridcell' aria-label=`${i + 1}. errenkada, ${j + 1}. zutabea`)
-                      if cellNum !== null
-                        span.i_words #{cellNum}
-                      span.char
+        if puz.format === 'ipuz'
+          .grid-axis-wrapper(style=`--grid-cols: ${puz.width}; --grid-rows: ${puz.height}`)
+            .axis-top(aria-hidden='true')
+              each _, j in puz.void_grid[0]
+                span.axis-label #{j + 1}
+            .axis-main
+              .axis-left(aria-hidden='true')
+                each _, i in puz.void_grid
+                  span.axis-label #{i + 1}
+              table.grid.unselectable#jokoa(tabindex='0' role='grid' aria-label=t('game.gridLabel', { name: puz.name }) style=`--grid-cols: ${puz.width}`)
+                tbody
+                  each row, i in puz.void_grid
+                    tr
+                      each cell, j in row
+                        - let id = 'c_' + i + '_' + j
+                        if cell == '.'
+                          td.black(id=id role='presentation' aria-hidden='true')
+                        else
+                          td(id=id role='gridcell' aria-label=`${i + 1}. errenkada, ${j + 1}. zutabea`)
+                            span.char
+        else
+          table.grid.unselectable#jokoa(tabindex='0' role='grid' aria-label=t('game.gridLabel', { name: puz.name }) style=`--grid-cols: ${puz.width}`)
+            tbody
+              each row, i in puz.void_grid
+                tr
+                  each cell, j in row
+                    - let id = 'c_' + i + '_' + j
+                    if cell == '.'
+                      td.black(id=id role='presentation' aria-hidden='true')
+                    else
+                      - let cellNum = null
+                      for word in puz.words
+                        if word.x == i && word.y == j && cellNum === null
+                          - cellNum = word.number
+                      td(id=id role='gridcell' aria-label=`${i + 1}. errenkada, ${j + 1}. zutabea`)
+                        if cellNum !== null
+                          span.i_words #{cellNum}
+                        span.char
         #active-clue.active-clue-bar(role='status' aria-live='polite') &nbsp;
         .history-bar
           button#undo_btn.btn.btn-sm.btn-outline-secondary(type='button' disabled) #{t('game.undo')}
@@ -55,18 +76,48 @@ block content
         - const downWords = puz.words.filter(w => w.dir === 'down').sort((a, b) => a.number - b.number)
         h2.clues-heading #{t('game.across')}
         .clues_across
-          each word in acrossWords
-            - let clueId = 'clueacross_' + word.number + '_' + word.x + '_' + word.y
-            div(id=clueId)
-              span.clue-num #{word.number}.
-              |  #{word.clue || '—'}
+          if puz.format === 'ipuz'
+            - const acrossByRow = Array.from({ length: puz.height }, (_, idx) => {
+            -   const rowNumber = idx + 1;
+            -   const words = acrossWords.filter(w => w.x === idx).sort((a, b) => a.y - b.y);
+            -   return { rowNumber, words };
+            - }).filter(group => group.words.length > 0)
+            each group in acrossByRow
+              - const firstWord = group.words[0]
+              - const clueId = 'clueacross_row_' + group.rowNumber
+              div(id=clueId data-dir='across' data-row=group.rowNumber data-x=firstWord.x data-y=firstWord.y)
+                span.clue-num #{group.rowNumber}.
+                .clue-block
+                  each word in group.words
+                    p.clue-line(data-start-x=word.x data-start-y=word.y data-dir='across') #{word.clue || '—'}
+          else
+            each word in acrossWords
+              - let clueId = 'clueacross_' + word.number + '_' + word.x + '_' + word.y
+              div(id=clueId data-dir='across' data-x=word.x data-y=word.y)
+                span.clue-num #{word.number}.
+                |  #{word.clue || '—'}
         h2.clues-heading #{t('game.down')}
         .clues_down
-          each word in downWords
-            - let clueId = 'cluedown_' + word.number + '_' + word.x + '_' + word.y
-            div(id=clueId)
-              span.clue-num #{word.number}.
-              |  #{word.clue || '—'}
+          if puz.format === 'ipuz'
+            - const downByCol = Array.from({ length: puz.width }, (_, idx) => {
+            -   const colNumber = idx + 1;
+            -   const words = downWords.filter(w => w.y === idx).sort((a, b) => a.x - b.x);
+            -   return { colNumber, words };
+            - }).filter(group => group.words.length > 0)
+            each group in downByCol
+              - const firstWord = group.words[0]
+              - const clueId = 'cluedown_col_' + group.colNumber
+              div(id=clueId data-dir='down' data-col=group.colNumber data-x=firstWord.x data-y=firstWord.y)
+                span.clue-num #{group.colNumber}.
+                .clue-block
+                  each word in group.words
+                    p.clue-line(data-start-x=word.x data-start-y=word.y data-dir='down') #{word.clue || '—'}
+          else
+            each word in downWords
+              - let clueId = 'cluedown_' + word.number + '_' + word.x + '_' + word.y
+              div(id=clueId data-dir='down' data-x=word.x data-y=word.y)
+                span.clue-num #{word.number}.
+                |  #{word.clue || '—'}
     #game-notification.game-notification-bar(role='status' aria-live='polite')
 
     nav.buttons

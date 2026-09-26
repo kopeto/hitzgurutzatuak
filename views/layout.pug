@@ -32,7 +32,7 @@ html(lang='eu')
           span.nav-toggle-line
         nav#site-navigation.site-navigation(data-site-navigation)
           a(href='/') #{t('nav.home')}
-          a(href='/puzzles') #{t('nav.puzzles')}
+          a(href='/jokoak') #{t('nav.puzzles')}
           if user && user.master
             a(href='/master') #{t('nav.management')}
           .navigation-account
@@ -58,7 +58,7 @@ html(lang='eu')
             span.brand-name #{t('site.name')}
           p #{t('site.footer')}
         nav.footer-links(aria-label=t('site.footerNavigation'))
-          a(href='/puzzles') #{t('nav.puzzles')}
+          a(href='/jokoak') #{t('nav.puzzles')}
           if user
             a(href='/users/dashboard') #{t('nav.profile')}
           else

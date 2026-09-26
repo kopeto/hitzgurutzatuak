@@ -142,6 +142,18 @@ td.wrong.selected_cell .char                           { opacity: 1; }
   cursor: pointer;
 }
 
+.clue-block {
+  margin-top: 0.15rem;
+}
+
+.clue-line {
+  margin: 0.2rem 0 0;
+}
+
+.clue-line:first-child {
+  margin-top: 0;
+}
+
 .clues_across div:hover,
 .clues_down div:hover {
   background-color: #176b4d;
@@ -229,6 +241,39 @@ td.wrong.selected_cell .char                           { opacity: 1; }
   cursor: default;
   width: fit-content;
   margin: 0 auto;
+}
+
+.grid-axis-wrapper {
+  width: fit-content;
+}
+
+.axis-top {
+  margin-left: 1.8rem;
+  margin-bottom: 0.15rem;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 15), min(50px, calc(100cqw / var(--grid-cols, 15))));
+}
+
+.axis-main {
+  display: flex;
+  align-items: stretch;
+}
+
+.axis-left {
+  width: 1.8rem;
+  margin-right: 0.15rem;
+  display: grid;
+  grid-template-rows: repeat(var(--grid-rows, 15), min(50px, calc(100cqw / var(--grid-cols, 15))));
+}
+
+.axis-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #34423b;
+  line-height: 1;
 }
 
 .active-clue-bar {

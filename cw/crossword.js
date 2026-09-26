@@ -85,6 +85,7 @@ class Crossword{
             const buffer = fs.readFileSync(filepath);
             this.filename = filepath;
             this.filesize = buffer.length;
+            this.format = 'puz';  // Mark as .puz format
             this.width = buffer.readUInt8(0x2c);
             this.height = buffer.readUInt8(0x2d);
 

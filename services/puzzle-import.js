@@ -1,7 +1,9 @@
 const crypto = require('crypto');
 const fs = require('fs/promises');
+const path = require('path');
 
 const Crossword = require('../cw/crossword');
+const iPuzCrossword = require('../cw/ipuz');
 const CrosswordModel = require('../models/crosswords');
 
 class PuzzleImportError extends Error {
@@ -51,6 +53,18 @@ async function removeTemporaryFile(filePath) {
   }
 }
 
+/**
+ * Detect file format based on extension
+ * Returns 'puz' or 'ipuz'
+ */
+function detectFormat(filename) {
+  const ext = path.extname(filename).toLowerCase();
+  if (ext === '.ipuz') {
+    return 'ipuz';
+  }
+  return 'puz';
+}
+
 async function importPuzzle(uploadedFile) {
   if (!uploadedFile || !uploadedFile.path) {
     throw new PuzzleImportError('Ez da fitxategirik jaso.');
@@ -65,7 +79,16 @@ async function importPuzzle(uploadedFile) {
       throw new PuzzleImportError('Puzle hau dagoeneko sisteman dago.', 409);
     }
 
-    const crossword = new Crossword(uploadedFile.path);
+    // Detect format and parse accordingly
+    const format = detectFormat(uploadedFile.originalname);
+    let crossword;
+
+    if (format === 'ipuz') {
+      crossword = new iPuzCrossword(uploadedFile.path);
+    } else {
+      crossword = new Crossword(uploadedFile.path);
+    }
+
     validateCrossword(crossword);
 
     const puzzle = new CrosswordModel({
@@ -78,6 +101,7 @@ async function importPuzzle(uploadedFile) {
       filled_grid: crossword.filled_grid,
       name: normalizedMetadata(crossword.cw_name, 'Izengabea', 200),
       author: normalizedMetadata(crossword.cw_author, 'Ezezaguna', 120),
+      format: format,
       fileHash
     });
 

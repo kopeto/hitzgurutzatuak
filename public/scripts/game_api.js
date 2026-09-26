@@ -237,6 +237,11 @@ const GameAPI = {
   }
 };
 
+function formatErrorLabel(count) {
+  if (Number(count) === 1) return t('game.oneError');
+  return t('game.errorCount', { count });
+}
+
 // Visual feedback for user
 const GameUI = {
   /**
@@ -548,13 +553,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
           if (result.complete) {
             GameUI.showNotification(
-              t('game.completedStats', { time: timeStr, errors: s.errors }),
+              t('game.completedStats', { time: timeStr, errors: formatErrorLabel(s.errors) }),
               'success',
               true
             );
           } else {
             GameUI.showNotification(
-              t('game.submittedStats', { time: timeStr, errors: s.errors }),
+              t('game.submittedStats', { time: timeStr, errors: formatErrorLabel(s.errors) }),
               'info',
               true
             );
@@ -563,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const emptyCount = result.cellResults.filter(c => c.empty).length;
           const parts = [];
           if (result.errorCount > 0)
-            parts.push(t('game.errorCount', { count: result.errorCount }));
+            parts.push(formatErrorLabel(result.errorCount));
           if (emptyCount > 0)
             parts.push(t('game.emptyCount', { count: emptyCount }));
           GameUI.showNotification(parts.join(' · '), 'error');

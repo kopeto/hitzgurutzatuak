@@ -7,7 +7,7 @@ block content
       h1 #{t('home.title')}
       p.hero-text #{t('home.intro')}
       .hero-actions
-        a.btn.btn-primary.btn-lg(href='/puzzles') #{t('home.browse')}
+        a.btn.btn-primary.btn-lg(href='/jokoak') #{t('home.browse')}
         if !user
           a.btn.btn-outline-light.btn-lg(href='/users/register') #{t('nav.createAccount')}
     .hero-panel(aria-hidden='true')
@@ -20,7 +20,7 @@ block content
     .section-heading-copy
       p.eyebrow #{t('home.latestEyebrow')}
       h2 #{t('home.latest')}
-    a.section-link(href='/puzzles') #{t('home.allCatalog')}
+    a.section-link(href='/jokoak') #{t('home.allCatalog')}
 
   if puzzles.length
     .puzzle-list
@@ -29,12 +29,12 @@ block content
           .puzzle-list-dimension #{puz.width}×#{puz.height}
           .puzzle-list-content
             h3
-              a(href=`/puzzles/game/${puz._id}`) #{puz.name}
+              a(href=`/jokoak/game/${puz._id}`) #{puz.name}
             p.puzzle-author #{puz.author || t('common.unknownAuthor')}
           .puzzle-list-meta
             span.puzzle-new #{t('home.new')}
             span #{puz.createdAt ? new Date(puz.createdAt).toLocaleDateString('eu') : '—'}
-          a.btn.btn-primary.btn-sm(href=`/puzzles/game/${puz._id}` aria-label=t('home.playAria', { name: puz.name })) #{t('common.play')}
+          a.btn.btn-primary.btn-sm(href=`/jokoak/game/${puz._id}` aria-label=t('home.playAria', { name: puz.name })) #{t('common.play')}
   else
     .empty-state
       h2 #{t('home.emptyTitle')}

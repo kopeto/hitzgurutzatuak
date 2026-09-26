@@ -7,7 +7,7 @@ block content
         p.eyebrow #{t('dashboard.eyebrow')}
         h1.dashboard-title #{t('dashboard.title')}
         p #{t('dashboard.intro')}
-      a.btn.btn-outline-primary(href='/puzzles') #{t('home.browse')}
+      a.btn.btn-outline-primary(href='/jokoak') #{t('home.browse')}
 
     .dashboard-stats-row
       .stat-card
@@ -33,7 +33,7 @@ block content
           each s in completed
             tr
               td
-                a(href=`/puzzles/game/${s.puzzleId}`) #{s.puzzle ? s.puzzle.name : s.puzzleId}
+                a(href=`/jokoak/game/${s.puzzleId}`) #{s.puzzle ? s.puzzle.name : s.puzzleId}
               td #{s.puzzle ? s.puzzle.width + '×' + s.puzzle.height : '—'}
               td #{new Date(s.completedAt).toLocaleDateString('eu')}
               td
@@ -60,8 +60,8 @@ block content
               td #{s.puzzle ? s.puzzle.width + '×' + s.puzzle.height : '—'}
               td #{new Date(s.startedAt).toLocaleDateString('eu')}
               td
-                a.btn.btn-sm.btn-outline-primary(href=`/puzzles/game/${s.puzzleId}`) #{t('common.continue')}
+                a.btn.btn-sm.btn-outline-primary(href=`/jokoak/game/${s.puzzleId}`) #{t('common.continue')}
 
     if !completed.length && !inProgress.length
       p.text-muted #{t('dashboard.empty')}
-      a.btn.btn-primary(href='/puzzles') #{t('dashboard.viewPuzzles')}
+      a.btn.btn-primary(href='/jokoak') #{t('dashboard.viewPuzzles')}

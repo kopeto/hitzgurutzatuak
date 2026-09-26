@@ -23,7 +23,7 @@ block content
         .stat-label #{t('common.active')}
 
     .dashboard-actions
-      a.btn.btn-primary(href='/puzzles/upload') #{t('master.upload')}
+      a.btn.btn-primary(href='/jokoak/upload') #{t('master.upload')}
     h4.dashboard-section-title #{t('master.externalApi')}
     .card.mb-4
       .card-body
@@ -70,7 +70,7 @@ block content
             td.text-center #{completionMap[p._id] || 0}
             td #{p.createdAt ? new Date(p.createdAt).toLocaleDateString('eu') : '—'}
             td
-              a.btn.btn-sm.btn-outline-secondary(href=`/puzzles/game/${p._id}`) #{t('common.play')}
+              a.btn.btn-sm.btn-outline-secondary(href=`/jokoak/game/${p._id}`) #{t('common.play')}
 
     h4.dashboard-section-title #{t('master.users')}
     table.table.table-sm.table-hover

@@ -72,13 +72,13 @@ router.post('/upload', checkAuth, upload, async (req, res) => {
     req.uploadErrors.forEach((err) => {
       req.flash('danger', '\'' + err.filename + '\' ' + err.message);
     });
-    return res.redirect('/puzzles');
+    return res.redirect('/jokoak');
   }
 
   try {
     await importPuzzle(req.file);
     req.flash('success', 'Puzlea Kargatuta');
-    res.redirect('/puzzles');
+    res.redirect('/jokoak');
   } catch (err) {
     if (err instanceof PuzzleImportError || err.code === 11000) {
       req.flash('danger', err.message || 'Puzle hau dagoeneko sisteman dago.');
@@ -86,7 +86,7 @@ router.post('/upload', checkAuth, upload, async (req, res) => {
       logError(err);
       req.flash('danger', 'Ezin izan da puzlea kargatu.');
     }
-    res.redirect('/puzzles');
+    res.redirect('/jokoak');
   }
 });
 
@@ -95,7 +95,7 @@ router.get('/game/:id', async (req, res) => {
     const puzzle = await CrosswordModel.findById(req.params.id);
     if (!puzzle) {
       req.flash('danger', 'Puzlea ez da aurkitu.');
-      return res.redirect('/puzzles');
+      return res.redirect('/jokoak');
     }
 
     // Load persisted state for authenticated users
@@ -153,13 +153,14 @@ router.get('/game/:id', async (req, res) => {
         words:          sanitizeWords(puzzle.words, puzzle.clues),
         completed:      isCompleted,
         elapsedSeconds: savedElapsed,
-        cellResults:    savedCellResults
+        cellResults:    savedCellResults,
+        format:         puzzle.format || 'puz'
       }
     });
   } catch (err) {
     logError(err);
     req.flash('danger', 'Erroreren bat gertatu da.');
-    res.redirect('/puzzles');
+    res.redirect('/jokoak');
   }
 });
 

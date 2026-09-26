@@ -309,6 +309,9 @@ $(document).ready(function() {
    function getClueId(x,y,dir){
      let id = '';
      if(dir =='down'){
+       const groupedId = 'cluedown_col_' + (y + 1);
+       if ($('#' + groupedId).length) return groupedId;
+
        while(x>=0 && !$('#c_'+x+'_'+y).hasClass('black')){
          --x;
        }           //console.log($(this).attr('id'));
@@ -321,6 +324,9 @@ $(document).ready(function() {
        });
      }
      else if (dir == 'across'){
+       const groupedId = 'clueacross_row_' + (x + 1);
+       if ($('#' + groupedId).length) return groupedId;
+
        //TODO: select clue
        while(y>=0 && !$('#c_'+x+'_'+y).hasClass('black')){
          --y;
@@ -345,7 +351,52 @@ $(document).ready(function() {
        var clueEl = document.getElementById(id);
        var activeBar = document.getElementById('active-clue');
        if (activeBar) {
-         activeBar.textContent = clueEl ? clueEl.textContent.trim() : '';
+         if (!clueEl) {
+           activeBar.textContent = '';
+         } else {
+           var groupedLines = clueEl.querySelectorAll('.clue-line');
+           if (groupedLines.length === 0) {
+             activeBar.textContent = clueEl.textContent.trim();
+           } else {
+             var selectedCell = document.querySelector('td.selected_cell');
+             var targetLine = null;
+
+             if (selectedCell && selectedCell.id) {
+               var parts = selectedCell.id.split('_');
+               var x = parseInt(parts[1], 10);
+               var y = parseInt(parts[2], 10);
+
+               var dir = 'across';
+               if (selectedCell.classList.contains('focus_down') && !selectedCell.classList.contains('focus_across')) {
+                 dir = 'down';
+               } else if (id.indexOf('cluedown') === 0) {
+                 dir = 'down';
+               }
+
+               // Find start cell of current word in selected direction.
+               if (dir === 'across') {
+                 while (y > 0 && !document.getElementById('c_' + x + '_' + (y - 1)).classList.contains('black')) {
+                   y--;
+                 }
+               } else {
+                 while (x > 0 && !document.getElementById('c_' + (x - 1) + '_' + y).classList.contains('black')) {
+                   x--;
+                 }
+               }
+
+               for (var i = 0; i < groupedLines.length; i++) {
+                 var line = groupedLines[i];
+                 if (parseInt(line.dataset.startX, 10) === x && parseInt(line.dataset.startY, 10) === y) {
+                   targetLine = line;
+                   break;
+                 }
+               }
+             }
+
+             if (!targetLine) targetLine = groupedLines[0];
+             activeBar.textContent = targetLine ? targetLine.textContent.trim() : '';
+           }
+         }
        }
 
        if ($.fn.scrollTo) {
@@ -512,13 +563,20 @@ $(document).ready(function() {
    $('.clues_across > div , .clues_down > div').on('click', function(e){
        $('div').removeClass('selected_clue');
        $(this).addClass('selected_clue');
-       //get n
-       let clueid = $(this).attr('id');
-       let splitted = clueid.split("_");
-       let n = splitted[1];
-       let x = splitted[2];
-       let y = splitted[3];
-       //console.log('Clue: '+n);
+
+       let x = Number($(this).data('x'));
+       let y = Number($(this).data('y'));
+
+       if (!Number.isFinite(x) || !Number.isFinite(y)) {
+         const clueid = $(this).attr('id');
+         const splitted = clueid.split("_");
+         x = Number(splitted[2]);
+         y = Number(splitted[3]);
+       }
+
+       if (!Number.isFinite(x) || !Number.isFinite(y)) {
+         return;
+       }
 
        $('td').removeClass('selected_cell');
        let first_cell_id = 'c_'+x+'_'+y;

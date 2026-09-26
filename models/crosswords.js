@@ -22,7 +22,12 @@ let cwSchema = mongoose.Schema({
   }],
   clues: [String],
   name: String,
-  author: String
+  author: String,
+  format: {
+    type: String,
+    enum: ['puz', 'ipuz'],
+    default: 'puz'
+  }
 }, { timestamps: true });
 
 let crossword = module.exports = mongoose.model('Crossword', cwSchema);

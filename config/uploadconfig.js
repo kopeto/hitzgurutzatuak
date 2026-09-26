@@ -20,18 +20,19 @@ function sanitizeOriginalFilename(filename) {
   return safeName || 'puzlea.puz';
 }
 
-function isPuzFilename(filename) {
-  return path.extname(filename).toLowerCase() === '.puz';
+function isAllowedPuzzleFilename(filename) {
+  const ext = path.extname(filename).toLowerCase();
+  return ext === '.puz' || ext === '.ipuz';
 }
 
 function fileFilter(req, file, callback) {
   const safeName = sanitizeOriginalFilename(file.originalname);
   file.originalname = safeName;
 
-  if (!isPuzFilename(safeName)) {
+  if (!isAllowedPuzzleFilename(safeName)) {
     req.uploadErrors = [{
       filename: safeName,
-      message: 'Fitxategiak .puz luzapena izan behar du.'
+      message: 'Fitxategiak .puz edo .ipuz luzapena izan behar du.'
     }];
     return callback(null, false);
   }

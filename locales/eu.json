@@ -9,7 +9,7 @@
   "nav": {
     "open": "Nabigazioa ireki",
     "home": "Hasiera",
-    "puzzles": "Puzleak",
+    "puzzles": "Jokoak",
     "management": "Kudeaketa",
     "profile": "Nire gunea",
     "signOut": "Saioa itxi",
@@ -37,27 +37,27 @@
   "home": {
     "eyebrow": "HITZ JOKOAK EUSKARAZ",
     "title": "Hitzak lotu, burua piztu.",
-    "intro": "Hitz gurutzatuak lasai gozatzeko gunea: aukeratu puzle bat, hasi zure erritmoan eta jarraitu nahi duzunean.",
-    "browse": "Puzleak arakatu",
+    "intro": "Hitz gurutzatuak lasai gozatzeko gunea: aukeratu joko bat, hasi zure erritmoan eta jarraitu nahi duzunean.",
+    "browse": "Jokoak arakatu",
     "latestEyebrow": "JOKATU EZAZU",
-    "latest": "Azken puzleak",
+    "latest": "Azken jokoak",
     "allCatalog": "Katalogo osoa ikusi →",
     "new": "BERRIA",
-    "emptyTitle": "Laster puzleak izango dira hemen.",
-    "emptyText": "Kudeatzaileak lehen puzlea argitaratzen duenean katalogoan ikusiko duzu.",
-    "playAria": "Jokatu {name} puzlean"
+    "emptyTitle": "Laster jokoak izango dira hemen.",
+    "emptyText": "Kudeatzaileak lehen jokoa argitaratzen duenean katalogoan ikusiko duzu.",
+    "playAria": "Jokatu {name} jokoan"
   },
   "catalog": {
     "eyebrow": "AUKERATU ZURE HURRENGO ERRONKA",
-    "title": "Puzleak",
+    "title": "Jokoak",
     "intro": "Arakatu hitz gurutzatuak, hasi berria edo jarraitu utzitako puntutik.",
-    "upload": "Puzle berria igo",
+    "upload": "joko berria igo",
     "adminMode": "Kudeaketa modua aktibo.",
-    "adminText": "Puzle berriak igo edo katalogoko puzleak ezabatu ditzakezu.",
-    "emptyTitle": "Ez dago puzlerik oraindik.",
-    "emptyAdmin": "Lehenengo puzlea igotzeko prest zaude.",
+    "adminText": "joko berriak igo edo katalogoko jokoak ezabatu ditzakezu.",
+    "emptyTitle": "Ez dago jokorik oraindik.",
+    "emptyAdmin": "Lehenengo jokoa igotzeko prest zaude.",
     "emptyPlayer": "Laster izango dituzu hitz gurutzatu berriak aukeran.",
-    "search": "Bilatu puzle bat",
+    "search": "Bilatu joko bat",
     "searchPlaceholder": "Izenaren edo egilearen arabera",
     "status": "Egoera",
     "inProgress": "Jokoan",
@@ -66,7 +66,8 @@
     "savedGame": "Gordetako partida",
     "ready": "Prest jokatzeko",
     "perfect": "Garbi-garbia",
-    "errors": "akats"
+    "errors": "akats",
+    "oneError": "akats bakarra"
   },
   "auth": {
     "loginEyebrow": "ONGI ETORRI BERRIRO",
@@ -88,7 +89,7 @@
   },
   "game": {
     "gridLabel": "{name} hitz gurutzatuko taula",
-    "cluesLabel": "Puzlearen pistak",
+    "cluesLabel": "jokoaren pistak",
     "across": "EZKER ESKUIN",
     "down": "GOITIK BEHERA",
     "check": "Zuzendu",
@@ -117,12 +118,13 @@
     "wordIncorrect": "Hitzak akatsak ditu ✗",
     "hintShown": "Pista agerian",
     "wordShown": "Hitza erabat agerian",
-    "completedStats": "✓ Zorionak! {time} · {errors} akats",
-    "submittedStats": "Bidalia: {time} · {errors} akats",
+    "completedStats": "✓ Zorionak! {time} · {errors}",
+    "submittedStats": "Bidalia: {time} · {errors}",
     "errorCount": "{count} akats",
+    "oneError": "akatsa bakarra",
     "emptyCount": "{count} hutsune",
     "solveConfirm": "Ziur zaude erantzun guztiak ikusi nahi dituzula? Honek jokoa amaitu egingo du.",
-    "gridSolved": "Puzlea erabat ebatzi da",
+    "gridSolved": "jokoa erabat ebatzi da",
     "metaDescription": "{name} — {author} — {width}×{height} — Hitz gurutzatuak",
     "metaTitle": "{name} | Hitz gurutzatuak",
     "metaOpenGraphDescription": "{author}en hitz-gurutzatua — Hitz jokoen jokoa"
@@ -131,38 +133,38 @@
     "eyebrow": "NIRE IBILBIDEA",
     "title": "Nire gunea",
     "intro": "Zure partidak, erritmoa eta hurrengo erronkak leku berean.",
-    "completed": "Osatutako puzleak",
-    "inProgress": "Abian dauden puzleak",
+    "completed": "Osatutako jokoak",
+    "inProgress": "Abian dauden jokoak",
     "completedAt": "Osatu zen",
     "duration": "Iraupena",
     "startedAt": "Hasi zen",
-    "empty": "Oraindik ez duzu puzlerik jokatu.",
-    "viewPuzzles": "Puzleak ikusi",
+    "empty": "Oraindik ez duzu jokorik jokatu.",
+    "viewPuzzles": "jokoak ikusi",
     "all": "Guztira"
   },
   "upload": {
     "eyebrow": "KUDEAKETA",
-    "title": "Puzle berria igo",
-    "intro": "Kargatu `.puz` formatuko fitxategi bat. Sistemak edukia aztertuko du argitaratu aurretik.",
+    "title": "joko berria igo",
+    "intro": "Kargatu `.puz` edo `.ipuz` formatuko fitxategi bat. Sistemak edukia aztertuko du argitaratu aurretik.",
     "backToCatalog": "Katalogora itzuli",
-    "file": "`.puz` fitxategia",
-    "hint": "Gehienezko tamaina: 5 MB. Fitxategiaren edukia balioztatu egingo da.",
-    "submit": "Puzlea kargatu"
+    "file": "`.puz` edo `.ipuz` fitxategia",
+    "hint": "Gehienezko tamaina: 5 MB. Onartutako formatuak: *.ipuz, *.puz. Fitxategiaren edukia balioztatu egingo da.",
+    "submit": "Jokoa kargatu"
   },
   "notFound": {
     "eyebrow": "404 ERROREA",
     "title": "Bilatzen ari zaren orria ez dago hemen.",
-    "text": "{url} helbidea ez dugu aurkitu. Agian puzle berriren batekin hastea nahiago duzu?"
+    "text": "{url} helbidea ez dugu aurkitu. Agian joko berriren batekin hastea nahiago duzu?"
   },
   "master": {
     "title": "Kudeaketa panela",
-    "intro": "Puzleak, erabiltzaileak eta plataformaren jarduera kudeatzeko gunea.",
-    "puzzleCount": "Puzle guztira",
+    "intro": "jokoak, erabiltzaileak eta plataformaren jarduera kudeatzeko gunea.",
+    "puzzleCount": "joko guztira",
     "userCount": "Erabiltzaile",
     "completionCount": "Osatze guztira",
-    "upload": "⬆ Puzle berria igo",
+    "upload": "⬆ joko berria igo",
     "externalApi": "🔑 Kanpoko APIa",
-    "apiDescription": "Kanpoko aplikazioek API gakoa behar dute puzleak kargatzeko.",
+    "apiDescription": "Kanpoko aplikazioek API gakoa behar dute jokoak kargatzeko.",
     "apiSecret": "Gakoa zerbitzariaren ingurune-aldagaietan bakarrik kudeatzen da eta ez da pantaila honetan erakusten.",
     "downloads": "Fitxategiak deskargatzeko",
     "downloadsEmpty": "Ez da fitxategirik `/downloads` karpetan.",
@@ -173,8 +175,8 @@
   },
   "page": {
     "home": "Hitz gurutzatuak",
-    "puzzles": "Puzleak",
-    "upload": "Puzle fitxategia kargatu",
+    "puzzles": "jokoak",
+    "upload": "Joko fitxategia kargatu",
     "game": "JOKOA",
     "dashboard": "Nire panela",
     "master": "Kudeaketa panela"
@@ -182,8 +184,8 @@
   "client": {
     "deleteConfirm": "Ziur zaude “{name}” ezabatu nahi duzula? Ekintza honek ezin du atzera egin.",
     "deleting": "Ezabatzen...",
-    "deleteFailed": "Ezin izan da puzlea ezabatu. Saiatu berriro.",
+    "deleteFailed": "Ezin izan da jokoa ezabatu. Saiatu berriro.",
     "delete": "Ezabatu",
-    "puzzleCount": "{count} puzle"
+    "puzzleCount": "{count} joko"
   }
 }

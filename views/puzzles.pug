@@ -7,7 +7,7 @@ block content
       h1 #{t('catalog.title')}
       p #{t('catalog.intro')}
     if user && user.master
-      a.btn.btn-outline-primary(href='/puzzles/upload') #{t('catalog.upload')}
+      a.btn.btn-outline-primary(href='/jokoak/upload') #{t('catalog.upload')}
 
   if user && user.master
     aside.admin-note
@@ -19,7 +19,7 @@ block content
       h2 #{t('catalog.emptyTitle')}
       if user && user.master
         p #{t('catalog.emptyAdmin')}
-        a.btn.btn-primary(href='/puzzles/upload') #{t('catalog.upload')}
+        a.btn.btn-primary(href='/jokoak/upload') #{t('catalog.upload')}
       else
         p #{t('catalog.emptyPlayer')}
   else
@@ -45,7 +45,7 @@ block content
           .puzzle-list-dimension #{puz.width}×#{puz.height}
           .puzzle-list-content
             h2
-              a(href=`/puzzles/game/${puz._id}`) #{puz.name}
+              a(href=`/jokoak/game/${puz._id}`) #{puz.name}
             p.puzzle-author #{puz.author || t('common.unknownAuthor')}
             .puzzle-list-details
               if st && status === 'completed'
@@ -54,7 +54,10 @@ block content
                 - const seconds = totalSeconds % 60
                 span ✓ #{minutes} min #{String(seconds).padStart(2, '0')} s
                 if st.errorCount
-                  span #{st.errorCount} #{t('catalog.errors')}
+                  if st.errorCount === 1
+                    span #{t('catalog.oneError')}
+                  else
+                    span #{st.errorCount} #{t('catalog.errors')}
                 else if !st.usedVerify && !st.usedHints
                   span #{t('catalog.perfect')}
               else if st && status === 'started'
@@ -71,8 +74,8 @@ block content
               span.status-pill #{t('catalog.notStarted')}
           .puzzle-list-actions
             if user && status === 'started'
-              a.btn.btn-primary(href=`/puzzles/game/${puz._id}`) #{t('common.continue')}
+              a.btn.btn-primary(href=`/jokoak/game/${puz._id}`) #{t('common.continue')}
             else
-              a.btn.btn-primary(href=`/puzzles/game/${puz._id}`) #{t('common.play')}
+              a.btn.btn-primary(href=`/jokoak/game/${puz._id}`) #{t('common.play')}
             if user && user.master
               button.btn.btn-outline-danger.deletePUZ(type='button' data-id=puz._id data-name=puz.name) #{t('common.delete')}

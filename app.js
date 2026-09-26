@@ -86,7 +86,7 @@ app.get('/ready', (req, res) => {
   }
   return res.status(503).json({ status: 'not-ready' });
 });
-app.use('/puzzles', puzzles);
+app.use('/jokoak', puzzles);
 app.use('/users', users);
 app.use('/api', api);
 app.use('/master', master);
