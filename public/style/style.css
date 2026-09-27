@@ -138,8 +138,8 @@ select:focus-visible {
 
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(3.25rem, 1fr));
-  width: min(100%, 19rem);
+  grid-template-columns: repeat(5, minmax(2.65rem, 1fr));
+  width: min(100%, 20rem);
   overflow: hidden;
   border: 0.55rem solid rgba(255, 255, 255, 0.92);
   border-radius: 1rem;
