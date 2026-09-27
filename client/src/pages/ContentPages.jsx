@@ -14,7 +14,7 @@ function PuzzleCard({ puzzle, status, t, master, home = false, onDelete }) {
 }
 
 export function HomePage({ puzzles = [], user, t }) {
-  const cells = ['H', 'I', 'T', 'Z', '', 'G', 'U', 'R', 'U', 'T', 'Z', '', 'A', 'K', ''];
+  const cells = ['H', 'I', 'T', 'Z', '', 'J', 'O', 'K', 'O', 'A', 'K', '', '', '', ''];
   return <><section className="hero"><div className="hero-copy"><p className="eyebrow">{t('home.eyebrow')}</p><h1>{t('home.title')}</h1><p className="hero-text">{t('home.intro')}</p><div className="hero-actions"><a className="btn btn-primary btn-lg" href="/jokoak">{t('home.browse')}</a>{!user && <a className="btn btn-outline-light btn-lg" href="/users/register">{t('nav.createAccount')}</a>}</div></div><div className="hero-panel" aria-hidden="true"><div className="hero-grid">{cells.map((cell, index) => <span className={`hero-cell${cell ? '' : ' hero-cell--dark'}`} key={index}>{cell}</span>)}</div></div></section><section className="section-heading"><div className="section-heading-copy"><p className="eyebrow">{t('home.latestEyebrow')}</p><h2>{t('home.latest')}</h2></div><a className="section-link" href="/jokoak">{t('home.allCatalog')}</a></section>{puzzles.length ? <div className="puzzle-list">{puzzles.map(puzzle => <PuzzleCard key={puzzle._id} puzzle={puzzle} t={t} home />)}</div> : <div className="empty-state"><h2>{t('home.emptyTitle')}</h2><p>{t('home.emptyText')}</p></div>}</>;
 }
 
