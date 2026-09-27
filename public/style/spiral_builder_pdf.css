@@ -2,21 +2,21 @@
   box-sizing: border-box;
 }
 
-body.site-body {
+body.site-body.spiral-builder-page {
   overflow: hidden;
 }
 
-.site-main {
+.spiral-builder-page .site-main {
   padding: 0 !important;
 }
 
-.site-main > .site-shell {
+.spiral-builder-page .site-main > .site-shell {
   max-width: none;
   width: 100%;
   padding: 0;
 }
 
-.site-footer {
+.spiral-builder-page .site-footer {
   display: none;
 }
 
@@ -78,6 +78,12 @@ body.site-body {
 }
 
 #spiral-builder-form {
+  display: grid;
+  gap: 0.32rem;
+  align-content: start;
+}
+
+.spiral-builder-page .spiral-builder-aside form {
   display: grid;
   gap: 0.32rem;
   align-content: start;
@@ -215,9 +221,28 @@ body.site-body {
   font-weight: 700;
 }
 
+.spiral-builder-page .spiral-builder-aside form label {
+  display: block;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 #spiral-builder-form textarea,
 #spiral-builder-form input[type='text'],
 #spiral-builder-form input[type='number'] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #777;
+  border-radius: 5px;
+  background: #fff;
+  color: #171717;
+  font: 700 0.84rem/1.25 Consolas, monospace;
+}
+
+.spiral-builder-page .spiral-builder-aside form textarea,
+.spiral-builder-page .spiral-builder-aside form input[type='text'],
+.spiral-builder-page .spiral-builder-aside form input[type='number'] {
   width: 100%;
   padding: 6px 8px;
   border: 1px solid #777;
@@ -235,6 +260,12 @@ body.site-body {
 }
 
 #spiral-builder-form textarea {
+  min-height: 0;
+  resize: vertical;
+  text-transform: uppercase;
+}
+
+.spiral-builder-page .spiral-builder-aside form textarea {
   min-height: 0;
   resize: vertical;
   text-transform: uppercase;

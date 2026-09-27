@@ -62,7 +62,18 @@
   gap: 0.2rem;
 }
 
+.spiral-builder-aside form {
+  display: grid;
+  gap: 0.2rem;
+}
+
 #spiral-builder-form label {
+  display: block;
+  margin: 14px 0 7px;
+  font-weight: 700;
+}
+
+.spiral-builder-aside form label {
   display: block;
   margin: 14px 0 7px;
   font-weight: 700;
@@ -80,7 +91,25 @@
   font: 700 1rem/1.4 Consolas, monospace;
 }
 
+.spiral-builder-aside form textarea,
+.spiral-builder-aside form input[type='text'],
+.spiral-builder-aside form input[type='number'] {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--builder-border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--builder-ink);
+  font: 700 1rem/1.4 Consolas, monospace;
+}
+
 #spiral-builder-form textarea {
+  min-height: 170px;
+  resize: vertical;
+  text-transform: uppercase;
+}
+
+.spiral-builder-aside form textarea {
   min-height: 170px;
   resize: vertical;
   text-transform: uppercase;

@@ -2,46 +2,37 @@
    BASE
    ============================================================================= */
 
-* {
+.game-wrapper * {
   transition: all .2s ease-out;
-}
-
-footer {
-  bottom: 2em;
-  font-size: 0.8em;
-}
-
-strong {
-  margin: 1em;
 }
 
 /* =============================================================================
    GRID TABLE
    ============================================================================= */
 
-table {
+.grid {
   border-top: 1px solid black;
   border-left: 1px solid black;
 }
 
-tbody {
+.grid tbody {
   display: grid;
-  grid-template-columns: repeat(var(--grid-cols, 15), min(50px, calc(100cqw / var(--grid-cols, 15))));
+  grid-template-columns: repeat(var(--grid-cols, 15), min(60px, calc(100cqw / var(--grid-cols, 15))));
 }
 
-tr {
+.grid tr {
   display: contents;
 }
 
-td {
+.grid td {
   border-right: 1px solid black;
   border-bottom: 1px solid black;
 }
 
-tbody td {
+.grid tbody td {
   aspect-ratio: 1;
   width: 100%;
-  font-size: clamp(0.6rem, calc(min(50px, 100cqw / var(--grid-cols, 15)) * 0.7), 1.8em);
+  font-size: clamp(0.6rem, calc(min(60px, 100cqw / var(--grid-cols, 15)) * 0.7), 1.8em);
   background-color: white;
   text-align: center;
   vertical-align: middle;
@@ -54,7 +45,7 @@ tbody td {
 }
 
 /* Cell number label */
-td span.i_words {
+.grid td span.i_words {
   position: absolute;
   top: 1px;
   left: 2px;
@@ -65,29 +56,33 @@ td span.i_words {
 }
 
 /* Cell states */
-tbody td:hover            { background-color: #ffe066; }
-td.focus_across,
-td.focus_down             { background-color: #b8d8e8; }
-td.selected_cell          { background-color: #ffd700; }
-td.black                  { background-color: black; }
-td.black:hover            { background-color: black; }
-td.empty-warn             { background-color: #fff9c4 !important; }
+.grid tbody td:hover            { background-color: #ffe066; }
+.grid td.focus_across,
+.grid td.focus_right,
+.grid td.focus_down             { background-color: #b8d8e8; }
+.grid td.selected_cell          { background-color: #ffd700; }
+.grid td.black                  { background-color: black; }
+.grid td.black:hover            { background-color: black; }
+.grid td.empty-warn             { background-color: #fff9c4 !important; }
 
 /* Correct / wrong cell background colours */
-td.right  { background-color: #c8f5c8 !important; }
-td.wrong  { background-color: #ffc8c8 !important; }
-td.wrong .char { opacity: 0.45; }
+.grid td.right  { background-color: #c8f5c8 !important; }
+.grid td.wrong  { background-color: #ffc8c8 !important; }
+.grid td.wrong .char { opacity: 0.45; }
 /* Higher-specificity !important rules restore interaction states */
-td.right:hover, td.wrong:hover                                         { background-color: #ffe066 !important; }
-td.right.focus_across, td.right.focus_down,
-td.wrong.focus_across, td.wrong.focus_down                             { background-color: #b8d8e8 !important; }
-td.right.focus_across:hover, td.right.focus_down:hover,
-td.wrong.focus_across:hover, td.wrong.focus_down:hover                 { background-color: #ffe066 !important; }
-td.right.selected_cell, td.wrong.selected_cell                         { background-color: #ffd700 !important; }
+.grid td.right:hover, .grid td.wrong:hover                                         { background-color: #ffe066 !important; }
+.grid td.right.focus_across, .grid td.right.focus_down,
+.grid td.right.focus_right,
+.grid td.wrong.focus_across, .grid td.wrong.focus_down                             { background-color: #b8d8e8 !important; }
+.grid td.right.focus_across:hover, .grid td.right.focus_down:hover,
+.grid td.right.focus_right:hover,
+.grid td.wrong.focus_across:hover, .grid td.wrong.focus_down:hover                 { background-color: #ffe066 !important; }
+.grid td.right.selected_cell, .grid td.wrong.selected_cell                         { background-color: #ffd700 !important; }
 /* Restore char opacity when cell is interacted with */
-td.wrong:hover .char,
-td.wrong.focus_across .char, td.wrong.focus_down .char,
-td.wrong.selected_cell .char                           { opacity: 1; }
+.grid td.wrong:hover .char,
+.grid td.wrong.focus_across .char, .grid td.wrong.focus_down .char,
+.grid td.wrong.focus_right .char,
+.grid td.wrong.selected_cell .char                           { opacity: 1; }
 .answer { display: none; }
 
 .cell-hint {
@@ -107,11 +102,9 @@ td.wrong.selected_cell .char                           { opacity: 1; }
 
 .clues {
   text-align: left;
-  flex-shrink: 3;
-  flex-basis: 320px;
-  width: 320px;
-  min-width: 120px;
-  max-width: 360px;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
   height: min(80vh, 600px);
   display: flex;
   flex-direction: column;
@@ -133,31 +126,90 @@ td.wrong.selected_cell .char                           { opacity: 1; }
   width: 100%;
   background: #eef4f7;
   overflow: auto;
-  font-size: 0.92rem;
+  font-size: 0.78rem;
 }
 
-.clues_across div, .clues_down div {
-  padding: 0.2em;
-  border-radius: 0.3em;
-  cursor: pointer;
+.grid tr:first-child td::after {
+  position: absolute;
+  top: -1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #526159;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.clue-block {
-  margin-top: 0.15rem;
+.grid tr td:first-child::before {
+  position: absolute;
+  top: 50%;
+  left: -1.35rem;
+  transform: translateY(-50%);
+  color: #526159;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.clue-line {
-  margin: 0.2rem 0 0;
+.grid tr:first-child td:nth-child(1)::after { content: '1'; }
+.grid tr:first-child td:nth-child(2)::after { content: '2'; }
+.grid tr:first-child td:nth-child(3)::after { content: '3'; }
+.grid tr:first-child td:nth-child(4)::after { content: '4'; }
+.grid tr:first-child td:nth-child(5)::after { content: '5'; }
+.grid tr:first-child td:nth-child(6)::after { content: '6'; }
+.grid tr:first-child td:nth-child(7)::after { content: '7'; }
+.grid tr:first-child td:nth-child(8)::after { content: '8'; }
+.grid tr:first-child td:nth-child(9)::after { content: '9'; }
+.grid tr:first-child td:nth-child(10)::after { content: '10'; }
+.grid tr:first-child td:nth-child(11)::after { content: '11'; }
+.grid tr:first-child td:nth-child(12)::after { content: '12'; }
+.grid tr:first-child td:nth-child(13)::after { content: '13'; }
+.grid tr:first-child td:nth-child(14)::after { content: '14'; }
+.grid tr:first-child td:nth-child(15)::after { content: '15'; }
+.grid tr:nth-child(1) td:first-child::before { content: '1'; }
+.grid tr:nth-child(2) td:first-child::before { content: '2'; }
+.grid tr:nth-child(3) td:first-child::before { content: '3'; }
+.grid tr:nth-child(4) td:first-child::before { content: '4'; }
+.grid tr:nth-child(5) td:first-child::before { content: '5'; }
+.grid tr:nth-child(6) td:first-child::before { content: '6'; }
+.grid tr:nth-child(7) td:first-child::before { content: '7'; }
+.grid tr:nth-child(8) td:first-child::before { content: '8'; }
+.grid tr:nth-child(9) td:first-child::before { content: '9'; }
+.grid tr:nth-child(10) td:first-child::before { content: '10'; }
+.grid tr:nth-child(11) td:first-child::before { content: '11'; }
+.grid tr:nth-child(12) td:first-child::before { content: '12'; }
+.grid tr:nth-child(13) td:first-child::before { content: '13'; }
+.grid tr:nth-child(14) td:first-child::before { content: '14'; }
+.grid tr:nth-child(15) td:first-child::before { content: '15'; }
+
+.clue-item {
+  display: block;
+  width: 100%;
+  padding: 0.22rem 0.35rem;
+  border: 0;
+  border-radius: 0.35rem;
+  color: inherit;
+  background: transparent;
+  text-align: left;
 }
 
-.clue-line:first-child {
-  margin-top: 0;
+.clue-item:hover {
+  background: #cfe4d8;
+  color: inherit;
 }
 
-.clues_across div:hover,
-.clues_down div:hover {
-  background-color: #176b4d;
-  color: white;
+.clue-group {
+  margin: 0.2rem 0;
+}
+
+.ipuz-clue-row {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  align-items: start;
+}
+
+.ipuz-clue-row .clue-item {
+  grid-column: 2;
 }
 
 .clue-num {
@@ -165,10 +217,14 @@ td.wrong.selected_cell .char                           { opacity: 1; }
   margin-right: 0.15em;
 }
 
-.selected_clue {
-  background-color: #176b4d;
-  color: white;
-  font-size: 1.3em;
+.clue-item.selected_clue {
+  color: #fff;
+  background: #176b4d;
+}
+
+.clue-item.selected_clue:hover {
+  color: #fff;
+  background: #176b4d;
 }
 
 /* =============================================================================
@@ -217,9 +273,9 @@ td.wrong.selected_cell .char                           { opacity: 1; }
 
 .puzzle {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
-  gap: 2em;
+  gap: 0.5rem;
   padding: 1em 0;
   width: 100%;
 }
@@ -228,10 +284,12 @@ td.wrong.selected_cell .char                           { opacity: 1; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex-grow: 1;
+  flex-grow: 0;
   flex-shrink: 0;
-  min-width: calc(var(--grid-cols, 15) * 20px);
-  max-width: calc(var(--grid-cols, 15) * 50px);
+  width: 100%;
+  padding-left: 1.6rem;
+  min-width: 0;
+  max-width: none;
   container-type: inline-size;
   container-name: grid-block;
 }
@@ -239,8 +297,8 @@ td.wrong.selected_cell .char                           { opacity: 1; }
 .grid {
   position: relative;
   cursor: default;
-  width: fit-content;
-  margin: 0 auto;
+  width: 100%;
+  margin: 1.55rem 0 0;
 }
 
 .grid-axis-wrapper {
@@ -357,7 +415,7 @@ td.wrong.selected_cell .char                           { opacity: 1; }
   opacity: 0.85;
 }
 
-.buttons-frozen button:not(#restart_btn) {
+.buttons-frozen button:not(.btn-restart) {
   pointer-events: none;
   opacity: 0.45;
 }
