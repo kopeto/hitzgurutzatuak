@@ -66,6 +66,7 @@ app.use(session({
 app.use(require('connect-flash')());
 app.use((req,res, next)=>{
 	res.locals.messages = require('express-messages')(req,res);
+	res.locals.flash = req.flash();
 	next();
 });
 require('./config/passport')(passport);
@@ -107,7 +108,10 @@ app.use((err, req, res, next) => {
     return res.status(statusCode).json({ error: true, message });
   }
 
-  return res.status(statusCode).render('message', { message, type: 'danger' });
+  return require('./services/react-view').renderReact(res, 'message', {
+    message,
+    type: 'danger'
+  }, { status: statusCode });
 });
 
 app.use(notFoundHandler);

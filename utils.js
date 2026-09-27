@@ -25,10 +25,10 @@ const logInfo = (info)=>{
 
 const notFoundHandler = (req,res)=>{
 	console.log(colors.red(logDate()+' - '+req.method+' '+req.url + ' ez da aurkitu.'));
-	res.render('notfound',{
-		title: 'Ez da aurkitu',
-		url: req.url
-	});
+	require('./services/react-view').renderReact(res, 'notFound', { url: req.url }, {
+    title: 'Ez da aurkitu',
+    status: 404
+  });
 }
 
 const defaultHandler = (req,res,next)=>{

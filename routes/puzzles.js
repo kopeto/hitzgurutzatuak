@@ -7,22 +7,24 @@ const PlaySession = require('../models/playsession');
 const GameStateModel = require('../models/gamestate');
 const upload = require('../config/uploadconfig');
 const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import');
+const { renderReact, serializePuzzleSummary } = require('../services/react-view');
 
 function requireMaster(req, res, next) {
   if (req.isAuthenticated() && req.user.master) return next();
-  return res.status(403).render('message', { message: 'Sarbidea ukatua', type: 'danger' });
+  return renderReact(res, 'message', { message: 'Sarbidea ukatua', type: 'danger' }, { status: 403 });
 }
 
 // Helper: strip solution data before sending to client.
 // clues[] is the flat DB array (always populated); w.clue is a per-word copy (only on newer uploads).
-function sanitizeWords(words, clues) {
+function sanitizeWords(words, clues, format) {
   return words.map((w, i) => ({
     dir: w.dir,
     x: w.x,
     y: w.y,
     length: w.length,
-    number: w.number,
-    clue: (clues && clues[i]) ? clues[i] : (w.clue || '')
+    number: format === 'ipuz' ? null : w.number,
+    clue: (clues && clues[i]) ? clues[i] : (w.clue || ''),
+    format
     // Do NOT include w.word (the answer)
   }));
 }
@@ -54,28 +56,19 @@ router.get('/', async (req, res) => {
       });
     }
 
-    res.render('puzzles', {
-      title: res.locals.t('page.puzzles'),
-      puzzles: puzzles,
-      statusMap
-    });
+    return renderReact(res, 'puzzles', { puzzles: puzzles.map(serializePuzzleSummary), statusMap }, { title: res.locals.t('page.puzzles') });
   } catch (err) {
     logError(err);
-    res.render('puzzles', { title: res.locals.t('page.puzzles'), puzzles: [], statusMap: {} });
+    return renderReact(res, 'puzzles', { puzzles: [], statusMap: {} }, { title: res.locals.t('page.puzzles') });
   }
 });
 
 router.get('/upload', checkAuth, (req, res) => {
-  res.render('upload', {
-    title: res.locals.t('page.upload'),
-    errors: {}
-  });
+  return renderReact(res, 'upload', {}, { title: res.locals.t('page.upload') });
 });
 
 router.get('/spiral-builder', checkAuth, requireMaster, (req, res) => {
-  res.render('spiral_builder', {
-    title: res.locals.t('page.spiralBuilder')
-  });
+  return renderReact(res, 'spiralBuilder', {}, { title: res.locals.t('page.spiralBuilder') });
 });
 
 router.post('/upload', checkAuth, upload, async (req, res) => {
@@ -161,7 +154,7 @@ router.get('/game/:id', async (req, res) => {
       width:          puzzle.width,
       height:         puzzle.height,
       void_grid:      puzzle.void_grid,
-      words:          sanitizeWords(puzzle.words, puzzle.clues),
+      words:          sanitizeWords(puzzle.words, puzzle.clues, puzzle.format),
       completed:      isCompleted,
       elapsedSeconds: savedElapsed,
       cellResults:    savedCellResults,
@@ -171,17 +164,11 @@ router.get('/game/:id', async (req, res) => {
     };
 
     if (gamePayload.gameType === 'spiral') {
-      return res.render('spiral_game', {
-        title: res.locals.t('page.game'),
-        puz: gamePayload
-      });
+      return renderReact(res, 'spiralGame', { puzzle: gamePayload }, { title: res.locals.t('page.game') });
     }
 
     // Send sanitized puzzle to crossword view (no filled_grid, no word answers)
-    res.render('game', {
-      title: res.locals.t('page.game'),
-      puz: gamePayload
-    });
+    return renderReact(res, 'game', { puzzle: gamePayload }, { title: res.locals.t('page.game') });
   } catch (err) {
     logError(err);
     req.flash('danger', 'Erroreren bat gertatu da.');
@@ -189,7 +176,7 @@ router.get('/game/:id', async (req, res) => {
   }
 });
 
-router.delete('/game/:id', checkAuth, async (req, res) => {
+router.delete('/game/:id', checkAuth, requireMaster, async (req, res) => {
   try {
     await CrosswordModel.deleteOne({ _id: req.params.id });
     req.flash('success', 'Jokoa ezabatu dugu');
