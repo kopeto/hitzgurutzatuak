@@ -18,14 +18,16 @@ function serializeUser(user) {
 }
 
 function serializePuzzleSummary(puzzle) {
+  const gameType = puzzle.gameType || (puzzle.format === 'spl' ? 'spiral' : 'crossword');
   return {
     _id: puzzle._id ? String(puzzle._id) : undefined,
     name: puzzle.name,
     author: puzzle.author,
     width: puzzle.width,
     height: puzzle.height,
-    gameType: puzzle.gameType,
+    gameType,
     format: puzzle.format,
+    cellCount: gameType === 'spiral' ? puzzle.spiral?.cells?.length || 0 : undefined,
     createdAt: puzzle.createdAt
   };
 }
