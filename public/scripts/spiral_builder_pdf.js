@@ -609,8 +609,9 @@
       const maxTurnsByRadius = (outerRadius - minInnerRadius) / turnPitch;
       const preferredTurns = clamp(cellCount / 15, 3, 7.2);
       const turns = clamp(preferredTurns, 2.2, Math.max(2.2, maxTurnsByRadius));
-      const thetaStart = -Math.PI / 2;
       const thetaSpan = turns * Math.PI * 2;
+      const cellAngle = thetaSpan / cellCount;
+      const thetaStart = -Math.PI * 3 / 4 - cellAngle / 2;
       const thetaEnd = thetaStart + thetaSpan;
       const innerRadius = outerRadius - turns * turnPitch;
       const radialSpan = outerRadius - innerRadius;

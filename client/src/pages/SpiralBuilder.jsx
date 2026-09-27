@@ -9,31 +9,20 @@ function clamp(value, minimum, maximum) {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
-function normalizeDefinitions(definitions, cellCount) {
-  if (!definitions.length) return [];
-  const count = Math.max(1, Number(cellCount) || 1);
-  const normalized = definitions.map(definition => {
-    const start = clamp(Number(definition.start) || 1, 1, count);
-    const end = clamp(Number(definition.end) || start, 1, count);
-    return { start: Math.min(start, end), end: Math.max(start, end), text: String(definition.text || '') };
-  }).sort((left, right) => left.start - right.start);
-
-  normalized[0].start = 1;
-  normalized.forEach((definition, index) => {
-    if (index > 0) definition.start = normalized[index - 1].end + 1;
-    definition.start = clamp(definition.start, 1, count);
-    definition.end = clamp(Math.max(definition.start, definition.end), definition.start, count);
-  });
-  normalized.at(-1).end = count;
-  return normalized;
+function normalizeDefinitions(definitions) {
+  return (Array.isArray(definitions) ? definitions : []).map(definition => ({
+    start: definition.start ?? 1,
+    end: definition.end ?? 1,
+    text: String(definition.text || '')
+  }));
 }
 
 function parseDefinitions(lines, count) {
   const parsed = String(lines || '').split('\n').map(line => {
-    const match = line.trim().match(/^(\d+)\s*-\s*(\d+)\s*(.*)$/);
+    const match = line.trim().match(/^(-?\d+)\s*-\s*(-?\d+)\s*(.*)$/);
     return match ? { start: Number(match[1]), end: Number(match[2]), text: match[3] } : null;
   }).filter(Boolean);
-  return normalizeDefinitions(parsed, count);
+  return normalizeDefinitions(parsed);
 }
 
 function definitionLines(definitions, direction) {
@@ -73,7 +62,8 @@ function pathFrom(points) {
 function buildSpiral(count, size) {
   const cx = 380; const cy = 380; const outerRadius = 286; const stripWidth = clamp(size * 0.82, 20, 56);
   const turns = clamp(clamp(count / 15, 3, 7.2), 2.2, Math.max(2.2, (outerRadius - 64) / stripWidth));
-  const thetaStart = -Math.PI / 2; const thetaSpan = turns * Math.PI * 2; const slope = (turns * stripWidth) / thetaSpan;
+  const thetaSpan = turns * Math.PI * 2; const cellAngle = thetaSpan / count;
+  const thetaStart = -Math.PI * 3 / 4 - cellAngle / 2; const slope = (turns * stripWidth) / thetaSpan;
   const sampleCount = Math.max(1800, count * 80); const samples = [];
   for (let index = 0; index <= sampleCount; index += 1) {
     const theta = thetaStart + thetaSpan * (index / sampleCount); const point = spiralPoint(cx, cy, outerRadius, slope, thetaStart, theta);
@@ -115,8 +105,8 @@ function hydrateState(saved) {
   const state = { ...initialState, ...saved };
   return {
     ...state,
-    inwardDefs: normalizeDefinitions(saved.inwardDefs || parseDefinitions(saved.inward, state.cellCount), state.cellCount),
-    outwardDefs: normalizeDefinitions(saved.outwardDefs || parseDefinitions(saved.outward, state.cellCount), state.cellCount)
+    inwardDefs: normalizeDefinitions(saved.inwardDefs || parseDefinitions(saved.inward, state.cellCount)),
+    outwardDefs: normalizeDefinitions(saved.outwardDefs || parseDefinitions(saved.outward, state.cellCount))
   };
 }
 
@@ -130,25 +120,21 @@ export function SpiralBuilder({ t }) {
   const update = (name, value) => setState(current => ({ ...current, [name]: value }));
   const updateCount = value => setState(current => {
     const cellCount = clamp(Number(value) || 1, 1, 400);
-    return { ...current, cellCount, answer: current.answer.slice(0, cellCount), inwardDefs: normalizeDefinitions(current.inwardDefs, cellCount), outwardDefs: normalizeDefinitions(current.outwardDefs, cellCount) };
+    return { ...current, cellCount, answer: current.answer.slice(0, cellCount) };
   });
   const updateDefinition = (direction, index, field, value) => setState(current => {
     const key = `${direction}Defs`; const definitions = current[key].map(definition => ({ ...definition }));
     const definition = definitions[index];
     if (!definition) return current;
     const mappedField = direction === 'outward' ? (field === 'start' ? 'end' : field === 'end' ? 'start' : field) : field;
-    definition[mappedField] = field === 'text' ? value : Number(value) || 1;
-    return { ...current, [key]: normalizeDefinitions(definitions, current.cellCount) };
+    definition[mappedField] = field === 'text' ? value : (value === '' ? '' : Number(value));
+    return { ...current, [key]: definitions };
   });
   const addDefinition = direction => setState(current => {
-    const key = `${direction}Defs`; const definitions = normalizeDefinitions(current[key], current.cellCount);
-    if (!definitions.length) return { ...current, [key]: [{ start: 1, end: current.cellCount, text: '' }] };
-    const last = definitions.at(-1); const length = last.end - last.start + 1;
-    if (length < 2) return current;
-    const split = last.start + Math.floor(length / 2) - 1;
-    return { ...current, [key]: normalizeDefinitions([...definitions.slice(0, -1), { ...last, end: split }, { start: split + 1, end: last.end, text: '' }], current.cellCount) };
+    const key = `${direction}Defs`;
+    return { ...current, [key]: [...current[key], { start: 1, end: current.cellCount, text: '' }] };
   });
-  const removeDefinition = (direction, index) => setState(current => ({ ...current, [`${direction}Defs`]: normalizeDefinitions(current[`${direction}Defs`].filter((_, itemIndex) => itemIndex !== index), current.cellCount) }));
+  const removeDefinition = (direction, index) => setState(current => ({ ...current, [`${direction}Defs`]: current[`${direction}Defs`].filter((_, itemIndex) => itemIndex !== index) }));
   const payload = () => ({ kind: 'hitzgurutzatuak/spiral/v1', format: 'spl', title: state.title || 'Espirala', author: state.author || 'Ezezaguna', viewBox: '0 0 760 760', answer: state.answer, clues: [...lines('inward'), ...lines('outward')], cells: spiral.cells });
   const saveDraft = () => localStorage.setItem('hitzgurutzatuak-spiral-draft', JSON.stringify(state));
   const loadDraft = () => { try { setState(hydrateState(JSON.parse(localStorage.getItem('hitzgurutzatuak-spiral-draft') || '{}'))); } catch { window.alert('Ezin izan da zirriborroa kargatu.'); } };
@@ -162,7 +148,7 @@ function Field({ label, children }) { return <div className="builder-field"><lab
 
 function DefinitionEditor({ direction, definitions, answer, t, onAdd, onUpdate, onRemove }) {
   const ordered = direction === 'outward' ? [...definitions].reverse() : definitions;
-  return <div className="builder-field"><div className="clue-editor-heading"><label>{t(`spiralBuilder.${direction}`)}</label><button className="clue-add-btn btn btn-outline-secondary btn-sm" type="button" onClick={() => onAdd(direction)} aria-label={t('spiralBuilder.addDefinition')}>+</button></div><div className="clue-editor"><div className="clue-editor-list">{ordered.map((definition, displayIndex) => { const index = direction === 'outward' ? definitions.length - displayIndex - 1 : displayIndex; const start = direction === 'outward' ? definition.end : definition.start; const end = direction === 'outward' ? definition.start : definition.end; return <div className="clue-row" key={`${direction}-${index}`}><div className="clue-row-head"><input className="form-control clue-start" type="number" min="1" value={start} onChange={event => onUpdate(direction, index, 'start', event.target.value)} aria-label={t('spiralBuilder.startCell')} /><input className="form-control clue-end" type="number" min="1" value={end} onChange={event => onUpdate(direction, index, 'end', event.target.value)} aria-label={t('spiralBuilder.endCell')} /><button className="btn btn-outline-danger btn-sm clue-remove" type="button" onClick={() => onRemove(direction, index)}>{t('spiralBuilder.removeDefinition')}</button></div><textarea className="form-control clue-text" value={definition.text} placeholder={t('spiralBuilder.definition')} onChange={event => onUpdate(direction, index, 'text', event.target.value)} /><div className="clue-word-preview">{t('spiralBuilder.wordPreview')}: {wordForRange(answer, start, end)}</div></div>; })}</div></div></div>;
+  return <div className="builder-field"><div className="clue-editor-heading"><label>{t(`spiralBuilder.${direction}`)}</label><button className="clue-add-btn btn btn-outline-secondary btn-sm" type="button" onClick={() => onAdd(direction)} aria-label={t('spiralBuilder.addDefinition')}>+</button></div><div className="clue-editor"><div className="clue-editor-list">{ordered.map((definition, displayIndex) => { const index = direction === 'outward' ? definitions.length - displayIndex - 1 : displayIndex; const start = direction === 'outward' ? definition.end : definition.start; const end = direction === 'outward' ? definition.start : definition.end; return <div className="clue-row" key={`${direction}-${index}`}><div className="clue-row-head"><input className="form-control clue-start" type="number" value={start} onChange={event => onUpdate(direction, index, 'start', event.target.value)} aria-label={t('spiralBuilder.startCell')} /><input className="form-control clue-end" type="number" value={end} onChange={event => onUpdate(direction, index, 'end', event.target.value)} aria-label={t('spiralBuilder.endCell')} /><button className="btn btn-outline-danger btn-sm clue-remove" type="button" onClick={() => onRemove(direction, index)}>{t('spiralBuilder.removeDefinition')}</button></div><textarea className="form-control clue-text" value={definition.text} placeholder={t('spiralBuilder.definition')} onChange={event => onUpdate(direction, index, 'text', event.target.value)} /><div className="clue-word-preview">{t('spiralBuilder.wordPreview')}: {wordForRange(answer, start, end)}</div></div>; })}</div></div></div>;
 }
 
 function ClueList({ title, lines }) { return <div className="spiral-clue-column"><h2>{title}</h2><ol>{lines.map((line, index) => <li key={index}>{line}</li>)}</ol></div>; }
