@@ -29,6 +29,14 @@
   fill: #ffe08a;
 }
 
+.spiral-cell.is-active {
+  fill: #b8d8e8;
+}
+
+.spiral-cell.is-active.is-selected {
+  fill: #ffd700;
+}
+
 .spiral-cell.is-correct {
   fill: #c8f5c8;
 }
@@ -61,11 +69,74 @@
   font-size: 1rem;
 }
 
-.spiral-clues {
-  margin: 0;
-  padding-left: 1.2rem;
-  max-height: 45vh;
-  overflow: auto;
+.spiral-direction-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 15rem);
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+}
+
+.spiral-direction-switch button {
+  padding: 0.38rem 0.45rem;
+  border: 1px solid #b8c8be;
+  border-radius: 0.45rem;
+  color: #526159;
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.spiral-direction-switch button.is-active {
+  border-color: #176b4d;
+  color: #fff;
+  background: #176b4d;
+}
+
+.spiral-definitions {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.spiral-definition-group h4 {
+  margin: 0 0 0.25rem;
+  color: #526159;
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.spiral-clues-list {
+  border-radius: 0.45rem;
+  background: #eef4f7;
+}
+
+.spiral-clue-item {
+  display: block;
+  width: 100%;
+  padding: 0.26rem 0.42rem;
+  border: 0;
+  border-radius: 0.35rem;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.spiral-clue-item span {
+  font-weight: 800;
+}
+
+.spiral-clue-item:hover {
+  background: #cfe4d8;
+}
+
+.spiral-clue-item.is-selected,
+.spiral-clue-item.is-selected:hover {
+  color: #fff;
+  background: #176b4d;
 }
 
 .spiral-status {
