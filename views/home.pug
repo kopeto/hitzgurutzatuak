@@ -12,9 +12,10 @@ block content
           a.btn.btn-outline-light.btn-lg(href='/users/register') #{t('nav.createAccount')}
     .hero-panel(aria-hidden='true')
       .hero-grid
-        - const cells = ['H','I','T','Z','','','','A','','H','J','O','K','O','A','A','T','O','','R','N','E','','A','K']
+        - const cells = ['H','I','T','Z',null,null,'P','I','K',null,'J','O','K','O','A','O','T','I',null,'K',null,'X',null,'',null]
+        - const featuredCellIndexes = [0,1,2,3,10,11,12,13,14,19]
         each cell, index in cells
-          span(class=cell ? 'hero-cell' : 'hero-cell hero-cell--dark') #{cell}
+          span(class=(cell === null ? 'hero-cell hero-cell--dark' : 'hero-cell') + (featuredCellIndexes.includes(index) ? ' hero-cell--featured' : '')) #{cell}
 
   section.section-heading
     .section-heading-copy

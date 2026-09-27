@@ -149,6 +149,7 @@ select:focus-visible {
 
 .hero-cell { display: grid; aspect-ratio: 1; place-items: center; border: 1px solid rgba(14, 61, 44, 0.25); color: var(--brand-dark); background: #fffefb; font-size: clamp(1.1rem, 4vw, 1.8rem); font-weight: 850; }
 .hero-cell--dark { background: #0d3c2c; }
+.hero-cell--featured { font-size: clamp(1.45rem, 5vw, 2.25rem); }
 
 .section-heading, .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin: 4.5rem 0 1.5rem; }
 .section-heading h2, .page-heading h1 { margin: 0; color: var(--ink); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 820; letter-spacing: -0.045em; }
