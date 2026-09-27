@@ -32,7 +32,7 @@
 .grid tbody td {
   aspect-ratio: 1;
   width: 100%;
-  font-size: clamp(0.6rem, calc(min(60px, 100% / var(--grid-cols, 15)) * 0.7), 1.8em);
+  font-size: clamp(0.6rem, calc(min(50px, 100cqw / var(--grid-cols, 15)) * 0.7), 1.8em);
   background-color: white;
   text-align: center;
   vertical-align: middle;
