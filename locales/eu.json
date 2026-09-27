@@ -11,7 +11,7 @@
     "home": "Hasiera",
     "puzzles": "Jokoak",
     "management": "Kudeaketa",
-    "profile": "Nire gunea",
+    "profile": "Erabiltzailearen gunea",
     "signOut": "Saioa itxi",
     "signIn": "Saioa hasi",
     "createAccount": "Erabiltzailea sortu"
@@ -103,8 +103,8 @@
     "clearGrid": "Koadroa garbitu",
     "checkGrid": "✓ Zuzendu koadroa",
     "playAgain": "↺ Berriro jokatu",
-    "undo": "↶ Desegin",
-    "redo": "↷ Berregin",
+    "undo": "↶ ",
+    "redo": "↷ ",
     "progress": "Aurrerapena:",
     "correctCells": "{correct}/{total} zelula zuzen",
     "congratulations": "Zorionak! 🎉",
@@ -134,7 +134,7 @@
   },
   "dashboard": {
     "eyebrow": "NIRE IBILBIDEA",
-    "title": "Nire gunea",
+    "title": "Erabiltzailearen gunea",
     "intro": "Zure partidak, erritmoa eta hurrengo erronkak leku berean.",
     "completed": "Osatutako jokoak",
     "inProgress": "Abian dauden jokoak",
