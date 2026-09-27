@@ -9,7 +9,6 @@
     "colors": "^1.4.0",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^5.1.0",
-    "connect-multiparty": "^2.2.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-messages": "^1.0.1",
@@ -19,15 +18,15 @@
     "helmet": "^8.0.0",
     "jquery": "^3.7.1",
     "mongoose": "^8.0.0",
-    "multer": "^1.4.2",
-    "passport": "^0.4.1",
+    "multer": "^2.4.0",
+    "passport": "^0.7.0",
     "passport-local": "^1.0.0",
-    "pug": "^2.0.4",
+    "pug": "^3.0.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.2",
+    "nodemon": "^3.1.14",
     "vite": "^5.4.21"
   },
   "scripts": {
