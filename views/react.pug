@@ -1,0 +1,17 @@
+doctype html
+html(lang='eu')
+  head
+    meta(charset='utf-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1')
+    meta(name='description' content='Hitz gurutzatuak — Hitz jokoen jokoa')
+    title #{title} | Hitz gurutzatuak
+    link(rel='stylesheet' href='/vendor/bootstrap/css/bootstrap.min.css')
+    link(rel='stylesheet' href='/style/style.css')
+    link(rel='stylesheet' href='/style/cw.css')
+    link(rel='stylesheet' href='/style/spiral.css')
+    link(rel='stylesheet' href='/style/spiral_builder.css')
+    link(rel='stylesheet' href='/style/spiral_builder_pdf.css')
+  body(class=`site-body ${pageClass}`)
+    #root
+    script#app-state(type='application/json') !{appState}
+    script(type='module' src='/react/main.js')
