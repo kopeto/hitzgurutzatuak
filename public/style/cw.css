@@ -105,7 +105,7 @@
   width: 100%;
   min-width: 0;
   max-width: none;
-  height: min(80vh, 600px);
+  height: min(82vh, 640px);
   display: flex;
   flex-direction: column;
   gap: 0.4em;
@@ -114,7 +114,7 @@
 .clues-heading {
   margin: 0.25rem 0 0;
   color: #526159;
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -126,18 +126,19 @@
   width: 100%;
   background: #eef4f7;
   overflow: auto;
-  font-size: 0.78rem;
+  font-size: 0.86rem;
 }
 
 .clue-item {
   display: block;
   width: 100%;
-  padding: 0.22rem 0.35rem;
+  padding: 0.27rem 0.4rem;
   border: 0;
   border-radius: 0.35rem;
   color: inherit;
   background: transparent;
   text-align: left;
+  line-height: 1.35;
 }
 
 .clue-item:hover {
@@ -157,6 +158,8 @@
 
 .ipuz-clue-row .clue-item {
   grid-column: 2;
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 .clue-num {
@@ -210,7 +213,7 @@
   flex-direction: column;
   align-items: stretch;
   width: 100%;
-  padding: 1.25rem;
+  padding: 1rem;
   border: 1px solid #d9dfd7;
   border-radius: 1.1rem;
   background: #fff;
@@ -220,10 +223,10 @@
 
 .puzzle {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   align-items: start;
   gap: 0.5rem;
-  padding: 1em 0;
+  padding: 0.75em 0;
   width: 100%;
 }
 
@@ -234,7 +237,7 @@
   flex-grow: 0;
   flex-shrink: 0;
   width: 100%;
-  padding-left: 1.6rem;
+  padding-left: 1.35rem;
   min-width: 0;
   max-width: none;
   container-type: inline-size;
@@ -438,7 +441,7 @@
     max-width: 100%;
   }
   .clues_across, .clues_down {
-    height: 200px;
+    height: 220px;
     flex: none;
   }
   .grid-block {
