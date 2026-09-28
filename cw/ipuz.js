@@ -188,9 +188,30 @@ class iPuzCrossword {
   }
 
   _normalizeClueText(text) {
-    return String(text || '')
+    return this._decodeHtmlEntities(String(text || ''))
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  _decodeHtmlEntities(text) {
+    const namedEntities = {
+      amp: '&',
+      apos: "'",
+      gt: '>',
+      lt: '<',
+      nbsp: ' ',
+      quot: '"'
+    };
+
+    return text.replace(/&(?:#(\d+)|#x([\da-f]+)|([a-z][a-z\d]+));/gi, (match, decimal, hexadecimal, name) => {
+      if (decimal || hexadecimal) {
+        const codePoint = Number.parseInt(decimal || hexadecimal, decimal ? 10 : 16);
+        return Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff
+          ? String.fromCodePoint(codePoint)
+          : match;
+      }
+      return namedEntities[name.toLowerCase()] || match;
+    });
   }
 
   _splitGroupedClueText(text) {
@@ -211,19 +232,20 @@ class iPuzCrossword {
   _extractClues(data) {
     const cluesObj = data.clues || {};
 
-    const acrossEntries = Array.isArray(cluesObj.Across)
-      ? cluesObj.Across.map(c => ({
-          number: this._parseStartNumber(c && c.number),
-          clue: this._normalizeClueText(c && c.clue)
-        }))
-      : [];
+    const entriesForDirection = direction => Object.entries(cluesObj)
+      // Some exporters append a localized heading after the direction, e.g.
+      // "Across:EZKER-ESKUIN" or "Down:GOITIK BEHERA".
+      .filter(([groupName, entries]) => (
+        Array.isArray(entries)
+        && new RegExp(`^${direction}(?:\\s*:|$)`, 'i').test(String(groupName).trim())
+      ))
+      .flatMap(([, entries]) => entries.map(c => ({
+        number: this._parseStartNumber(c && c.number),
+        clue: this._normalizeClueText(c && c.clue)
+      })));
 
-    const downEntries = Array.isArray(cluesObj.Down)
-      ? cluesObj.Down.map(c => ({
-          number: this._parseStartNumber(c && c.number),
-          clue: this._normalizeClueText(c && c.clue)
-        }))
-      : [];
+    const acrossEntries = entriesForDirection('Across');
+    const downEntries = entriesForDirection('Down');
 
     return {
       acrossEntries,
