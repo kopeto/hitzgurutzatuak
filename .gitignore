@@ -22,6 +22,9 @@ logs/
 ### Uploads / downloads
 uploads/*.puz
 
+###
+jokoak/
+
 
 ### Public vendor
 public/bower_components/

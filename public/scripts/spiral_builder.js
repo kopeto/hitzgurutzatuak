@@ -227,7 +227,7 @@ function initSpiralBuilder() {
       letter.setAttribute('font-size', '18pt');
       letter.setAttribute('font-weight', '700');
       letter.setAttribute('fill', '#151515');
-      letter.textContent = letters[cell.index - 1] || '·';
+      letter.textContent = letters[cell.index - 1] || '';
       lettersGroup.appendChild(letter);
     });
 

@@ -92,7 +92,7 @@
   },
   "game": {
     "gridLabel": "{name} hitz gurutzatuko taula",
-    "cluesLabel": "jokoaren pistak",
+    "cluesLabel": "Definizioak",
     "across": "EZKER ESKUIN",
     "down": "GOITIK BEHERA",
     "check": "Zuzendu",

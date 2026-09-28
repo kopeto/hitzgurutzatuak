@@ -233,6 +233,20 @@ export function SpiralGame({ puzzle, user, t }) {
   const matchingDefinitions = definitions[direction].filter(item => selected >= item.start && selected <= item.end);
   const activeDefinition = matchingDefinitions[activeDefinitionIndex] || matchingDefinitions[0];
   const save = next => { if (user) gameApi.save(puzzle.id, next.flatMap((value, col) => value ? [{ row: 0, col, value }] : [])); };
+  useEffect(() => {
+    const selectedClue = document.querySelector('.spiral-clue-item.is-selected');
+    const panel = selectedClue?.closest('.spiral-clues-list');
+    if (!selectedClue || !panel) return;
+
+    const clueRect = selectedClue.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    if (clueRect.top < panelRect.top || clueRect.bottom > panelRect.bottom) {
+      panel.scrollTo({
+        top: panel.scrollTop + clueRect.top - panelRect.top - (panel.clientHeight - clueRect.height) / 2,
+        behavior: 'smooth'
+      });
+    }
+  }, [activeDefinition, direction]);
   useEffect(() => { gameApi.load(puzzle.id).then(result => { if (!result.cells) return; setValues(current => current.map((value, col) => result.cells.find(cell => cell.row === 0 && cell.col === col)?.value || value)); }); return () => window.clearTimeout(saveTimeout.current); }, []);
   const update = (index, value) => { if (puzzle.completed) return; setValues(current => { const next = [...current]; next[index - 1] = value; window.clearTimeout(saveTimeout.current); saveTimeout.current = window.setTimeout(() => save(next), 600); return next; }); setResults({}); };
   const selectCell = (index, cycle = false, preferredDefinition = null) => {

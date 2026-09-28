@@ -260,7 +260,7 @@
       const step = startNum <= endNum ? 1 : -1;
       const chars = [];
       for (let i = startNum; step > 0 ? i <= endNum : i >= endNum; i += step) {
-        chars.push(letters[i - 1] || '·');
+        chars.push(letters[i - 1] || '');
       }
       return chars.join('');
     }
@@ -778,7 +778,7 @@
         letter.setAttribute('text-anchor', 'middle');
         letter.setAttribute('dominant-baseline', 'central');
         letter.setAttribute('class', 'spiral-preview-letter');
-        letter.textContent = letters[cell.index - 1] || '·';
+        letter.textContent = letters[cell.index - 1] || '';
         lettersGroup.appendChild(letter);
       });
 
@@ -849,7 +849,7 @@
         const numberText = state.showNumbers
           ? `<text x="${cell.labelX}" y="${cell.labelY}" text-anchor="middle" dominant-baseline="middle" class="spiral-number">${cell.index}</text>`
           : '';
-        const letter = letters[cell.index - 1] || '·';
+        const letter = letters[cell.index - 1] || '';
         return [
           `<path d="${cell.path}" class="${fillClass}" stroke-width="1.1"></path>`,
           numberText,

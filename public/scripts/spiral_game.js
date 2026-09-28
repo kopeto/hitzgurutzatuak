@@ -40,7 +40,7 @@
     const i = index - 1;
     values[i] = letter;
     const target = document.getElementById('s_char_' + index);
-    if (target) target.textContent = letter || '·';
+    if (target) target.textContent = letter || '';
     updateCounter();
   }
 
