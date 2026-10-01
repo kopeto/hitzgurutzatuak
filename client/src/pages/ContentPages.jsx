@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { formatDate, formatDuration } from '../lib/i18n';
 
 function Heading({ eyebrow, title, text, action }) {
@@ -49,7 +49,128 @@ export function DashboardPage({ stats, completed = [], inProgress = [], t }) { r
 
 function SessionTable({ title, sessions, completed, t }) { return <><h2 className="dashboard-section-title">{title}</h2><table className="table table-sm table-hover"><thead><tr><th>{t('common.name')}</th><th>{t('common.size')}</th><th>{completed ? t('dashboard.completedAt') : t('dashboard.startedAt')}</th>{completed && <th>{t('dashboard.duration')}</th>}<th /></tr></thead><tbody>{sessions.map(session => <tr key={session._id}><td>{completed ? <a href={`/jokoak/game/${session.puzzleId}`}>{session.puzzle?.name || session.puzzleId}</a> : session.puzzle?.name || session.puzzleId}</td><td>{session.puzzle ? `${session.puzzle.width}×${session.puzzle.height}` : '—'}</td><td>{formatDate(completed ? session.completedAt : session.startedAt)}</td>{completed && <td>{session.durationSeconds == null ? '—' : formatDuration(session.durationSeconds)}</td>}<td>{!completed && <a className="btn btn-sm btn-outline-primary" href={`/jokoak/game/${session.puzzleId}`}>{t('common.continue')}</a>}</td></tr>)}</tbody></table></>; }
 
-export function UploadPage({ user, t }) { return <section className="form-page"><Heading eyebrow={t('upload.eyebrow')} title={t('upload.title')} text={t('upload.intro')} action={<div className="page-actions">{user?.master && <a className="btn btn-outline-secondary" href="/jokoak/spiral-builder">{t('upload.builder')}</a>}<a className="btn btn-outline-primary" href="/jokoak">{t('upload.backToCatalog')}</a></div>} /><div className="upload-card"><form className="auth-form" method="POST" action="/jokoak/upload" encType="multipart/form-data"><div className="form-group"><label htmlFor="filename">{t('upload.file')}</label><input id="filename" className="form-control" name="filename" type="file" accept=".ipuz,.puz,.spl" required /><small className="form-hint">{t('upload.hint')}</small></div><button className="btn btn-primary" type="submit">{t('upload.submit')}</button></form></div></section>; }
+export function UploadPage({ user, t, maxUploadFiles = 25, maxUploadFileSize = 5242880 }) {
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [batch, setBatch] = useState(null);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const fileInput = useRef(null);
+  const busy = submitting || batch?.status === 'queued' || batch?.status === 'processing';
+  const maxSizeMb = Math.ceil(maxUploadFileSize / (1024 * 1024));
+
+  useEffect(() => {
+    if (!batch || !['queued', 'processing'].includes(batch.status)) return undefined;
+    let cancelled = false;
+    let timeout;
+    const poll = async () => {
+      try {
+        const response = await fetch(`/jokoak/upload/batches/${batch.id}`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || t('upload.statusError'));
+        if (cancelled) return;
+        setBatch(result);
+        if (['queued', 'processing'].includes(result.status)) timeout = window.setTimeout(poll, 1000);
+      } catch (pollError) {
+        if (!cancelled) setError(pollError.message || t('upload.statusError'));
+      }
+    };
+    timeout = window.setTimeout(poll, 700);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [batch?.id, batch?.status, t]);
+
+  const appendFiles = incoming => {
+    if (!incoming.length) return;
+    if (selectedFiles.length + incoming.length > maxUploadFiles) {
+      setError(t('upload.tooManyFiles', { count: maxUploadFiles }));
+      return;
+    }
+    setError('');
+    setSelectedFiles(current => [...current, ...incoming]);
+    setBatch(null);
+  };
+
+  const addFiles = event => {
+    const incoming = Array.from(event.target.files || []);
+    event.target.value = '';
+    appendFiles(incoming);
+  };
+
+  const handleDrop = event => {
+    event.preventDefault();
+    setDragging(false);
+    if (!busy) appendFiles(Array.from(event.dataTransfer.files || []));
+  };
+
+  const removeSelectedFile = index => {
+    setSelectedFiles(current => current.filter((_, fileIndex) => fileIndex !== index));
+  };
+
+  const submitBatch = async event => {
+    event.preventDefault();
+    if (!selectedFiles.length || busy) return;
+    setSubmitting(true);
+    setError('');
+    setBatch(null);
+    const formData = new FormData();
+    selectedFiles.forEach(file => formData.append('filename', file));
+    try {
+      const response = await fetch('/jokoak/upload/batches', { method: 'POST', body: formData });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || t('upload.submitError'));
+      setBatch(result);
+      setSelectedFiles([]);
+      if (fileInput.current) fileInput.current.value = '';
+    } catch (submitError) {
+      setError(submitError.message || t('upload.submitError'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const batchProgress = batch?.total ? Math.round((batch.processed / batch.total) * 100) : 0;
+  const statusLabel = status => t(`upload.status.${status}`);
+
+  return <section className="form-page">
+    <Heading eyebrow={t('upload.eyebrow')} title={t('upload.title')} text={t('upload.intro')} action={<div className="page-actions">{user?.master && <a className="btn btn-outline-secondary" href="/jokoak/spiral-builder">{t('upload.builder')}</a>}<a className="btn btn-outline-primary" href="/jokoak">{t('upload.backToCatalog')}</a></div>} />
+    <div className="upload-card">
+      <form className="auth-form" onSubmit={submitBatch}>
+        <div className="form-group">
+          <div className={`upload-dropzone${dragging ? ' upload-dropzone--active' : ''}${busy ? ' upload-dropzone--disabled' : ''}`}
+            onDragEnter={event => { event.preventDefault(); if (!busy) setDragging(true); }}
+            onDragOver={event => { event.preventDefault(); if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'; }}
+            onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
+            onDrop={handleDrop}>
+            <input ref={fileInput} id="filenames" className="upload-file-input" type="file" accept=".ipuz,.puz,.spl" multiple onChange={addFiles} disabled={busy} aria-label={t('upload.file')} />
+            <span className="upload-dropzone-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M24 31V8m0 0-8 8m8-8 8 8M9 27v10a4 4 0 0 0 4 4h22a4 4 0 0 0 4-4V27" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+            <div className="upload-dropzone-copy"><strong>{dragging ? t('upload.dropActive') : t('upload.dropTitle')}</strong><span>{t('upload.dropHint', { count: maxUploadFiles, size: maxSizeMb })}</span></div>
+            <button className="btn btn-outline-primary upload-browse-button" type="button" onClick={() => fileInput.current?.click()} disabled={busy}>{t('upload.browseFiles')}</button>
+          </div>
+          <small id="upload-hint" className="form-hint">{t('upload.hint')}</small>
+        </div>
+
+        {selectedFiles.length > 0 && <div className="upload-selection">
+          <div className="upload-section-heading"><strong>{t('upload.selectedFiles', { count: selectedFiles.length })}</strong><button className="btn btn-link btn-sm" type="button" onClick={() => setSelectedFiles([])} disabled={busy}>{t('upload.clearSelection')}</button></div>
+          <ul className="upload-file-list">{selectedFiles.map((file, index) => <li className="upload-file-row" key={`${file.name}-${file.lastModified}-${index}`}><span className="upload-file-type">{file.name.split('.').pop().slice(0, 5).toUpperCase()}</span><span className="upload-file-name">{file.name}<small>{(file.size / (1024 * 1024)).toFixed(2)} MB</small></span><button className="upload-remove-button" type="button" onClick={() => removeSelectedFile(index)} disabled={busy} aria-label={t('upload.removeFile', { name: file.name })} title={t('upload.remove')}>×</button></li>)}</ul>
+        </div>}
+
+        {error && <div className="alert alert-danger" role="alert">{error}</div>}
+        <button className="btn btn-primary" type="submit" disabled={!selectedFiles.length || busy}>{submitting ? t('upload.sending') : t('upload.submit', { count: selectedFiles.length })}</button>
+      </form>
+
+      {batch && <section className="upload-progress" aria-live="polite">
+        <div className="upload-progress-heading"><h2>{t('upload.progressTitle')}</h2><span>{statusLabel(batch.status)}</span></div>
+        <p className="form-hint">{t('upload.progressCount', { processed: batch.processed, total: batch.total, succeeded: batch.succeeded, failed: batch.failed })}</p>
+        <progress className="upload-progress-bar" max="100" value={batchProgress} aria-label={t('upload.progressTitle')} />
+        {['completed', 'completed_with_errors'].includes(batch.status) && <p className={`upload-summary${batch.failed ? ' upload-summary--warning' : ''}`}>{batch.failed ? t('upload.finishedWithErrors') : t('upload.finished')}</p>}
+        <ul className="upload-file-list upload-results-list">{batch.files.map(file => <li className="upload-file-row" key={file.id}><span className="upload-file-type">{file.filename.split('.').pop().slice(0, 5).toUpperCase()}</span><span className="upload-file-name">{file.filename}{file.puzzleName && <small>{file.puzzleName}</small>}{file.message && <small className="upload-file-error">{file.message}</small>}</span><span className={`upload-status upload-status--${file.status}`}>{statusLabel(file.status)}</span></li>)}</ul>
+      </section>}
+    </div>
+  </section>;
+}
 
 export function MasterPage({ stats, puzzles = [], users = [], completionMap = {}, userStats = {}, recentCompletions = [], downloadsFiles = [], t }) { return <div className="dashboard"><Heading eyebrow={t('upload.eyebrow')} title={t('master.title')} text={t('master.intro')} /><div className="dashboard-stats-row">{[[stats.puzzles, t('master.puzzleCount')], [stats.users, t('master.userCount')], [stats.completions, t('master.completionCount')], [stats.activeSessions, t('common.active')]].map(([value, label]) => <div className="stat-card" key={label}><div className="stat-value">{value}</div><div className="stat-label">{label}</div></div>)}</div><div className="dashboard-actions"><a className="btn btn-primary" href="/jokoak/upload">{t('master.upload')}</a></div><h2 className="dashboard-section-title">{t('master.externalApi')}</h2><div className="card mb-4"><div className="card-body"><p className="mb-2">{t('master.apiDescription')}</p><p className="mb-0 text-muted">{t('master.apiSecret')}</p></div></div><h2 className="dashboard-section-title">{t('master.downloads')}</h2>{downloadsFiles.length ? <table className="table table-sm"><thead><tr><th>{t('common.name')}</th><th>{t('common.size')}</th><th>{t('common.date')}</th></tr></thead><tbody>{downloadsFiles.map(file => <tr key={file.name}><td><a href={`/master/download/${encodeURIComponent(file.name)}`}>{file.name}</a></td><td>{file.sizeDisplay}</td><td>{file.mtimeDisplay}</td></tr>)}</tbody></table> : <p className="text-muted">{t('master.downloadsEmpty')}</p>}<MasterTables puzzles={puzzles} users={users} completionMap={completionMap} userStats={userStats} recentCompletions={recentCompletions} t={t} /></div>; }
 

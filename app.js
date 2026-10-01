@@ -20,9 +20,13 @@ const home = require('./routes/home');
 
 
 const mongoose = require('mongoose');
+const { resumePendingPuzzleUploadBatches } = require('./services/puzzle-upload-queue');
 mongoose.connect(config.database);
 const db = mongoose.connection;
-db.once('open',()=>{logInfo('Connected to mongodb');});
+db.once('open',()=>{
+  logInfo('Connected to mongodb');
+  resumePendingPuzzleUploadBatches().catch(logError);
+});
 db.on('error',(err)=>{logError(err); process.exit(1);});
 
 const app = express();
