@@ -27,6 +27,8 @@ uploads/*.puz
 ###
 jokoak/
 
+###
+downloads/
 
 ### Public vendor
 public/bower_components/
@@ -52,4 +54,3 @@ Thumbs.db
 ### Misc
 .cache/
 npm-debug.log
-

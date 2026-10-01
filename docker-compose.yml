@@ -4,6 +4,7 @@ services:
     build: .
     ports:
       - "3000:3000"
+    env_file: .env
     environment:
       - DB_CONNECTION=mongodb://mongo:27017/CW
       - NODE_ENV=development
