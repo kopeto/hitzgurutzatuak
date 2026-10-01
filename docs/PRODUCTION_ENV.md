@@ -15,7 +15,7 @@ sudoedit /etc/hitzgurutzatuak/app.env
 Gehitu gutxienez aldagai hauek, benetako balioekin:
 
 ```dotenv
-DB_CONNECTION=mongodb+srv://ERABILTZAILEA:PASAHITZA@KLUSTERRA/CW?retryWrites=true&w=majority
+DB_CONNECTION=mongodb://mongo:27017/CW
 MY_SECRET=sortu_openssl_rand_base64_48_komandoarekin
 EXTERNAL_API_KEY=sortu_openssl_rand_hex_32_komandoarekin
 TRUST_PROXY=true
@@ -23,9 +23,11 @@ SESSION_MAX_AGE_MS=604800000
 MAX_PUZ_UPLOAD_BYTES=5242880
 ```
 
-Ez kopiatu adibideko balioak produkziora. Sortu `MY_SECRET` eta `EXTERNAL_API_KEY` ausaz zerbitzarian, adibidez `openssl rand -base64 48` eta `openssl rand -hex 32` erabiliz. `TRUST_PROXY=true` erabili soilik aplikazioa salto bakarreko proxy fidagarri baten atzean badago; proxy-katerako, aplikazioaren konfigurazioak salto kopuru osoa ere onartzen du. MongoDB konexioak autentifikazioa eta TLS erabili behar ditu, eta datu-baseak ez du publikoki eskuragarri egon behar.
+Ez kopiatu adibideko sekretuak produkziora. Sortu `MY_SECRET` eta `EXTERNAL_API_KEY` ausaz zerbitzarian, adibidez `openssl rand -base64 48` eta `openssl rand -hex 32` erabiliz. `TRUST_PROXY=true` erabili soilik aplikazioa salto bakarreko proxy fidagarri baten atzean badago; proxy-katerako, aplikazioaren konfigurazioak salto kopuru osoa ere onartzen du. Adibideko `DB_CONNECTION` balioa Compose barruko MongoDB zerbitzurako da; kanpoko MongoDB kudeatu bat erabiltzean, autentifikazioa eta TLS dituen URI pribatua erabili, eta ez utzi datu-basea publikoki eskuragarri.
 
-`NODE_ENV=production` eta `PORT=3000` Docker Compose konfigurazioak ezartzen ditu. Produkzio-konfigurazioak ez du MongoDB lokaleko edukiontzirik sortzen; `DB_CONNECTION` produkzioko datu-basera zuzendu behar da.
+`NODE_ENV=production` eta `PORT=3000` Docker Compose konfigurazioak ezartzen ditu. Compose-ak aplikazioa eta MongoDB edukiontzia abiarazten ditu, MongoDBren osasun-proba eta datu-bolumen iraunkorrarekin. `DB_CONNECTION=mongodb://mongo:27017/CW` erabil daiteke konfigurazio horrekin; MongoDBren portua ez da ostalarian argitaratzen.
+
+MongoDB kudeatu bat erabiltzen baduzu, jarri haren autentifikatutako TLS URIa `DB_CONNECTION` aldagaian eta kendu edo egokitu `mongo` zerbitzua Compose fitxategian. Ostalari berean MongoDB edukiontzia erabiltzean, portua argitaratu gabe uzten da eta aplikazioak soilik erabiltzen du sare pribatuan; datu-base kritikoetarako autentifikazioa, babeskopiak eta berreskuratze-prozedura ere konfiguratu.
 
 ## Abiaraztea
 
