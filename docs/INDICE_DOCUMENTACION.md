@@ -53,8 +53,8 @@ c:\Users\ander\hitzgurutzatuak\
 ├── 📄 INDICE_DOCUMENTACION.md       👈 Este archivo
 │
 ├── 🔧 create-master.js              ← Script crear usuario maestro
-├── 🔧 start-local.bat               ← Script lanzar (Windows)
-├── 🔧 start-local.sh                ← Script lanzar (Linux/Mac)
+├── 🔧 scripts/start-local.bat               ← Script lanzar (Windows)
+├── 🔧 scripts/start-local.sh                ← Script lanzar (Linux/Mac)
 └── ...resto de proyecto...
 ```
 
@@ -227,11 +227,11 @@ node create-master.js master 1234 master@hitzgurutzatuak.local
 ```
 **Ubicación**: Raíz del proyecto
 
-### start-local.bat (Windows)
+### scripts/start-local.bat (Windows)
 **Propósito**: Lanzar la app automáticamente
 **Uso**:
 ```cmd
-start-local.bat
+scripts/start-local.bat
 ```
 **Qué hace**:
 - Verifica Node.js
@@ -240,12 +240,12 @@ start-local.bat
 - Crea usuario maestro
 - Lanza npm start
 
-### start-local.sh (Linux/macOS)
+### scripts/start-local.sh (Linux/macOS)
 **Propósito**: Lanzar la app automáticamente
 **Uso**:
 ```bash
-chmod +x start-local.sh
-./start-local.sh
+chmod +x scripts/start-local.sh
+./scripts/start-local.sh
 ```
 **Qué hace**: Lo mismo que .bat
 
@@ -255,8 +255,8 @@ chmod +x start-local.sh
 
 ✅ **Scripts Creados**:
 - create-master.js (crear usuario maestro)
-- start-local.bat (lanzar app automático - Windows)
-- start-local.sh (lanzar app automático - Linux/Mac)
+- scripts/start-local.bat (lanzar app automático - Windows)
+- scripts/start-local.sh (lanzar app automático - Linux/Mac)
 
 ✅ **Documentación Creada**:
 - LOCAL_SETUP_QUICK.md (guía rápida)
@@ -305,7 +305,7 @@ chmod +x start-local.sh
 ## ✨ NOTAS IMPORTANTES
 
 - **MongoDB es CRÍTICO**: Debe estar corriendo siempre
-- **Los scripts hacen TODO**: start-local.bat/sh automatiza todo
+- **Los scripts automatizan el arranque local**: `scripts/start-local.bat` y `scripts/start-local.sh` preparan las dependencias, comprueban MongoDB y lanzan la app sin Docker
 - **Primera vez es la más lenta**: Descarga dependencias
 - **Puedes parar la app**: MongoDB sigue corriendo
 - **Documentación es redundante**: Es intencional (copiar/pegar comandos)

@@ -116,6 +116,8 @@ app.use((err, req, res, next) => {
 
 app.use(notFoundHandler);
 
-app.listen(process.env.PORT || 3000, ()=>{
-	logInfo('Easy example. Listening on port '+(process.env.PORT || 3000));
+const port = process.env.PORT || 3000;
+const host = process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1');
+app.listen(port, host, ()=>{
+	logInfo('Easy example. Listening on '+host+':'+port);
 });

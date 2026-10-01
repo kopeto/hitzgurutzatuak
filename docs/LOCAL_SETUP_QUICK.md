@@ -1,65 +1,36 @@
 # 🚀 Lanzar Hitzgurutzatuak en Local - GUÍA RÁPIDA
 
-## ⚠️ PASO 1: Instalar MongoDB (REQUERIDO)
+## ⚠️ PASO 1: Requisito
 
-MongoDB es la base de datos necesaria. Elige una opción:
+Instala Node.js y MongoDB localmente, y asegúrate de que MongoDB esté corriendo en `127.0.0.1:27017`. Los scripts no usan Docker y siempre conectan a la base local `HG_develop`, separada de la base de producción. Consulta `MONGODB_INSTALL.md` si necesitas instalar MongoDB.
 
-### Opción A: Instalación Rápida (Windows + Chocolatey)
-```powershell
-# En PowerShell como Administrador:
-choco install mongodb-community
-```
+## 🎯 PASO 2: Lanzar la Aplicación
 
-### Opción B: Descarga e Instala Manualmente
-Descarga desde: https://www.mongodb.com/try/download/community
-
-### Opción C: macOS con Homebrew
-```bash
-brew install mongodb-community
-brew services start mongodb-community
-```
-
-Ver detalles en: **MONGODB_INSTALL.md**
-
----
-
-## ✅ PASO 2: Verificar MongoDB está Corriendo
-
-```bash
-mongod
-```
-
-**Importante**: Mantén esta terminal ABIERTA
-
----
-
-## 🎯 PASO 3: Lanzar la Aplicación
-
-Abre una **NUEVA terminal** en el directorio del proyecto:
+Desde la raíz del proyecto, ejecuta el script correspondiente:
 
 ### Windows - Script Automático:
 ```cmd
-start-local.bat
+scripts/start-local.bat
 ```
 
-### Windows - Manual:
+### Windows - Lanzamiento nativo (requiere Node.js y MongoDB locales):
 ```cmd
 npm start
 ```
 
 ### macOS/Linux - Script:
 ```bash
-./start-local.sh
+./scripts/start-local.sh
 ```
 
-### macOS/Linux - Manual:
+### macOS/Linux - Lanzamiento nativo (requiere Node.js y MongoDB locales):
 ```bash
 npm start
 ```
 
 ---
 
-## 🔐 PASO 4: Acceder a la Aplicación
+## 🔐 PASO 3: Acceder a la Aplicación
 
 Abre tu navegador:
 - 🌐 **URL**: http://localhost:3000
@@ -118,8 +89,8 @@ npm install
 ## 📚 Archivos Nuevos Creados
 
 1. **`create-master.js`** - Script para crear usuario maestro
-2. **`start-local.bat`** - Script de inicio automático (Windows)
-3. **`start-local.sh`** - Script de inicio automático (Linux/macOS)
+2. **`scripts/start-local.bat`** - Script de inicio automático (Windows)
+3. **`scripts/start-local.sh`** - Script de inicio automático (Linux/macOS)
 4. **`GUIA_LOCAL_SETUP.md`** - Guía detallada
 5. **`MONGODB_INSTALL.md`** - Guía instalación MongoDB
 6. **`LOCAL_SETUP_QUICK.md`** - Este archivo

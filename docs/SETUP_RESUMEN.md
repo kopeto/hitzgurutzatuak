@@ -10,8 +10,8 @@ He creado una configuración completa para lanzar la aplicación en local sin Do
    - Se puede ejecutar múltiples veces sin problemas
 
 ### 2. **Scripts de Inicio Automático**
-   - **`start-local.bat`** (Windows) - Automatiza todo el proceso
-   - **`start-local.sh`** (Linux/macOS) - Versión para Unix
+   - **`scripts/start-local.bat`** (Windows) - Automatiza todo el proceso
+   - **`scripts/start-local.sh`** (Linux/macOS) - Versión para Unix
    - Verifican MongoDB
    - Instalan dependencias si es necesario
    - Crean usuario maestro
@@ -79,14 +79,14 @@ Abre una **NUEVA terminal** en el directorio del proyecto:
 **Windows:**
 ```cmd
 cd c:\Users\ander\hitzgurutzatuak
-start-local.bat
+scripts/start-local.bat
 ```
 
 **macOS/Linux:**
 ```bash
 cd ~/hitzgurutzatuak
-chmod +x start-local.sh
-./start-local.sh
+chmod +x scripts/start-local.sh
+./scripts/start-local.sh
 ```
 
 **O manual (cualquier SO):**
@@ -197,8 +197,8 @@ Ver más en: **GUIA_LOCAL_SETUP.md** (sección "Solucionar Problemas")
 ```
 proyecto/
 ├── create-master.js              ← Script crear usuario maestro
-├── start-local.bat               ← Script inicio (Windows)
-├── start-local.sh                ← Script inicio (Linux/macOS)
+├── scripts/start-local.bat               ← Script inicio (Windows)
+├── scripts/start-local.sh                ← Script inicio (Linux/macOS)
 ├── LOCAL_SETUP_QUICK.md          ← Este archivo (guía rápida)
 ├── GUIA_LOCAL_SETUP.md           ← Guía detallada completa
 ├── MONGODB_INSTALL.md            ← Cómo instalar MongoDB
@@ -228,7 +228,7 @@ Una vez la app esté corriendo:
 
 1. Instala MongoDB → `choco install mongodb-community`
 2. Lanza MongoDB → `mongod`
-3. En nueva terminal → `start-local.bat` (o `npm start`)
+3. En nueva terminal → `scripts/start-local.bat` (o `npm start`)
 4. Abre → http://localhost:3000
 5. Login → master / 1234
 
@@ -256,7 +256,7 @@ Una vez la app esté corriendo:
 - ✓ Scripts de inicio preparados
 - ✓ Documentación completa
 - ⏳ En espera: MongoDB instalado y corriendo
-- ⏳ En espera: Ejecutar `start-local.bat` o `npm start`
+- ⏳ En espera: Ejecutar `scripts/start-local.bat` o `npm start`
 
 ---
 

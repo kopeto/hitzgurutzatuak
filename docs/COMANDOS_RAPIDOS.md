@@ -1,15 +1,17 @@
 # ⚡ Comandos Rápidos - Referencia
 
-## 🚀 LANZAR LA APP (Asumo MongoDB corriendo)
+## 🚀 LANZAR LA APP EN DESARROLLO LOCAL
+
+Los scripts ejecutan Node.js localmente y conectan con MongoDB en `127.0.0.1:27017`, usando la base `HG_develop`.
 
 ### Opción 1: Script automático (Windows)
 ```cmd
-start-local.bat
+scripts/start-local.bat
 ```
 
 ### Opción 2: Script automático (Linux/macOS)
 ```bash
-./start-local.sh
+./scripts/start-local.sh
 ```
 
 ### Opción 3: Manual (Cualquier SO)
@@ -211,7 +213,7 @@ DB_CONNECTION=mongodb+srv://user:pass@cluster.mongodb.net/CW
 # Terminal 1: MongoDB
 mongod
 
-# Terminal 2: Crear usuario y lanzar app (se abre automáticamente con start-local.bat)
+# Terminal 2: Crear usuario y lanzar app (se abre automáticamente con scripts/start-local.bat)
 cd proyecto
 node create-master.js master 1234
 npm start

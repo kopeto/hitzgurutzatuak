@@ -53,14 +53,14 @@ mongosh
 #### Windows:
 ```powershell
 cd C:\Users\ander\hitzgurutzatuak
-.\start-local.bat
+.\scripts/start-local.bat
 ```
 
 #### Linux/Mac:
 ```bash
 cd ~/hitzgurutzatuak
-chmod +x start-local.sh
-./start-local.sh
+chmod +x scripts/start-local.sh
+./scripts/start-local.sh
 ```
 
 ### Opción 2: Manual (paso a paso)

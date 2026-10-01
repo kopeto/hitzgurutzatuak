@@ -133,7 +133,7 @@ npm start
 
 ```bash
 cd c:\Users\ander\hitzgurutzatuak
-.\start-local.bat
+.\scripts/start-local.bat
 ```
 
 O manualmente:

@@ -118,7 +118,7 @@
   ```bash
   npm start
   # O:
-  start-local.bat
+  scripts/start-local.bat
   ```
 
 - [ ] **Verificar inicio correcto**
@@ -191,7 +191,7 @@
 | npm | ✅ Instalado | Verificado |
 | MongoDB | ⏳ Pendiente | Instalar y lanzar |
 | Dependencias | ✅ Instaladas | En node_modules |
-| Scripts | ✅ Listos | create-master.js, start-local.bat |
+| Scripts | ✅ Listos | create-master.js, scripts/start-local.bat |
 | Código | ✅ Listo | Sin cambios pendientes |
 | Puerto 3000 | ⏳ Por verificar | Antes de lanzar |
 | Aplicación | ⏳ Pendiente | Lanzar npm start |
