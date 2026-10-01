@@ -89,16 +89,14 @@ router.post('/login', (req,res,next)=>{
 });
 
 router.get('/logout',(req,res,next)=>{
-  try {
-    req.logout();
-  } catch (err) {
-    return next(err);
-  }
+  req.logout(logoutError => {
+    if (logoutError) return next(logoutError);
 
-  return req.session.destroy(err => {
-    if (err) return next(err);
-    res.clearCookie('hitzgurutzatuak.sid');
-    res.redirect('/');
+    req.session.destroy(sessionError => {
+      if (sessionError) return next(sessionError);
+      res.clearCookie('hitzgurutzatuak.sid');
+      return res.redirect('/');
+    });
   });
 });
 
