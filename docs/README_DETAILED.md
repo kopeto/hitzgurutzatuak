@@ -12,7 +12,8 @@
 
 - `app.js` — entrada de la aplicación Express
 - `package.json` — dependencias y scripts
-- `Dockerfile`, `docker-compose.yml` — contenedores/deploy
+- `Dockerfile`, `docker-compose.production.yml` — contenedores de producción
+- `Dockerfile.develop`, `docker-compose.develop.yml` — desarrollo local
 - `routes/` — rutas Express principales (`api.js`, `puzzles.js`, `users.js`, ...)
 - `models/` — Mongoose models (`crosswords.js`, `gamestate.js`, `playsession.js`, `user.js`)
 - `views/` — plantillas Pug (`game.pug`, `puzzles.pug`, `layout.pug`, ...)
@@ -93,8 +94,10 @@ npm run dev
 3. Levantar con Docker (si procede):
 
 ```bash
-docker-compose up --build
+docker compose -f docker-compose.develop.yml up --build
 ```
+
+Este Compose liga la app solo a `127.0.0.1:3000` y usa un volumen Mongo independiente de producción.
 
 4. Ejecutar tests simples (si existen):
 

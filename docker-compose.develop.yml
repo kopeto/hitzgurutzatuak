@@ -1,17 +1,20 @@
-services:
+name: hitzgurutzatuak-develop
 
+services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.develop
     ports:
-      - "3000:3000"
-    env_file: .env
+      - "127.0.0.1:3000:3000"
     environment:
-      - DB_CONNECTION=mongodb://mongo:27017/CW
-      - NODE_ENV=development
-      - PORT=3000
-      - MY_SECRET=${MY_SECRET:-local-development-secret-change-me}
-      - EXTERNAL_API_KEY=${EXTERNAL_API_KEY:-local-development-api-key-change-me}
-      - TRUST_PROXY=false
+      DB_CONNECTION: mongodb://mongo:27017/HG_develop
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "3000"
+      MY_SECRET: local-development-secret-change-me
+      EXTERNAL_API_KEY: local-development-api-key-change-me
+      TRUST_PROXY: "false"
     depends_on:
       mongo:
         condition: service_healthy
@@ -34,4 +37,6 @@ services:
 
 volumes:
   mongodata:
+    name: hitzgurutzatuak_develop_mongodata
   uploads:
+    name: hitzgurutzatuak_develop_uploads

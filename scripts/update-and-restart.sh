@@ -1,53 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage() {
-  echo "Usage: $0 [--production|--maintenance]"
-  echo "  no flag       rebuild and restart the development stack from this checkout"
-  echo "  --production  build and launch the production stack from this checkout"
-  echo "  --maintenance build and launch the maintenance page from this checkout"
-}
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  echo "Usage: $0"
+  echo "Rebuild and restart the local development app."
+  exit 0
+fi
 
-mode=development
-case "${1:-}" in
-  "") ;;
-  --production) mode=production ;;
-  --maintenance) mode=maintenance ;;
-  --help|-h)
-    usage
-    exit 0
-    ;;
-  *)
-    usage >&2
-    exit 2
-    ;;
-esac
-
-if (( $# > 1 )); then
-  usage >&2
+if (( $# > 0 )); then
+  echo "Usage: $0 [--help]" >&2
   exit 2
 fi
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-if [[ "$mode" == production ]]; then
-  echo "==> Building and starting the production stack from this checkout..."
-  docker compose -f docker-compose.production.yml up -d --build
-  docker compose -f docker-compose.production.yml ps
-elif [[ "$mode" == maintenance ]]; then
-  echo "==> Building and starting the maintenance page from this checkout..."
-  docker compose -f docker-compose.maintenance.yml up -d --build --remove-orphans
-  docker compose -f docker-compose.maintenance.yml ps
-else
-  echo "==> Stopping development containers..."
-  docker compose down
+compose_file=docker-compose.develop.yml
 
-  echo "==> Rebuilding development image from this checkout..."
-  docker compose build --no-cache
+echo "==> Rebuilding and restarting the development app..."
+docker compose -f "$compose_file" up -d --build --force-recreate app
+docker compose -f "$compose_file" ps
 
-  echo "==> Starting development services..."
-  docker compose up -d
-fi
-
-echo "==> Update and restart complete!"
+echo "==> Development app update complete!"

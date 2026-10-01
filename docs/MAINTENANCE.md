@@ -5,7 +5,7 @@ Mantentze moduak aplikazioaren ohiko zerbitzua ordezkatzen du orri bakar batekin
 Abiarazteko, checkout egokia hautatu eta exekutatu:
 
 ```sh
-./scripts/update-and-restart.sh --maintenance
+./scripts/update-and-restart-deploy.sh --maintenance
 ```
 
 Launcher-ak checkout hori eraikitzen du; ez du Git-etik pull egiten. Mantentze Compose fitxategiak ekoizpeneko aplikazio bera erabiltzen du (`127.0.0.1:3000`) eta, `--remove-orphans` erabilita, Mongo zerbitzua gelditzen du. Datu-bolumena ez da ezabatzen.
@@ -13,5 +13,5 @@ Launcher-ak checkout hori eraikitzen du; ez du Git-etik pull egiten. Mantentze C
 Ohiko aplikaziora itzultzeko, exekutatu:
 
 ```sh
-./scripts/update-and-restart.sh --production
+./scripts/update-and-restart-deploy.sh --production
 ```
