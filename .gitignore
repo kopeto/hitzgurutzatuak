@@ -6,6 +6,8 @@ yarn-error.log*
 
 ### Env files
 .env
+.env.*
+!.env.example
 .env.*.local
 
 ### Logs
