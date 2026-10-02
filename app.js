@@ -1,5 +1,7 @@
 
-const {logError, notFoundHandler, defaultHandler, logInfo} = require('./utils.js');
+require('dotenv/config');
+
+const { logError, notFoundHandler, defaultHandler, logInfo } = require('./utils');
 const express = require('express');
 const http = require('http');
 const session = require('express-session');
@@ -10,7 +12,7 @@ const passport = require('passport');
 const config = require('./config/database');
 const sessionconfig = require('./config/sessionconfig');
 const { clientMessages, translate } = require('./services/i18n');
-require('dotenv/config');
+const { renderReact } = require('./services/react-view');
 
 const puzzles = require('./routes/puzzles');
 const users = require('./routes/users');
@@ -102,9 +104,10 @@ app.get('/ready', (req, res) => {
 });
 app.use('/jokoak', puzzles);
 app.use('/users', users);
-app.use('/api', api);
 app.use('/master', master);
 app.use('/api/game', api);
+// Keep the shorter API base available for compatibility.
+app.use('/api', api);
 app.use('/external', external);
 app.use('/', home);
 
@@ -121,7 +124,7 @@ app.use((err, req, res, next) => {
     return res.status(statusCode).json({ error: true, message });
   }
 
-  return require('./services/react-view').renderReact(res, 'message', {
+  return renderReact(res, 'message', {
     message,
     type: 'danger'
   }, { status: statusCode });
