@@ -30,6 +30,10 @@ jokoak/
 ###
 downloads/
 
+###
+docs/*.pdf
+docs/*.docx
+
 ### Public vendor
 public/bower_components/
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { translate as getText } from '../lib/i18n';
-import { HomePage, PuzzlesPage, LoginPage, RegisterPage, DashboardPage, UploadPage, MasterPage, MessagePage, NotFoundPage } from './ContentPages';
+import { PuzzlesPage, LoginPage, RegisterPage, DashboardPage, UploadPage, MasterPage, MessagePage, NotFoundPage } from './ContentPages';
 import { CrosswordGame, SpiralGame } from './GamePages';
 import { SpiralBuilder } from './SpiralBuilder';
 
@@ -30,7 +30,7 @@ function Layout({ state, children }) {
 }
 
 const pages = {
-  home: HomePage, puzzles: PuzzlesPage, login: LoginPage, register: RegisterPage, dashboard: DashboardPage,
+  puzzles: PuzzlesPage, login: LoginPage, register: RegisterPage, dashboard: DashboardPage,
   upload: UploadPage, master: MasterPage, message: MessagePage, notFound: NotFoundPage, game: CrosswordGame,
   spiralGame: SpiralGame, spiralBuilder: SpiralBuilder
 };

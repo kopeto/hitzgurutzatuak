@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
-const { renderReact } = require('../services/react-view');
-
 router.get('/', (req, res) => {
-  return renderReact(res, 'home', {}, { title: res.locals.t('page.home') });
+  return res.render('home', {
+    title: res.locals.t('page.home'),
+    useVite: process.env.NODE_ENV === 'development'
+  });
 });
 
 module.exports = router;

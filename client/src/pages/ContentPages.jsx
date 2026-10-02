@@ -1,136 +1,45 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { formatDate, formatDuration } from '../lib/i18n';
-import tournament2026 from '../content/tournament-2026';
 
 function Heading({ eyebrow, title, text, action }) {
   return <section className="page-heading"><div className="page-heading-copy"><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{text && <p>{text}</p>}</div>{action}</section>;
 }
 
-function PuzzleCard({ puzzle, status, t, master, home = false, onDelete }) {
+function PuzzleCard({ puzzle, status, t, master, onDelete }) {
   const gameType = puzzle.gameType || (puzzle.format === 'spl' ? 'spiral' : 'crossword');
-  const size = gameType === 'spiral' ? (puzzle.cellCount || puzzle.width * puzzle.height) : `${puzzle.width}×${puzzle.height}`;
+  const size = gameType === 'spiral'
+    ? (puzzle.cellCount || puzzle.width * puzzle.height)
+    : `${puzzle.width}×${puzzle.height}`;
   const isCompleted = status?.status === 'completed';
   const isStarted = status?.status === 'started';
   const typeLabel = gameType === 'spiral' ? t('catalog.spiralType') : t('catalog.crosswordType');
-  const typePill = <span className={`game-type-pill${gameType === 'spiral' ? ' game-type-pill--spiral' : ''}`}>{typeLabel}</span>;
-  if (home) return <article className="puzzle-list-item"><div className="puzzle-list-dimension">{size}</div><div className="puzzle-list-content"><h3><a href={`/jokoak/game/${puzzle._id}`}>{puzzle.name}</a></h3><div className="puzzle-list-details">{typePill}<span>{puzzle.author || t('common.unknownAuthor')}</span></div></div><div className="puzzle-list-meta"><span className="puzzle-new">{t('home.new')}</span><span>{formatDate(puzzle.createdAt)}</span></div><a className="btn btn-primary btn-sm" href={`/jokoak/game/${puzzle._id}`} aria-label={t('home.playAria', { name: puzzle.name })}>{t('common.play')}</a></article>;
-  return <article className="puzzle-list-item"><div className="puzzle-list-dimension">{size}</div><div className="puzzle-list-content"><h2><a href={`/jokoak/game/${puzzle._id}`}>{puzzle.name}</a></h2><p className="puzzle-author">{puzzle.author || t('common.unknownAuthor')}</p><div className="puzzle-list-details">{typePill}{isCompleted ? <><span>✓ {formatDuration(status.elapsedSeconds)}</span><span>{status.errorCount ? (status.errorCount === 1 ? t('catalog.oneError') : `${status.errorCount} ${t('catalog.errors')}`) : (!status.usedVerify && !status.usedHints ? t('catalog.perfect') : '')}</span></> : <span>{isStarted ? t('catalog.savedGame') : t('catalog.ready')}</span>}<span>{formatDate(puzzle.createdAt)}</span></div></div><div className="puzzle-list-status"><span className={`status-pill${isCompleted ? ' status-pill--complete' : isStarted ? ' status-pill--progress' : ''}`}>{isCompleted ? t('catalog.completed') : isStarted ? t('catalog.inProgress') : t('catalog.notStarted')}</span></div><div className="puzzle-list-actions"><a className="btn btn-primary" href={`/jokoak/game/${puzzle._id}`}>{isStarted ? t('common.continue') : t('common.play')}</a>{master && <button className="btn btn-outline-danger" onClick={() => onDelete(puzzle)}>{t('common.delete')}</button>}</div></article>;
-}
+  const errorSummary = status?.errorCount
+    ? (status.errorCount === 1 ? t('catalog.oneError') : `${status.errorCount} ${t('catalog.errors')}`)
+    : (!status?.usedVerify && !status?.usedHints ? t('catalog.perfect') : '');
 
-function Paragraphs({ items }) {
-  return items.map((paragraph, index) => <p key={index}>{paragraph}</p>);
-}
-
-function TournamentSection({ id, title, children, className = '' }) {
-  return <section className={`tournament-section${className ? ` ${className}` : ''}`} id={id}>
-    <h2>{title}</h2>
-    {children}
-  </section>;
-}
-
-export function HomePage() {
-  const event = tournament2026;
-  return <article className="tournament-page">
-    <section className="tournament-cover" aria-labelledby="tournament-title">
-      <p className="tournament-organizer">Aitzondo Euskara Taldea <span aria-hidden="true">·</span> Irun</p>
-      <h1 id="tournament-title">{event.title}</h1>
-      <p className="tournament-date"><time dateTime={event.date}>{event.dateLabel}</time></p>
-      <dl className="tournament-facts">
-        <div><dt>Tokia</dt><dd>{event.venue}<br />{event.address}</dd></div>
-        <div><dt>Bilera</dt><dd>09:00</dd></div>
-        <div><dt>Lehiaketaren hasiera</dt><dd>09:30</dd></div>
-      </dl>
-      <div className="tournament-actions">
-        <a className="btn btn-primary" href={event.registrationUrl}>Izena eman</a>
+  return <article className="puzzle-list-item">
+    <div className="puzzle-list-dimension">{size}</div>
+    <div className="puzzle-list-content">
+      <h2><a href={`/jokoak/game/${puzzle._id}`}>{puzzle.name}</a></h2>
+      <p className="puzzle-author">{puzzle.author || t('common.unknownAuthor')}</p>
+      <div className="puzzle-list-details">
+        <span className={`game-type-pill${gameType === 'spiral' ? ' game-type-pill--spiral' : ''}`}>{typeLabel}</span>
+        {isCompleted
+          ? <><span>✓ {formatDuration(status.elapsedSeconds)}</span><span>{errorSummary}</span></>
+          : <span>{isStarted ? t('catalog.savedGame') : t('catalog.ready')}</span>}
+        <span>{formatDate(puzzle.createdAt)}</span>
       </div>
-    </section>
-
-    <nav className="tournament-toc" aria-label="Edukiak">
-      <a href="#nondik-norakoak">Aurkezpena</a>
-      <a href="#izen-ematea">Izen-ematea</a>
-      <a href="#lehiaketa">Lehiaketa</a>
-      <a href="#emaitzen-neurketa">Emaitzak</a>
-      <a href="#sariak">Sariak</a>
-      <a href="#egitaraua">Egitaraua</a>
-      <a href="#nola-heldu">Nola heldu</a>
-    </nav>
-
-    <div className="tournament-copy">
-      <TournamentSection id="nondik-norakoak" title="Txapelketaren nondik norakoak">
-        <Paragraphs items={event.introduction} />
-      </TournamentSection>
-
-      <TournamentSection id="izen-ematea" title={event.registration.heading}>
-        <div className="registration-facts" aria-label="Izen-ematearen datuak">
-          <div><span>Adina</span><strong>{event.registration.age}</strong></div>
-          <div><span>Izen-emate saria</span><strong>{event.registration.fee}</strong></div>
-          <div><span>Azken eguna</span><strong>{event.registration.deadline}</strong></div>
-        </div>
-        <Paragraphs items={event.registration.paragraphs} />
-        <p className="registration-contact">{event.registration.contactIntro} <a href={event.contactUrl}>{event.registration.phone}</a>.</p>
-        <a className="text-action" href={event.registrationUrl}>Izen-emate gunera jo <span aria-hidden="true">↗</span></a>
-      </TournamentSection>
-
-      <TournamentSection id="lehiaketa" title={event.competition.heading}>
-        <p className="event-arrival">{event.competition.arrival}</p>
-        <Paragraphs items={event.competition.rules} />
-        <p>{event.competition.scheduleIntroduction}</p>
-        <div className="tournament-table-wrap">
-          <table className="tournament-table">
-            <caption>Lehiaketako proben ordutegia</caption>
-            <thead><tr><th scope="col">Ordutegia</th><th scope="col">Proba</th></tr></thead>
-            <tbody>{event.competition.schedule.map(item => <tr key={item.time}><td>{item.time}</td><td>{item.name}</td></tr>)}</tbody>
-          </table>
-        </div>
-        <div className="round-list">
-          {event.competition.rounds.map(round => <section className="tournament-round" key={round.title}>
-            <h3>{round.title}</h3>
-            <Paragraphs items={round.paragraphs} />
-          </section>)}
-        </div>
-      </TournamentSection>
-
-      <TournamentSection id="emaitzen-neurketa" title={event.scoring.heading}>
-        <Paragraphs items={event.scoring.paragraphs} />
-        <p>{event.scoring.exampleIntroduction}</p>
-        <div className="tournament-table-wrap">
-          <table className="tournament-table result-table">
-            <caption>Finaleko adibideko emaitzak</caption>
-            <colgroup><col /><col /><col /><col /></colgroup>
-            <thead><tr><th scope="col">Lehiakidea</th><th scope="col">Okerrak</th><th scope="col">Denbora</th><th scope="col">Postua</th></tr></thead>
-            <tbody>{event.scoring.results.map(result => <tr key={result.contestant}><th scope="row">{result.contestant}</th><td>{result.errors}</td><td>{result.time}</td><td>{result.place}</td></tr>)}</tbody>
-          </table>
-        </div>
-        <p>{event.scoring.explanation}</p>
-        <p className="tournament-note">Oharra: {event.scoring.note}</p>
-      </TournamentSection>
-
-      <TournamentSection id="jokoen-prestakuntza" title={event.preparation.heading}>
-        <Paragraphs items={event.preparation.paragraphs} />
-      </TournamentSection>
-
-      <TournamentSection id="sariak" title={event.prizes.heading}>
-        <p>{event.prizes.introduction}</p>
-        {event.prizes.groups.map(group => <section className="prize-group" key={group.title}>
-          <h3>{group.title}</h3>
-          <ul>{group.awards.map(award => <li key={award.place || award.prize}>{award.place && <strong>{award.place}. </strong>}{award.prize}</li>)}</ul>
-        </section>)}
-      </TournamentSection>
-
-      <TournamentSection id="egitaraua" title={event.programme.heading}>
-        <p>{event.programme.introduction}</p>
-        <div className="tournament-table-wrap">
-          <table className="tournament-table programme-table">
-            <caption>{event.dateLabel} · egitaraua</caption>
-            <thead><tr><th scope="col">Ordua</th><th scope="col">Egitaraua</th></tr></thead>
-            <tbody>{event.programme.events.map(item => <tr key={`${item.time}-${item.title}`}><td>{item.time}</td><td><strong>{item.title}</strong>{item.detail && <span className="programme-detail">{item.detail}</span>}{item.note && <span className="programme-detail">{item.note}</span>}</td></tr>)}</tbody>
-          </table>
-        </div>
-      </TournamentSection>
-
-      <TournamentSection id="nola-heldu" title={event.travel.heading}>
-        <Paragraphs items={event.travel.paragraphs} />
-      </TournamentSection>
+    </div>
+    <div className="puzzle-list-status">
+      <span className={`status-pill${isCompleted ? ' status-pill--complete' : isStarted ? ' status-pill--progress' : ''}`}>
+        {isCompleted ? t('catalog.completed') : isStarted ? t('catalog.inProgress') : t('catalog.notStarted')}
+      </span>
+    </div>
+    <div className="puzzle-list-actions">
+      <a className="btn btn-primary" href={`/jokoak/game/${puzzle._id}`}>
+        {isStarted ? t('common.continue') : t('common.play')}
+      </a>
+      {master && <button className="btn btn-outline-danger" onClick={() => onDelete(puzzle)}>{t('common.delete')}</button>}
     </div>
   </article>;
 }

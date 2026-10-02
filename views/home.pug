@@ -1,42 +1,250 @@
 extends layout
 
+block scripts
+  if useVite
+    script(type='module' src='/@vite/client')
+
 block content
-  section.hero
-    .hero-copy
-      p.eyebrow #{t('home.eyebrow')}
-      h1 #{t('home.title')}
-      p.hero-text #{t('home.intro')}
-      .hero-actions
-        a.btn.btn-primary.btn-lg(href='/jokoak') #{t('home.browse')}
-        if !user
-          a.btn.btn-outline-light.btn-lg(href='/users/register') #{t('nav.createAccount')}
-    .hero-panel(aria-hidden='true')
-      .hero-grid
-        - const cells = ['H','I','T','Z',null,null,'P','I','K',null,'J','O','K','O','A','O','T','I',null,'K',null,'X',null,'',null]
-        - const featuredCellIndexes = [0,1,2,3,10,11,12,13,14,19]
-        each cell, index in cells
-          span(class=(cell === null ? 'hero-cell hero-cell--dark' : 'hero-cell') + (featuredCellIndexes.includes(index) ? ' hero-cell--featured' : '')) #{cell}
+  article.tournament-page
+    section.tournament-cover(aria-labelledby='tournament-title')
+      p.tournament-organizer Xedera · Irun
+      h1#tournament-title Euskal Herriko Hitz Gurutzatuen XI. Txapelketa
+      p.tournament-date
+        time(datetime='2026-11-21') 2026ko azaroaren 21a, larunbata
+      dl.tournament-facts
+        div
+          dt Tokia
+          dd
+            | Palmera-Montero gunea
+            br
+            | Leandro Agirretxe plazatxoa, 1 · 20304 Irun
+        div
+          dt Bilera
+          dd 09:00
+        div
+          dt Lehiaketaren hasiera
+          dd 09:30
+      .tournament-actions
+        a.btn.btn-primary(href='https://labur.eus/gurutzatuak') Izena eman
 
-  section.section-heading
-    .section-heading-copy
-      p.eyebrow #{t('home.latestEyebrow')}
-      h2 #{t('home.latest')}
-    a.section-link(href='/jokoak') #{t('home.allCatalog')}
+    nav.tournament-toc(aria-label='Edukiak')
+      a(href='#nondik-norakoak') Aurkezpena
+      a(href='#izen-ematea') Izen-ematea
+      a(href='#lehiaketa') Lehiaketa
+      a(href='#emaitzen-neurketa') Emaitzak
+      a(href='#sariak') Sariak
+      a(href='#egitaraua') Egitaraua
+      a(href='#nola-heldu') Nola heldu
 
-  if puzzles.length
-    .puzzle-list
-      each puz in puzzles
-        article.puzzle-list-item
-          .puzzle-list-dimension #{puz.width}×#{puz.height}
-          .puzzle-list-content
-            h3
-              a(href=`/jokoak/game/${puz._id}`) #{puz.name}
-            p.puzzle-author #{puz.author || t('common.unknownAuthor')}
-          .puzzle-list-meta
-            span.puzzle-new #{t('home.new')}
-            span #{puz.createdAt ? new Date(puz.createdAt).toLocaleDateString('eu') : '—'}
-          a.btn.btn-primary.btn-sm(href=`/jokoak/game/${puz._id}` aria-label=t('home.playAria', { name: puz.name })) #{t('common.play')}
-  else
-    .empty-state
-      h2 #{t('home.emptyTitle')}
-      p #{t('home.emptyText')}
+    .tournament-copy
+      section#nondik-norakoak.tournament-section
+        h2 Txapelketaren nondik norakoak
+        p.
+          Euskal Herriko Hitz Gurutzatuen XI. Txapelketa eginen dugu Irunen datorren azaroaren 21ean, larunbatean, eta aro berriko hirugarren edizioa izanen da honakoa. Izan ere, 2007an antolatu zen lehendabiziko txapelketa, eta urtero egin zen ondoko zazpi urtean, antolatzaileek, LUMA taldeko kide irundarrek, 2015ean ediziorik ez zutela berrituko iragarri zuten arte.
+        p.
+          Aurtengoan ere, Aitzondo Euskara Taldeak hartu ditu antolaketa-lanak bere gain, eta duela bi urte hasitako bideari jarraituko dio, euskarazko jokozaleen eta, bereziki, hitz gurutzatu maitale ororen pozerako.
+        p.
+          Biziki esanguratsuak izanen dira Euskal Herriko Hitz Gurutzatuen XI. Txapelketak egituran eskainiko dituen berritasunak. Betiko moduan, goizez jokatuko da lehiaketa, goizean jokatuko dira Txapelketako proba guztiak, baina aurtengoan, bi beharrean, hiru proba gainditu beharko dituzte finalerako txartela eskuratu nahiko duten lehiakideek, eta finalean hiru lehiakide baizik ez dira arituko. Hiruko finala izanen da, beraz. Bestalde, orain arte beti izan den bezala, Joxan Elosegi hitz gurutzatu sortzaile irundarrak prestatuak izanen dira proba guztiak.
+        p.
+          Txapelketa bada ere, eta halakoa da, txapela jantziko baitu lehiaketako irabazleak, topaketa baten aurrean gaudela esan genezake, elkar ezagutzeko eta elkarrekin egoteko, hitz egiteko eta jarduteko aukera izanen baitute egun horretan, giro alaian eta patxadan, euskarazko hitz jokozaleek, garai batekoek eta egungoek. Hain zuzen ere, zale horiei guztiei begira antolatu nahi izan dugu txapelketa hau; bixigarria da lehiaketa, jakina, baina gure lehen helburua ez da puntako hitz gurutzatuen ederra besterik gabe egitea, baizik eta denon gustuko giroa sortzea eta guztioi egun goxoa eskaintzea. Gero, esan gabe doa, ohorea zor zaie betiere goren sailkatu direnei.
+
+      section#izen-ematea.tournament-section
+        h2 Izen-ematea
+        p.
+          Hala nahi duten euskaldun guztiek hartu ahal izanen dute parte Euskal Herriko Hitz Gurutzatuen XI. Txapelketa honetan. Bost euro ordainduko du haietako bakoitzak, izen-emate sari gisa, txapelketa egunean berean.
+        p.
+          Hartara, Interneten https://labur.eus/gurutzatuak helbidera jo eta gunearen barrenean izena eman ahal izanen dute hala nahi duten guztiek, Euskal Herriko Hitz Gurutzatuen XI. Txapelketan parte hartzeko. Bestalde, zernahi argibidetarako edo, hala behar badu, lehiaketan parte hartzeko izena whatsapp bidez emateko, hona hemen interesatu guztiek baliatu ahal izanen duten telefono zenbakia: 685783470.
+        p 2026ko azaroaren 20an bukatuko da izena emateko epea.
+        a.text-action(href='https://labur.eus/gurutzatuak') Izen-emate gunera jo #[span(aria-hidden='true') ↗]
+
+      section#lehiaketa.tournament-section
+        h2 Lehiaketa
+        p.
+          2026ko azaroaren 21ean, goizeko 09:00etarako bilduko dira lehiakide guztiak Palmera-Montero izeneko gunean (Leandro Agirretxe plazatxoa, 1 - 20304 Irun), eta 09:30ean hasiko da saioa, lehiakide guztiak aretoko mahaietan egokitu eta gero.
+        p.
+          Aurtengoan, lau proba jokatuko dira guztira Txapelketan. Lehendabiziko hiru probetan, ikasleak azterketetan bezala ariko dira, elkarrekin mintzatu ezinik eta aldamenekoari begiratu bat egiteko tentazioari uko eginik. Bakarrik, lagunik gabe, ariko dira lehiakideak eta hiztegi-liburuak nahi adina erabili ahal izanen dituzte, hala nahi izanez gero. Ez da hiztegi elektronikorik, ez eta telefonorik edo ordenagailurik onartuko.
+        p.
+          Lehiakideen esku jarriko dituzte antolatzaileek lehiaketarako beharko dituzten guztiak: paperak, arkatzak, borragomak, eta abar.
+        p.
+          Lau saio izanen ditu lehiaketak: hasierako proba, joan-jina, finalaurrekoa eta finala, eta honenbestez banatuko dira lehiaketa-ordutegian:
+
+        .tournament-table-wrap
+          table.tournament-table
+            caption Lehiaketako proben ordutegia
+            thead
+              tr
+                th(scope='col') Ordutegia
+                th(scope='col') Proba
+            tbody
+              tr
+                td 09:30 – 10:10
+                td Hasierako proba.
+              tr
+                td 10:20 – 10:45
+                td Joan-jina.
+              tr
+                td 11:00 – 11:40
+                td Finalaurrekoa.
+              tr
+                td 12:00 – 13:00
+                td Finala.
+
+        .round-list
+          section.tournament-round
+            h3 Hasierako proba
+            p.
+              Mahaian jokatzeko proba izanen da Txapelketako lehen proba hau eta, aurtengo edizioan, berritasun gisa, ez da lehiakideek betetzeko behar izan duten denbora neurtuko, bai ordea eginiko akatsak, horrelakorik bada.
+            p.
+              Lehiakideek 10 x 10 lauki dituen hitz gurutzatu taula bat eta bera bete beharko dute, jakinik horretarako gehienez berrogei minutuko epea izanen dutela. Lehen saio honen helburua da lehiakideak Txapelketan sarrera egokia egitea eta, horrenbestez, bete beharreko taulak ere ez du aparteko zailtasunik izanen.
+            p.
+              Hasierako Proba ez da kanporaketa izaerakoa izanen, haren ondoan inor ez da Txapelketatik kanpo geldituko. Bestela esanik, finalaurrekoa jokatzeko aukera izanen dute Hasierako Proban parte harturiko guztiek.
+
+          section.tournament-round
+            h3 Joan-jina
+            p.
+              Mahaian jokatzeko proba izanen da bigarren proba hau. Txapelketaren historian, lehendabizikoz eginen zaio sarrera hitz joko mota honi aurtengo edizioan. Bigarren proba honetan hasiko gara lehiakideek jokoetan enplegatuko duten denbora neurtzen, baina samurra izanen da hitzetara heltzeko bidea, Hasierako Proban bezala.
+            p.
+              Hitz gurutzatu joko berezi honetan (hitz gurutzatu taula karratua izan beharrean, espirala da kasu honetan), letra bakar bat eta bera dagokio beti espiraleko gelaxka zenbakidun bakoitzari. Erlojuaren orratzen norabidean irakurtzen dira hitz batzuk, kontrakoan beste batzuk... eta desberdinak dira guztiak. Halatan, espiralaren barreneko erdigunerantz hedatzen da hitz-andana bat, eta erdigunetik kanpoalderantz hedatzen da bestea.
+            p.
+              Asmatu beharreko hitz bakoitzaren luzera eta kokapenaren berri ematen digute azalpen bakoitzaren ezkerraldean ageri diren zenbakiek. Lehiakideei dagokie, orain, espiraleko gelaxka guztiak egokiro betetzea eta, jakina, hitzak xuxen-xuxen asmatzea.
+            p.
+              Joan-jina ez da kanporaketa izaerakoa izanen, haren ondoan inor ez da Txapelketatik kanpo geldituko. Bestela esanik finalaurrekoa jokatzeko aukera izanen dute Joan-jin proban parte harturiko guztiek.
+
+          section.tournament-round
+            h3 Finalaurrekoa
+            p.
+              Kanporaketa izaerakoa eta mahaian jokatzekoa izanen da Txapelketako hirugarren proba hau. Lehiakideek 12x12 lauki dituen hitz gurutzatu taula bat eta bera bete beharko dute, jakinik horretarako gehienez berrogeita bost minutuko epea izanen dutela.
+            p Proba honen ondoan zehaztuko dira finalerako sailkatuko diren hiru lehiakideen izenak.
+
+          section.tournament-round
+            h3 Finala
+            p.
+              Finalerako sailkaturiko hiru lehiakideek 15x15 lauki dituen hitz gurutzatu taula bat eta bera bete beharko dute, jakinik horretarako gehienez ordubeteko epea dutela.
+            p.
+              Agerian eta jendaurrean ariko dira finalistak. Ez dira mahaian jardunen, aretoaren alde batean asto gainean paraturiko paneletan baizik, eta eskolan arbelean baleude bezala bete beharko dute egitekoa, finalaren gainerako ikusle eta jarraitzaileei bizkarra emanez. Finaleko beste lehiakideak zertan ari diren ez dakitela ariko dira finalistak, besteen lana ezin ikusiko dutela, eta kanpoko hotsik bakar bat ere ezin entzunen dutela, kasko berezi batzuez estali beharko baitituzte belarriak horretarako.
+            p.
+              Kadiretan jarririk eta aurrean mahaiak dituztela segitu ahal izanen dute gainerako ikusle eta jarraitzaileek finala. Hitz egin ahal izanen dute besteekin, finaleko gorabeherei edota txapelketako beste zernahiri buruzko iritziak, iradokizunak eta beste aurkezteko, eta aukera izanen dute, era berean, finaleko joko-taula mahaian lasai betetzeko. Helburua da, horretaz guztiaz patxadan eta elkarrekin hitz egitea… finalistak zinak eta minak ikusten ari diren unea. Finaleko saioaren bitarte honetan, antolatzaileetako bat ariko da solas horien guztien gidari.
+
+      section#emaitzen-neurketa.tournament-section
+        h2 Emaitzen neurketa
+        p.
+          Joko mota hauetan guztietan bezala, zuzentasuna eta lastertasuna izanen dira, hurrenez hurren, lehiakide bakoitzak eginiko lana neurtzeko erabiliko diren irizpideak.
+        p.
+          Txapelketaren aurtengo edizioan, ordea, Hasierako Proban ez da lastertasuna, hau da, lehiakide bakoitzak lana bururatzeko behar izan duen denbora, neurtuko, bai ordea eginiko akatsak.
+        p.
+          Halatan, garrantzitsua izanen da beste hiru probetan taula bizkor betetzea, baina ez da hori beti aski aldeak zehazteko. Izan ere, erantzunen zuzentasuna izanen da probaren bukaeran gogoan hartuko den lehen irizpidea, lastertasunaren aitzinetik.
+        p Hona hemen adibide bat:
+        p Finala bukatu da eta honako emaitza hauek aurkeztu dituzte hartara iritsi diren hiru lehiakideek:
+        .tournament-table-wrap
+          table.tournament-table.result-table
+            caption Finaleko adibideko emaitzak
+            colgroup
+              col
+              col
+              col
+              col
+            thead
+              tr
+                th(scope='col') Lehiakidea
+                th(scope='col') Okerrak
+                th(scope='col') Denbora
+                th(scope='col') Postua
+            tbody
+              tr
+                th(scope='row') A Lehiakidea
+                td 1
+                td 45 m 13 s
+                td 2
+              tr
+                th(scope='row') B Lehiakidea
+                td 0
+                td 56 m 21 s
+                td 1
+              tr
+                th(scope='row') C Lehiakidea
+                td 3
+                td 38 m 07 s
+                td 3
+        p.
+          Denboran luzeen jo arren, B Lehiakideak irabazi du okerrik egin ez duelako (zuzentasuna baita, hain zuzen ere, lehiakideak neurtzerakoan aintzat hartzen den lehen irizpidea). Bizkorrena izan da C Lehiakidea, baina hirugarren postura lerrarazi dute eginiko hiru okerrek. Eta abar…
+
+      section#jokoen-prestakuntza.tournament-section
+        h2 Jokoen prestakuntza
+        p.
+          Hitz gurutzatuen taxuko jokoak aurkeztuko dituzte antolatzaileek txapelketako probetan eta aurtengo honetarako espreski sortuak izanen dira taula guztiak. Halatan, lehen mailako garrantzia izanen dute haietan eskainiko diren definizioek edota azalpenek. Mota askotakoak izan daitezke definizio horiek, eta urrundu ere egiten dira zenbaitetan hiztegietan topatzen ditugun estereotipoetatik. Nolanahi ere, Txapelketa honetan sekula ez dute sarbiderik izan, eta ez dute izanen, izaera arbitrarioko definizioek.
+        p.
+          Joxan Elosegi arduratuko da jokoen prestakuntzaz eta haien egokieraz eta zuzentasunaz, eta, Txapelketa honen antolakuntzaren ardura nagusia haiena denez geroz, Aitzondo elkartearen ordezkariak izanen dira epaile, horrelakoen beharra suerta litekeen egoera guztietan.
+
+      section#sariak.tournament-section
+        h2 Sariak
+        p Hona hemen, maila orokorrenetik hasita, lehiakideek eskuratuko dituzten sariak:
+        section.prize-group
+          h3 Txapelketako parte hartzaile guztiak
+          p Eusko label kalitate-markaren ekarria.
+        section.prize-group
+          h3 Finalistak
+          ul
+            li #[strong 1. postua:] Txapela, 400 €, Alberdania bonua eta bazkarirako txartela
+            li #[strong 2. postua:] 300 €, Alberdania bonua eta bazkarirako txartela
+            li #[strong 3. postua:] 200 €, Alberdania bonua eta bazkarirako txartela
+        section.prize-group
+          h3 Gainerako ohorezko postuak
+          ul
+            li #[strong 4-10. postuak:] Bazkarirako txartela
+        section.prize-group
+          h3 Irungo lehiakide hoberena
+          ul
+            li Oarso-Bidasoako Hitzaren urtebeteko harpidetza
+
+      section#egitaraua.tournament-section
+        h2 Txapelketa eguneko egitaraua
+        .tournament-table-wrap
+          table.tournament-table.programme-table
+            caption 2026ko azaroaren 21a, larunbata · egitaraua
+            thead
+              tr
+                th(scope='col') Ordua
+                th(scope='col') Egitaraua
+            tbody
+              tr
+                td 09:00
+                td
+                  strong Lehiakideen bilkura eta agurra.
+                  span.programme-detail Palmera-Montero gunea, Leandro Agirretxe plazatxoa, 1. IRUN (Gipuzkoa)
+              tr
+                td 09:30
+                td
+                  strong Txapelketaren hasiera.
+              tr
+                td 09:30 – 10:10
+                td
+                  strong Hasierako proba.
+              tr
+                td 10:20 – 10:45
+                td
+                  strong Joan-jina
+              tr
+                td 11:00 – 11:45
+                td
+                  strong Finalaurrekoa.
+              tr
+                td 12:00 – 13:00
+                td
+                  strong Finala.
+              tr
+                td 13:15
+                td
+                  strong Txapelaren janztea eta sarien banaketa.
+              tr
+                td 14:00
+                td
+                  strong Bazkaria.
+                  span.programme-detail Bidasoako EKT elkartea, Larretxipi karrika, 12
+                  span.programme-detail Bazkari txartela: 20 €.
+
+      section#nola-heldu.tournament-section
+        h2 Nola heldu
+        p.
+          Ez dago, guk uste, Irunera heltzeko arazo handiegirik. Komeni da, ordea, datu batzuk kontuan hartzea. Trena (Renfe), topoa (Euskotren) eta autobusa ditu eskura garraio publikoan etorri nahi duenak. Autoz etorri nahi izatekotan, berriz, arazoa izan liteke Txapelketa lehiatuko den inguruetan aparkatzea, TAO gunea baita eremu guztia. Bestalde, bada lurpeko aparkaleku bat Palmera Montero gunean berean, BM supermerkatuaren lurpean, baina ordainpekoa da.
+        p.
+          Alabaina, Ibilaldi ttiki bat egiteko arazorik ez duenak badu autoa edo ibilgailua egun guztian, goizeko 8:00etatik arratseko 8:00ak arte, dohainik aparkatzeko aukera, Ficoba erakustazokaren aparkaleku zabalean. Irun eta Hendaia arteko zubien eremuan dago Ficoba. Oinez 15-20 bat minutu behar dira hartatik Palmera Montero gunera iristeko.
