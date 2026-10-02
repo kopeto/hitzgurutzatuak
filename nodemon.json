@@ -1,0 +1,21 @@
+{
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "watch": [
+    "app.js",
+    "utils.js",
+    "auth/**",
+    "config/**",
+    "models/**",
+    "routes/**",
+    "services/**",
+    "vite.config.mjs"
+  ],
+  "ext": "js,mjs,cjs",
+  "ignore": [
+    "client/**",
+    "public/**",
+    "views/**"
+  ]
+}
