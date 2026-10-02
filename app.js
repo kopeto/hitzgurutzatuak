@@ -1,6 +1,7 @@
 
 const {logError, notFoundHandler, defaultHandler, logInfo} = require('./utils.js');
 const express = require('express');
+const http = require('http');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const helmet = require('helmet');
@@ -30,6 +31,8 @@ db.once('open',()=>{
 db.on('error',(err)=>{logError(err); process.exit(1);});
 
 const app = express();
+const server = http.createServer(app);
+let vite;
 
 if (process.env.TRUST_PROXY === 'true') {
   app.set('trust proxy', 1);
@@ -44,7 +47,9 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:'],
-      connectSrc: ["'self'"],
+      connectSrc: process.env.NODE_ENV === 'development'
+        ? ["'self'", 'ws:', 'wss:']
+        : ["'self'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
@@ -56,6 +61,10 @@ app.use(helmet({
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.use(express.static('public'));
+app.use((req, res, next) => {
+  if (vite) return vite.middlewares(req, res, next);
+  next();
+});
 // Serve jQuery and Bootstrap from node_modules (replaces bower_components)
 app.use('/vendor/jquery', express.static(path.join(__dirname, 'node_modules/jquery/dist')));
 app.use('/vendor/bootstrap/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')));
@@ -122,6 +131,26 @@ app.use(notFoundHandler);
 
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1');
-app.listen(port, host, ()=>{
-	logInfo('Easy example. Listening on '+host+':'+port);
+
+async function startServer() {
+  if (process.env.NODE_ENV === 'development') {
+    const { createServer } = await import('vite');
+    vite = await createServer({
+      configFile: path.join(__dirname, 'vite.config.mjs'),
+      appType: 'custom',
+      server: {
+        middlewareMode: { server },
+        hmr: { server }
+      }
+    });
+  }
+
+  server.listen(port, host, () => {
+    logInfo('Easy example. Listening on ' + host + ':' + port);
+  });
+}
+
+startServer().catch((err) => {
+  logError(err);
+  process.exit(1);
 });

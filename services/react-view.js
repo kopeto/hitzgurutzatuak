@@ -45,7 +45,8 @@ function renderReact(res, page, data = {}, options = {}) {
   return res.status(options.status || 200).render('react', {
     title,
     pageClass: page === 'spiralBuilder' ? 'spiral-builder-page' : '',
-    appState: safeJson(state)
+    appState: safeJson(state),
+    useVite: process.env.NODE_ENV === 'development'
   });
 }
 

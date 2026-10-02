@@ -14,4 +14,9 @@ html(lang='eu')
   body(class=`site-body ${pageClass}`)
     #root
     script#app-state(type='application/json') !{appState}
-    script(type='module' src='/react/main.js')
+    if useVite
+      script(type='module' src='/client/src/react-preamble.js')
+      script(type='module' src='/@vite/client')
+      script(type='module' src='/client/src/main.jsx')
+    else
+      script(type='module' src='/react/main.js')

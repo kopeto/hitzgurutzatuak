@@ -26,6 +26,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
     "nodemon": "^3.1.14",
     "vite": "^5.4.21"
   },
