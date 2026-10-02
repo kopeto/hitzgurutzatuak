@@ -21,15 +21,13 @@ router.get('/', requireMaster, async (req, res) => {
     ]);
 
     const completionMap = {};
-    allSessions.forEach(s => {
-      if (s.completedAt) {
-        const key = s.puzzleId.toString();
-        completionMap[key] = (completionMap[key] || 0) + 1;
-      }
-    });
-
     const userStats = {};
     allSessions.forEach(s => {
+      if (s.completedAt) {
+        const puzzleId = s.puzzleId.toString();
+        completionMap[puzzleId] = (completionMap[puzzleId] || 0) + 1;
+      }
+
       const key = s.userId.toString();
       if (!userStats[key]) userStats[key] = { completed: 0, inProgress: 0 };
       if (s.completedAt) userStats[key].completed++;
@@ -41,8 +39,8 @@ router.get('/', requireMaster, async (req, res) => {
     const usernameMap = {};
     users.forEach(u => { usernameMap[u._id.toString()] = u.username; });
 
-    const recentCompletions = allSessions
-      .filter(s => s.completedAt)
+    const completedSessions = allSessions.filter(s => s.completedAt);
+    const recentCompletions = completedSessions
       .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
       .slice(0, 20)
       .map(s => ({
@@ -54,8 +52,8 @@ router.get('/', requireMaster, async (req, res) => {
     const stats = {
       puzzles:        puzzles.length,
       users:          users.length,
-      completions:    allSessions.filter(s => s.completedAt).length,
-      activeSessions: allSessions.filter(s => !s.completedAt).length
+      completions: completedSessions.length,
+      activeSessions: allSessions.length - completedSessions.length
     };
 
     const downloadsDir = path.join(__dirname, '..', 'downloads');
@@ -129,8 +127,6 @@ router.get('/download/:name', requireMaster, (req, res) => {
   });
 });
 
-module.exports = router;
-
 router.post('/download/:name/delete', requireMaster, async (req, res) => {
   const name = req.params.name;
   if (!name || name.includes('..') || name.includes('/') || name.includes('\\')) {
@@ -150,3 +146,5 @@ router.post('/download/:name/delete', requireMaster, async (req, res) => {
   }
   res.redirect('/master');
 });
+
+module.exports = router;

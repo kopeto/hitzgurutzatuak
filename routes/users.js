@@ -34,32 +34,32 @@ router.post('/register',[
     .withMessage('Pasahitza eta egiaztapena ez dira berdinak.')
 ], async (req,res)=>{
   const errors = validationResult(req);
-  if(!errors.isEmpty()){
+  if (!errors.isEmpty()) {
     return renderReact(res, 'register', { errors: errors.array() }, { status: 422, title: res.locals.t('nav.createAccount') });
-  } else {
-    try {
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash(req.body.password, salt);
+  }
 
-      const newUser = new UserModel({
-        email:    req.body.email,
-        username: req.body.username.trim().toLowerCase(),
-        password: hash,
-        master: false
-      });
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(req.body.password, salt);
 
-      await newUser.save();
-      req.flash('success', 'Erabiltzaile berria sortu duzu');
-      res.redirect('/users/login');
-    } catch (err) {
-      if (err && err.code === 11000) {
-        req.flash('danger', 'Erabiltzailea edo posta elektronikoa dagoeneko erregistratuta dago.');
-      } else {
-        logError(err);
-        req.flash('danger', 'Ezin izan da erabiltzailea sortu.');
-      }
-      res.redirect('/users/register');
+    const newUser = new UserModel({
+      email: req.body.email,
+      username: req.body.username.trim().toLowerCase(),
+      password: hash,
+      master: false
+    });
+
+    await newUser.save();
+    req.flash('success', 'Erabiltzaile berria sortu duzu');
+    res.redirect('/users/login');
+  } catch (err) {
+    if (err && err.code === 11000) {
+      req.flash('danger', 'Erabiltzailea edo posta elektronikoa dagoeneko erregistratuta dago.');
+    } else {
+      logError(err);
+      req.flash('danger', 'Ezin izan da erabiltzailea sortu.');
     }
+    res.redirect('/users/register');
   }
 });
 
@@ -109,22 +109,22 @@ router.get('/dashboard', async (req, res) => {
     const puzzleMap = {};
     puzzles.forEach(p => { puzzleMap[p._id.toString()] = p; });
 
-    const completed  = sessions
+    const completed = sessions
       .filter(s => s.completedAt)
       .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
       .map(s => ({
         ...s,
-        puzzle: puzzleMap[s.puzzleId] ? serializePuzzleSummary(puzzleMap[s.puzzleId]) : null,
-        durationSeconds: s.elapsedSeconds || (s.completedAt
-          ? Math.max(0, Math.round((new Date(s.completedAt) - new Date(s.startedAt)) / 1000))
-          : null
+        puzzle: serializeSessionPuzzle(s, puzzleMap),
+        durationSeconds: s.elapsedSeconds || Math.max(
+          0,
+          Math.round((new Date(s.completedAt) - new Date(s.startedAt)) / 1000)
         )
       }));
 
     const inProgress = sessions
       .filter(s => !s.completedAt)
       .sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt))
-      .map(s => ({ ...s, puzzle: puzzleMap[s.puzzleId] ? serializePuzzleSummary(puzzleMap[s.puzzleId]) : null }));
+      .map(s => ({ ...s, puzzle: serializeSessionPuzzle(s, puzzleMap) }));
 
     return renderReact(res, 'dashboard', {
       stats: {
@@ -140,5 +140,10 @@ router.get('/dashboard', async (req, res) => {
     return renderReact(res, 'message', { message: 'Errore bat gertatu da', type: 'danger' }, { status: 500 });
   }
 });
+
+function serializeSessionPuzzle(session, puzzleMap) {
+  const puzzle = puzzleMap[session.puzzleId];
+  return puzzle ? serializePuzzleSummary(puzzle) : null;
+}
 
 module.exports = router;

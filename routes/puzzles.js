@@ -1,4 +1,4 @@
-const {logDate, logError} = require('../utils.js');
+const { logError } = require('../utils');
 const checkAuth = require('../auth/authenticate.js');
 const express = require('express');
 const fs = require('fs/promises');
@@ -10,6 +10,7 @@ const GameStateModel = require('../models/gamestate');
 const upload = require('../config/uploadconfig');
 const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import');
 const { enqueueBatch } = require('../services/puzzle-upload-queue');
+const { createEmptyGrid } = require('../services/game-grid');
 const { renderReact, serializePuzzleSummary } = require('../services/react-view');
 
 function requireMaster(req, res, next) {
@@ -26,17 +27,10 @@ function sanitizeWords(words, clues, format) {
     y: w.y,
     length: w.length,
     number: format === 'ipuz' ? null : w.number,
-    clue: (clues && clues[i]) ? clues[i] : (w.clue || ''),
+    clue: clues?.[i] || w.clue || '',
     format
     // Do NOT include w.word (the answer)
   }));
-}
-
-// Helper: build an empty user grid from void_grid template
-function createEmptyGrid(void_grid) {
-  return void_grid.map(row =>
-    row.map(cell => (cell === '.' ? '.' : ''))
-  );
 }
 
 router.get('/', async (req, res) => {
@@ -82,15 +76,16 @@ function serializeUploadBatch(batch) {
     puzzleId: file.puzzleId ? String(file.puzzleId) : null,
     puzzleName: file.puzzleName
   }));
-  const processed = files.filter(file => file.status === 'imported' || file.status === 'failed').length;
+  const succeeded = files.filter(file => file.status === 'imported').length;
+  const failed = files.filter(file => file.status === 'failed').length;
 
   return {
     id: String(batch._id),
     status: batch.status,
     total: files.length,
-    processed,
-    succeeded: files.filter(file => file.status === 'imported').length,
-    failed: files.filter(file => file.status === 'failed').length,
+    processed: succeeded + failed,
+    succeeded,
+    failed,
     files
   };
 }
