@@ -41,5 +41,5 @@ app.use((req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Maintenance page listening on port ${port}`);
+  console.log(`Mantentze-lanak: zerbitzaria ${port} atakan entzuten ari da.`);
 });

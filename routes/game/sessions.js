@@ -59,7 +59,7 @@ router.post('/start/:id', startLimiter, async (req, res) => {
       }
     });
 
-    logInfo(`User ${req.user?.username || 'anon'} started game: ${puzzle.name}`);
+    logInfo(`${req.user?.username || 'anon'} erabiltzaileak jokoa hasi du: ${puzzle.name}`);
 
   } catch (err) {
     logError(err);

@@ -60,7 +60,7 @@ router.get('/', requireMaster, async (req, res) => {
     try {
       await fs.promises.mkdir(downloadsDir, { recursive: true });
     } catch (e) {
-      console.error('Could not ensure downloads dir', e);
+      console.error('Ezin izan da deskargen karpeta sortu edo egiaztatu:', e);
     }
     let downloadsFiles = [];
     try {
@@ -94,7 +94,7 @@ router.get('/', requireMaster, async (req, res) => {
         mtimeDisplay: fi.mtime ? new Date(fi.mtime).toLocaleString('eu') : ''
       }));
     } catch (e) {
-      console.error('Could not read downloads dir', e);
+      console.error('Ezin izan da deskargen karpeta irakurri:', e);
     }
 
     return renderReact(res, 'master', {
@@ -122,7 +122,7 @@ router.get('/download/:name', requireMaster, (req, res) => {
   fs.stat(filePath, (err, stat) => {
     if (err || !stat.isFile()) return renderReact(res, 'message', { message: 'Fitxategia ez da aurkitu', type: 'warning' }, { status: 404 });
     res.download(filePath, name, (err) => {
-      if (err) console.error('Download error', err);
+      if (err) console.error('Errorea fitxategia deskargatzean:', err);
     });
   });
 });
@@ -141,7 +141,7 @@ router.post('/download/:name/delete', requireMaster, async (req, res) => {
     await fs.promises.unlink(filePath);
     req.flash('success', 'Fitxategia ezabatu da');
   } catch (e) {
-    console.error('Delete error', e);
+    console.error('Errorea fitxategia ezabatzean:', e);
     req.flash('warning', 'Ezin izan da fitxategia ezabatu');
   }
   res.redirect('/master');

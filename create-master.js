@@ -21,12 +21,12 @@ async function createMasterUser() {
   try {
     console.log(colors.cyan(`\nMongoDBra konektatzen: ${config.database}`));
     await mongoose.connect(config.database);
-    console.log(colors.green('✓ Konektado a MongoDB\n'));
+    console.log(colors.green('✓ MongoDBra konektatuta\n'));
 
     // Check if user already exists
     const existingUser = await UserModel.findOne({ username });
     if (existingUser) {
-      console.log(colors.yellow(`⚠ Erabiltzailea "${username}" dagoeneko existitzen da.`));
+      console.log(colors.yellow(`⚠ "${username}" erabiltzailea badago lehendik.`));
       
       // Update if needed
       const salt = await bcrypt.genSalt(10);
@@ -38,10 +38,10 @@ async function createMasterUser() {
         { new: true }
       );
       
-      console.log(colors.green(`✓ Erabiltzailea eguneratu da:`));
+      console.log(colors.green('✓ Erabiltzailearen datuak eguneratu dira:'));
       console.log(`  Erabiltzaile-izena: ${updated.username}`);
       console.log(`  Helbide elektronikoa: ${updated.email}`);
-      console.log(`  Nagusia: ${updated.master}`);
+      console.log(`  Administratzailea: ${updated.master ? 'Bai' : 'Ez'}`);
       console.log(`  Pasahitza: ${password}\n`);
       
       await mongoose.disconnect();
@@ -65,7 +65,7 @@ async function createMasterUser() {
     console.log(`  Erabiltzaile-izena: ${username}`);
     console.log(`  Helbide elektronikoa: ${email}`);
     console.log(`  Pasahitza: ${password}`);
-    console.log(`  Nagusia: true\n`);
+    console.log('  Administratzailea: Bai\n');
 
     await mongoose.disconnect();
     process.exit(0);

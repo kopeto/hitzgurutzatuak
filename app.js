@@ -27,7 +27,7 @@ const { resumePendingPuzzleUploadBatches } = require('./services/puzzle-upload-q
 mongoose.connect(config.database);
 const db = mongoose.connection;
 db.once('open',()=>{
-  logInfo('Connected to mongodb');
+  logInfo('MongoDBra konektatuta');
   resumePendingPuzzleUploadBatches().catch(logError);
 });
 db.on('error',(err)=>{logError(err); process.exit(1);});
@@ -149,7 +149,7 @@ async function startServer() {
   }
 
   server.listen(port, host, () => {
-    logInfo('Easy example. Listening on ' + host + ':' + port);
+    logInfo('Aplikazioa martxan: http://' + host + ':' + port);
   });
 }
 

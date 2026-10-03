@@ -11,48 +11,52 @@ set "DB_CONNECTION=mongodb://127.0.0.1:27017/HG_develop"
 
 where node >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Node.js no está instalado o no está en PATH.
+    echo [ERROREA] Node.js ez dago instalatuta edo ez dago PATH aldagaian.
     popd
     exit /b 1
 )
 
 where npm >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] npm no está instalado o no está en PATH.
+    echo [ERROREA] npm ez dago instalatuta edo ez dago PATH aldagaian.
     popd
     exit /b 1
 )
 
-echo ==^> Node.js
+echo ==^> Node.js bertsioa
 node --version
 
-if not exist "node_modules\.bin\nodemon.cmd" (
-    echo ==^> Instalando dependencias de desarrollo...
-    call npm ci
+set "INSTALL_DEPS="
+if not exist "node_modules\.bin\nodemon.cmd" set "INSTALL_DEPS=1"
+if not exist "node_modules\.bin\vite.cmd" set "INSTALL_DEPS=1"
+if not exist "node_modules\@vitejs\plugin-react\package.json" set "INSTALL_DEPS=1"
+if defined INSTALL_DEPS (
+    echo ==^> Garapeneko mendekotasunak instalatzen...
+    call npm --silent ci
     if errorlevel 1 goto :failed
 )
 
-echo ==^> Comprobando MongoDB local en 127.0.0.1:27017...
-node -e "const mongoose = require('mongoose'); mongoose.connect(process.env.DB_CONNECTION, {serverSelectionTimeoutMS:5000}).then(() => mongoose.disconnect()).then(() => process.exit(0)).catch(error => {console.error(error.message); process.exit(1);})"
+echo ==^> MongoDB lokala egiaztatzen: 127.0.0.1:27017...
+call node scripts\check-local-mongodb.js
 if errorlevel 1 (
-    echo [ERROR] MongoDB no está disponible en 127.0.0.1:27017.
-    echo Inicia el servicio local de MongoDB (mongod) y vuelve a ejecutar este script.
+    echo [ERROREA] MongoDB ez dago erabilgarri 127.0.0.1:27017 helbidean.
+    echo Abiarazi MongoDB zerbitzua mongod erabiliz, eta exekutatu script hau berriro.
     popd
     exit /b 1
 )
 
-echo ==^> Base de desarrollo: HG_develop
-echo ==^> Preparando usuario local master...
+echo ==^> Garapeneko datu-basea: HG_develop
+echo ==^> Tokiko master erabiltzailea prestatzen...
 call node create-master.js master 1234 master@hitzgurutzatuak.local
 if errorlevel 1 goto :failed
 
 echo.
-echo ==^> App local: http://localhost:%PORT%
-echo ==^> Usuario de desarrollo: master / 1234
-echo ==^> Pulsa Ctrl+C para detener la aplicación.
+echo ==^> Tokiko aplikazioa: http://localhost:%PORT%
+echo ==^> Garapenerako erabiltzailea: master / 1234
+echo ==^> Sakatu Ctrl+C aplikazioa gelditzeko.
 echo.
 
-call npm run dev
+call npm --silent run dev
 set "EXIT_CODE=%ERRORLEVEL%"
 popd
 exit /b %EXIT_CODE%

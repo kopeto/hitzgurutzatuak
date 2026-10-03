@@ -14,7 +14,7 @@ const logDate = ()=>{
 }
 
 const logError = (err)=>{
-  console.log(colors.red(logDate()+' - '+err.message));
+  console.log(colors.red(logDate()+' - Errorea: '+err.message));
 	if(err.stack)
   	console.log(colors.green(err.stack));
 }
@@ -32,7 +32,7 @@ const notFoundHandler = (req,res)=>{
 }
 
 const defaultHandler = (req,res,next)=>{
-	logInfo(req.method+' '+req.url);
+	logInfo('Eskaera: '+req.method+' '+req.url);
 	res.locals.user = req.user || null;
 	next();
 }
