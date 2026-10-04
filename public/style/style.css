@@ -348,6 +348,7 @@ select:focus-visible {
 .tournament-facts div { min-width: 0; }
 .tournament-facts dt, .registration-facts span { margin-bottom: 0.25rem; color: var(--ink-soft); font-size: 0.74rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
 .tournament-facts dd { margin: 0; color: var(--ink); font-size: 0.96rem; font-weight: 650; }
+.tournament-actions { margin-top: 1.6rem; }
 .tournament-toc { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin: 1.4rem 0 0; padding: 1.2rem 0; border-bottom: 1px solid var(--line); }
 .tournament-toc a { display: inline-flex; align-items: center; justify-self: start; padding: 0.4rem 0.75rem; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-soft); background: rgba(255, 255, 255, 0.62); font-size: 0.84rem; font-weight: 700; line-height: 1.3; text-decoration: none; }
 .tournament-toc a:hover { color: var(--brand); text-decoration: underline; }
