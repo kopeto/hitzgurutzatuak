@@ -99,8 +99,8 @@ else
             if completed
               span= `✓ ${t('dashboard.duration')}: ${Math.floor((status.elapsedSeconds || 0) / 60)} min ${String((status.elapsedSeconds || 0) % 60).padStart(2, '0')} s`
               span= status.errorCount ? (status.errorCount === 1 ? t('catalog.oneError') : `${status.errorCount} ${t('catalog.errors')}`) : (!status.usedVerify && !status.usedHints ? t('catalog.perfect') : '')
-            else
-              span= started ? t('catalog.savedGame') : t('catalog.ready')
+            else if started
+              span= t('catalog.savedGame')
         .puzzle-list-status(role='cell')
           span(class=`status-pill${completed ? ' status-pill--complete' : started ? ' status-pill--progress' : ''}`)= statusText
         .puzzle-list-date(role='cell')= uploadDate

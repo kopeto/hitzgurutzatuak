@@ -324,6 +324,8 @@ select:focus-visible {
   min-height: 30rem;
 }
 
+.auth-page { width: min(100%, 32rem); margin-inline: auto; }
+
 .auth-intro h1 {
   max-width: 10ch;
   margin: 0;
