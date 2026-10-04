@@ -1,4 +1,6 @@
 const express = require('express');
+const GameStateModel = require('../../models/gamestate');
+const PlaySession = require('../../models/playsession');
 const { logError } = require('../../utils');
 const { actionLimiter, requireGameSession } = require('./middleware');
 const { findCurrentPuzzle, respondPuzzleNotFound } = require('./puzzle-helpers');
@@ -122,8 +124,45 @@ router.post('/solve-grid', actionLimiter, requireGameSession, async (req, res) =
       }
     }
 
-    // Zelula guztiak pista gisa kontatu
-    req.session.currentGame.hintCount += allLetters.length;
+    const game = req.session.currentGame;
+    game.hintCount += allLetters.length;
+    if (game.timerStartedAt) {
+      game.elapsedSeconds = (game.elapsedSeconds || 0)
+        + Math.floor((Date.now() - new Date(game.timerStartedAt).getTime()) / 1000);
+      game.timerStartedAt = null;
+    }
+
+    if (req.user) {
+      const userId = req.user._id.toString();
+      const puzzleId = game.puzzleId;
+      const completedAt = new Date();
+      const cellResults = allLetters.map(({ row, col }) => ({ row, col, correct: true, empty: false }));
+      await Promise.all([
+        GameStateModel.findOneAndUpdate(
+          { playerId: userId, puzzleId },
+          {
+            cells: allLetters,
+            cellResults,
+            elapsedSeconds: game.elapsedSeconds || 0,
+            usedVerify: game.usedVerify || false,
+            completed: true,
+            updatedAt: completedAt
+          },
+          { upsert: true }
+        ),
+        PlaySession.findOneAndUpdate(
+          { userId, puzzleId },
+          { $set: {
+            completedAt,
+            elapsedSeconds: game.elapsedSeconds || 0,
+            errorCount: game.errorCount || 0,
+            usedVerify: game.usedVerify || false,
+            usedHints: true
+          } },
+          { upsert: true }
+        )
+      ]);
+    }
 
     res.json({
       success: true,

@@ -63,21 +63,19 @@ router.post('/history/:puzzleId', actionLimiter, async (req, res) => {
 
 /**
  * DELETE /api/game/reset/:puzzleId
- * Wipes PlaySession and GameState so the player can start fresh.
- * Only available for authenticated users.
+ * Wipes this player's saved state and current session so the puzzle can restart.
  */
 router.delete('/reset/:puzzleId', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: true, message: 'Saioa hasi behar duzu' });
-  }
   try {
-    const userId = getUserId(req);
     const puzzleId = req.params.puzzleId;
-    await Promise.all([
-      PlaySession.deleteOne({ userId, puzzleId }),
-      GameStateModel.deleteOne({ playerId: userId, puzzleId })
-    ]);
-    delete req.session.currentGame;
+    if (req.user) {
+      const userId = getUserId(req);
+      await Promise.all([
+        PlaySession.deleteOne({ userId, puzzleId }),
+        GameStateModel.deleteOne({ playerId: userId, puzzleId })
+      ]);
+    }
+    if (req.session.currentGame?.puzzleId === puzzleId) delete req.session.currentGame;
     res.json({ success: true });
   } catch (err) {
     logError(err);

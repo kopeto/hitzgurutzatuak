@@ -10,9 +10,10 @@
     "models/**",
     "routes/**",
     "services/**",
+    "locales/**",
     "views/**"
   ],
-  "ext": "js,mjs,cjs,pug",
+  "ext": "js,mjs,cjs,json,pug",
   "ignore": [
     "public/**"
   ]

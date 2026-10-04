@@ -8,6 +8,13 @@ function escapeHtml(value = '') {
   })[character]);
 }
 
+function normalizeLetter(value) {
+  const letter = String(value ?? '').normalize('NFC');
+  if (!/^\p{L}$/u.test(letter)) return '';
+  const uppercase = letter.toLocaleUpperCase('eu');
+  return /^\p{L}$/u.test(uppercase) ? uppercase : '';
+}
+
 function notify(element, message, type = 'info', permanent = false) {
   if (!element) return;
   element.textContent = message;
@@ -228,7 +235,8 @@ function initCrossword() {
   const timer = root.querySelector('[data-game-timer]');
   const user = state.user;
   let grid = emptyGrid(puzzle.void_grid);
-  let layout = root.dataset.defaultLayout || 'american';
+  let layout = root.dataset.defaultLayout || 'xedera';
+  const americanMode = root.querySelector('[data-american-mode]');
   let selected = null;
   let scrolledWord = null;
   let feedback = Object.fromEntries((puzzle.cellResults || []).map((item) => [`${item.row}-${item.col}`, item]));
@@ -298,11 +306,7 @@ function initCrossword() {
     const block = root.querySelector('[data-grid-block]');
     block.classList.toggle('clue-layout-xedera', layout === 'xedera');
     block.classList.toggle('clue-layout-american', layout === 'american');
-    root.querySelectorAll('[data-layout]').forEach((button) => {
-      const active = button.dataset.layout === layout;
-      button.classList.toggle('is-active', active);
-      button.setAttribute('aria-pressed', String(active));
-    });
+    if (americanMode) americanMode.checked = layout === 'american';
     clueLists.forEach((list) => {
       const words = list.dataset.clues === 'right' ? across : down;
       list.replaceChildren();
@@ -386,7 +390,11 @@ function initCrossword() {
   };
   const setCompleted = () => {
     completed = true;
-    root.querySelector('[data-game-buttons]')?.classList.add('buttons-frozen');
+    timerRunning = false;
+    window.clearInterval(timerHandle);
+    root.querySelector('[data-game-buttons]')?.classList.add('game-actions--finished');
+    const restartButton = root.querySelector('[data-action="restart"]');
+    if (restartButton) restartButton.hidden = false;
     root.querySelectorAll('[data-action]').forEach((button) => { if (button.dataset.action !== 'restart') button.disabled = true; });
     root.querySelector('.grid')?.classList.add('grid-frozen');
   };
@@ -400,7 +408,11 @@ function initCrossword() {
     const cell = event.target.closest('[data-cell]');
     if (cell && !cell.classList.contains('black')) chooseCell(Number(cell.dataset.row), Number(cell.dataset.col));
   });
-  root.querySelectorAll('[data-layout]').forEach((button) => button.addEventListener('click', () => { layout = button.dataset.layout; renderClueLayout(); renderGrid(); }));
+  americanMode?.addEventListener('change', () => {
+    layout = americanMode.checked ? 'american' : 'xedera';
+    renderClueLayout();
+    renderGrid();
+  });
   root.querySelector('[data-undo]').addEventListener('click', () => {
     const action = history.pop(); if (!action) return;
     (action.batch || [action]).forEach((item) => { grid[item.row][item.col] = item.previous; });
@@ -424,7 +436,8 @@ function initCrossword() {
     const word = selectedWord();
     if (action === 'restart') {
       const result = await request(`/api/game/reset/${encodeURIComponent(puzzle.id)}`, { method: 'DELETE' });
-      if (!result.error) window.location.reload();
+      if (result.error) return notify(notice, result.message || t('game.restartFailed'), 'error');
+      window.location.reload();
       return;
     }
     if (action === 'check-cell') {
@@ -460,7 +473,7 @@ function initCrossword() {
       const result = await request('/api/game/solve-grid', { method: 'POST' });
       if (result.error) return notify(notice, result.message, 'error');
       result.solvedLetters.forEach((item) => { grid[item.row][item.col] = item.value; });
-      history = []; redo = []; renderGrid(); scheduleSave(); return notify(notice, t('game.gridSolved'));
+      history = []; redo = []; renderGrid(); setCompleted(); return notify(notice, t('game.gridSolved'));
     }
     if (action === 'check-grid') {
       const values = grid.flatMap((row, r) => row.map((value, c) => value !== '.' ? { row: r, col: c, value } : null).filter(Boolean));
@@ -497,9 +510,10 @@ function initCrossword() {
       if (grid[selected.row][selected.col]) setValue(selected.row, selected.col, ''); else move(selected.row, selected.col, selected.dir, true);
       return;
     }
-    if (/^[\p{L}\p{N}]$/u.test(event.key)) {
+    const letter = normalizeLetter(event.key);
+    if (letter) {
       event.preventDefault();
-      setValue(selected.row, selected.col, event.key.toLocaleUpperCase('eu'));
+      setValue(selected.row, selected.col, letter);
       move(selected.row, selected.col, selected.dir);
     }
   });
@@ -524,7 +538,10 @@ function initCrossword() {
   renderClueLayout();
   renderGrid();
   request(`/api/game/history/${encodeURIComponent(puzzle.id)}`).then((result) => {
-    if (result.cells) result.cells.forEach(({ row, col, value }) => { if (grid[row]?.[col] !== '.') grid[row][col] = value; });
+    if (result.cells) result.cells.forEach(({ row, col, value }) => {
+      const letter = normalizeLetter(value);
+      if (letter && grid[row]?.[col] != null && grid[row][col] !== '.') grid[row][col] = letter;
+    });
     renderGrid();
   });
   if (user && !completed) {
@@ -648,10 +665,10 @@ function initSpiralGame() {
       event.preventDefault();
       if (values[selected - 1]) update(selected, '');
       else { const index = next(-step); selectCell(index); update(index, ''); }
-    } else if (/^[\p{L}\p{N}]$/u.test(event.key)) {
+    } else if (normalizeLetter(event.key)) {
       event.preventDefault();
       const definition = active();
-      update(selected, event.key.toLocaleUpperCase('eu'));
+      update(selected, normalizeLetter(event.key));
       selectCell(next(step), false, definition);
     }
   });
@@ -670,7 +687,10 @@ function initSpiralGame() {
     if (!answer.error) window.location.reload();
   });
   request(`/api/game/history/${encodeURIComponent(puzzle.id)}`).then((answer) => {
-    (answer.cells || []).forEach(({ row, col, value }) => { if (row === 0 && values[col] != null) values[col] = value; });
+    (answer.cells || []).forEach(({ row, col, value }) => {
+      const letter = normalizeLetter(value);
+      if (row === 0 && values[col] != null && letter) values[col] = letter;
+    });
     render();
   });
   render();
