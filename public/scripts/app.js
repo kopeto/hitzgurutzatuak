@@ -52,8 +52,11 @@ function initCatalog() {
   const selectedCards = () => cards().filter((card) => card.querySelector('[data-select-puzzle]')?.checked);
   let sortColumn = '';
   let sortDirection = 1;
-  const sortRows = (column) => {
-    if (sortColumn === column) sortDirection *= -1;
+  const sortRows = (column, initialDirection) => {
+    if (initialDirection) {
+      sortColumn = column;
+      sortDirection = initialDirection;
+    } else if (sortColumn === column) sortDirection *= -1;
     else {
       sortColumn = column;
       sortDirection = 1;
@@ -109,6 +112,7 @@ function initCatalog() {
   [search, status, type].forEach((element) => element?.addEventListener('input', update));
   [status, type].forEach((element) => element?.addEventListener('change', update));
   update();
+  if (list) sortRows('date', -1);
   document.addEventListener('change', (event) => {
     if (event.target.matches('[data-select-all]')) {
       cards().filter((card) => !card.hidden).forEach((card) => {
