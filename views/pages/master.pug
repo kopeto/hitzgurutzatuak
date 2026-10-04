@@ -1,0 +1,86 @@
+section.dashboard
+  section.page-heading
+    .page-heading-copy
+      p.eyebrow= t('upload.eyebrow')
+      h1= t('master.title')
+      p= t('master.intro')
+  .dashboard-stats-row
+    each item in [[data.stats.puzzles, t('master.puzzleCount')], [data.stats.users, t('master.userCount')], [data.stats.completions, t('master.completionCount')], [data.stats.activeSessions, t('common.active')]]
+      .stat-card
+        .stat-value= item[0]
+        .stat-label= item[1]
+  .dashboard-actions
+    a.btn.btn-primary(href='/jokoak/upload')= t('master.upload')
+  h2.dashboard-section-title= t('master.externalApi')
+  .card.mb-4
+    .card-body
+      p.mb-2= t('master.apiDescription')
+      p.mb-0.text-muted= t('master.apiSecret')
+  h2.dashboard-section-title= t('master.downloads')
+  if data.downloadsFiles.length
+    table.table.table-sm
+      thead
+        tr
+          th= t('common.name')
+          th= t('common.size')
+          th= t('common.date')
+          th
+      tbody
+        each file in data.downloadsFiles
+          tr
+            td: a(href=`/master/download/${encodeURIComponent(file.name)}`)= file.name
+            td= file.sizeDisplay
+            td= file.mtimeDisplay
+  else
+    p.text-muted= t('master.downloadsEmpty')
+  h2.dashboard-section-title= t('nav.puzzles')
+  table.table.table-sm.table-hover
+    thead
+      tr
+        th= t('common.name')
+        th= t('common.size')
+        th= t('common.author')
+        th= t('master.completionCountShort')
+        th= t('master.published')
+        th
+    tbody
+      each puzzle in data.puzzles
+        tr
+          td= puzzle.name
+          td= `${puzzle.width}×${puzzle.height}`
+          td= puzzle.author || '—'
+          td= data.completionMap[puzzle._id] || 0
+          td= puzzle.createdAt ? new Intl.DateTimeFormat('eu').format(new Date(puzzle.createdAt)) : '—'
+          td: a.btn.btn-sm.btn-outline-secondary(href=`/jokoak/game/${puzzle._id}`)= t('common.play')
+  h2.dashboard-section-title= t('master.users')
+  table.table.table-sm.table-hover
+    thead
+      tr
+        th= t('auth.username')
+        th= t('common.authorEmail')
+        th= t('common.manager')
+        th= t('dashboard.completed')
+        th= t('common.active')
+    tbody
+      each item in data.users
+        tr
+          td= item.username
+          td= item.email
+          td
+            if item.master
+              span.badge.badge-warning= t('common.authorized')
+          td= data.userStats[item._id] ? data.userStats[item._id].completed || 0 : 0
+          td= data.userStats[item._id] ? data.userStats[item._id].inProgress || 0 : 0
+  h2.dashboard-section-title= t('master.recentCompletions', { count: data.recentCompletions.length })
+  table.table.table-sm
+    thead
+      tr
+        th= t('auth.username')
+        th= t('nav.puzzles')
+        th= t('common.date')
+    tbody
+      each session in data.recentCompletions
+        tr
+          td= session.username || session.userId
+          td= session.puzzleName || session.puzzleId
+          td= session.completedAt ? new Intl.DateTimeFormat('eu').format(new Date(session.completedAt)) : '—'

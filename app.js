@@ -3,7 +3,6 @@ require('dotenv/config');
 
 const { logError, notFoundHandler, defaultHandler, logInfo } = require('./utils');
 const express = require('express');
-const http = require('http');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const helmet = require('helmet');
@@ -12,7 +11,7 @@ const passport = require('passport');
 const config = require('./config/database');
 const sessionconfig = require('./config/sessionconfig');
 const { clientMessages, translate } = require('./services/i18n');
-const { renderReact } = require('./services/react-view');
+const { renderPage } = require('./services/page-view');
 
 const puzzles = require('./routes/puzzles');
 const users = require('./routes/users');
@@ -33,9 +32,6 @@ db.once('open',()=>{
 db.on('error',(err)=>{logError(err); process.exit(1);});
 
 const app = express();
-const server = http.createServer(app);
-let vite;
-
 if (process.env.TRUST_PROXY === 'true') {
   app.set('trust proxy', 1);
 } else if (/^\d+$/.test(process.env.TRUST_PROXY || '')) {
@@ -63,14 +59,8 @@ app.use(helmet({
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.use(express.static('public'));
-app.use((req, res, next) => {
-  if (vite) return vite.middlewares(req, res, next);
-  next();
-});
-// Serve jQuery and Bootstrap from node_modules (replaces bower_components)
-app.use('/vendor/jquery', express.static(path.join(__dirname, 'node_modules/jquery/dist')));
+// Serve Bootstrap styles from node_modules.
 app.use('/vendor/bootstrap/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')));
-app.use('/vendor/bootstrap/js', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/js')));
 app.use(express.urlencoded({ extended: false, limit: '100kb' }));
 app.use(express.json({ limit: '100kb' }));
 
@@ -124,7 +114,7 @@ app.use((err, req, res, next) => {
     return res.status(statusCode).json({ error: true, message });
   }
 
-  return renderReact(res, 'message', {
+  return renderPage(res, 'message', {
     message,
     type: 'danger'
   }, { status: statusCode });
@@ -136,19 +126,7 @@ const port = process.env.PORT || 3000;
 const host = process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1');
 
 async function startServer() {
-  if (process.env.NODE_ENV === 'development') {
-    const { createServer } = await import('vite');
-    vite = await createServer({
-      configFile: path.join(__dirname, 'vite.config.mjs'),
-      appType: 'custom',
-      server: {
-        middlewareMode: { server },
-        hmr: { server }
-      }
-    });
-  }
-
-  server.listen(port, host, () => {
+  app.listen(port, host, () => {
     logInfo('Aplikazioa martxan: http://' + host + ':' + port);
   });
 }

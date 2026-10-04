@@ -11,11 +11,11 @@ const upload = require('../config/uploadconfig');
 const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import');
 const { enqueueBatch } = require('../services/puzzle-upload-queue');
 const { createEmptyGrid } = require('../services/game-grid');
-const { renderReact, serializePuzzleSummary } = require('../services/react-view');
+const { renderPage, serializePuzzleSummary } = require('../services/page-view');
 
 function requireMaster(req, res, next) {
   if (req.isAuthenticated() && req.user.master) return next();
-  return renderReact(res, 'message', { message: 'Sarbidea ukatua', type: 'danger' }, { status: 403 });
+  return renderPage(res, 'message', { message: 'Sarbidea ukatua', type: 'danger' }, { status: 403 });
 }
 
 // Helper: strip solution data before sending to client.
@@ -56,15 +56,15 @@ router.get('/', async (req, res) => {
       });
     }
 
-    return renderReact(res, 'puzzles', { puzzles: puzzles.map(serializePuzzleSummary), statusMap }, { title: res.locals.t('page.puzzles') });
+    return renderPage(res, 'puzzles', { puzzles: puzzles.map(serializePuzzleSummary), statusMap }, { title: res.locals.t('page.puzzles') });
   } catch (err) {
     logError(err);
-    return renderReact(res, 'puzzles', { puzzles: [], statusMap: {} }, { title: res.locals.t('page.puzzles') });
+    return renderPage(res, 'puzzles', { puzzles: [], statusMap: {} }, { title: res.locals.t('page.puzzles') });
   }
 });
 
 router.get('/upload', checkAuth, (req, res) => {
-  return renderReact(res, 'upload', {
+  return renderPage(res, 'upload', {
     maxUploadFiles: upload.maxBatchFiles,
     maxUploadFileSize: upload.maxFileSize
   }, { title: res.locals.t('page.upload') });
@@ -163,7 +163,7 @@ router.get('/upload/batches/:id', checkAuth, async (req, res) => {
 });
 
 router.get('/spiral-builder', checkAuth, requireMaster, (req, res) => {
-  return renderReact(res, 'spiralBuilder', {}, { title: res.locals.t('page.spiralBuilder') });
+  return renderPage(res, 'spiralBuilder', {}, { title: res.locals.t('page.spiralBuilder') });
 });
 
 router.post('/upload', checkAuth, upload, async (req, res) => {
@@ -259,11 +259,11 @@ router.get('/game/:id', async (req, res) => {
     };
 
     if (gamePayload.gameType === 'spiral') {
-      return renderReact(res, 'spiralGame', { puzzle: gamePayload }, { title: res.locals.t('page.game') });
+      return renderPage(res, 'spiralGame', { puzzle: gamePayload }, { title: res.locals.t('page.game') });
     }
 
     // Send sanitized puzzle to crossword view (no filled_grid, no word answers)
-    return renderReact(res, 'game', { puzzle: gamePayload }, { title: res.locals.t('page.game') });
+    return renderPage(res, 'game', { puzzle: gamePayload }, { title: res.locals.t('page.game') });
   } catch (err) {
     logError(err);
     req.flash('danger', 'Erroreren bat gertatu da.');

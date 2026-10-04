@@ -1,0 +1,42 @@
+section.spiral-builder-shell(data-spiral-builder)
+  aside.spiral-builder-aside
+    p.spiral-builder-intro= t('spiralBuilder.intro')
+    .spiral-builder-status(role='status' data-builder-status)
+    form#spiral-builder-form(autoComplete='off' data-builder-form)
+      .builder-row
+        .builder-field
+          label(for='builder-title')= t('spiralBuilder.titleField')
+          input#builder-title.form-control(data-field='title')
+        .builder-field
+          label(for='builder-author')= t('spiralBuilder.authorField')
+          input#builder-author.form-control(data-field='author')
+      .builder-row
+        .builder-field
+          label(for='builder-count')= t('spiralBuilder.cellCount')
+          input#builder-count.form-control(type='number' min='1' max='400' data-field='cellCount')
+        .builder-field
+          label(for='builder-size')= t('spiralBuilder.cellSize')
+          input#builder-size.form-control(type='number' min='12' max='120' data-field='cellSize')
+      each direction in ['inward', 'outward']
+        .builder-field(data-definition-editor=direction)
+          .clue-editor-heading
+            label= t(`spiralBuilder.${direction}`)
+            button.clue-add-btn.btn.btn-outline-secondary.btn-sm(type='button' data-add-definition=direction aria-label=t('spiralBuilder.addDefinition')) +
+          .clue-editor
+            .clue-editor-list(data-definition-rows=direction)
+      .builder-field
+        label(for='builderAnswer')= t('spiralBuilder.answer')
+        textarea#builderAnswer.form-control(rows='2' data-field='answer')
+      .spiral-builder-switch
+        input#show-numbers(type='checkbox' data-field='showNumbers')
+        label(for='show-numbers')= t('spiralBuilder.showNumbers')
+      .spiral-builder-actions
+        button.btn.btn-primary(type='button' data-builder-action='download')= t('spiralBuilder.download')
+        button.btn.btn-outline-secondary(type='button' data-builder-action='download-html')= t('spiralBuilder.downloadHtml')
+        button.btn.btn-outline-secondary(type='button' data-builder-action='save')= t('spiralBuilder.saveDraft')
+        button.btn.btn-outline-secondary(type='button' data-builder-action='load')= t('spiralBuilder.loadDraft')
+        label.btn.btn-outline-secondary.mb-0
+          | #{t('spiralBuilder.import')}
+          input.sr-only(type='file' accept='.spl,application/json' data-builder-import)
+        button.btn.btn-outline-danger(type='button' data-builder-action='reset')= t('spiralBuilder.reset')
+  main.spiral-builder-main(data-builder-preview)

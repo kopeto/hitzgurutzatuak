@@ -1,0 +1,22 @@
+header.site-header
+  .site-shell.site-header-inner
+    a.brand(href='/' aria-label=t('site.homeLinkLabel'))
+      span.brand-name #{t('site.name')}
+    button.nav-toggle(type='button' aria-expanded='false' aria-controls='site-navigation' data-nav-toggle)
+      span.sr-only #{t('nav.open')}
+      span.nav-toggle-line
+      span.nav-toggle-line
+      span.nav-toggle-line
+    nav#site-navigation.site-navigation(data-site-navigation)
+      a(href='/') #{t('nav.home')}
+      a(href='/jokoak') #{t('nav.puzzles')}
+      if user && user.master
+        a(href='/master') #{t('nav.management')}
+      .navigation-account
+        if user
+          span.navigation-user #{user.username}
+          a.nav-login(href='/users/dashboard') #{t('nav.profile')}
+          a.nav-login(href='/users/logout') #{t('nav.signOut')}
+        else
+          a.nav-login(href='/users/login') #{t('nav.signIn')}
+          a.nav-login(href='/users/register') #{t('nav.createAccount')}

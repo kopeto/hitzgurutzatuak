@@ -1,0 +1,48 @@
+doctype html
+html(lang='eu')
+  head
+    meta(charset='utf-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1')
+    meta(name='description' content=t('site.description'))
+    link(rel='icon' type='image/svg+xml' href='/favicon.svg?v=20261004-2')
+    link(rel='icon' href='/favicon.ico?v=20261004-2' sizes='any')
+    title #{title} | #{t('site.name')}
+    link(rel='stylesheet' href='/vendor/bootstrap/css/bootstrap.min.css')
+    link(rel='stylesheet' href='/style/style.css?v=20261002-2')
+    link(rel='stylesheet' href='/style/cw.css?v=20261004-2-5')
+    link(rel='stylesheet' href='/style/spiral.css')
+    link(rel='stylesheet' href='/style/spiral_builder.css')
+    link(rel='stylesheet' href='/style/spiral_builder_pdf.css')
+    script#i18n-data(type='application/json') !{JSON.stringify(clientMessages)}
+    script(src='/scripts/i18n.js')
+    script(src='/scripts/site.js' defer)
+    script(src='/scripts/app.js' type='module')
+  body(class=`site-body ${pageClass || ''}`)
+    include includes/site-header.pug
+    main.site-main
+      .site-shell
+        each items, type in flash || {}
+          each message in items
+            div(class=`alert alert-${type}` role='status')= message
+        if page === 'puzzles'
+          include pages/puzzles.pug
+        else if page === 'login' || page === 'register'
+          include pages/auth.pug
+        else if page === 'dashboard'
+          include pages/dashboard.pug
+        else if page === 'upload'
+          include pages/upload.pug
+        else if page === 'master'
+          include pages/master.pug
+        else if page === 'game'
+          include pages/crossword.pug
+        else if page === 'spiralGame'
+          include pages/spiral-game.pug
+        else if page === 'spiralBuilder'
+          include pages/spiral-builder.pug
+        else if page === 'notFound'
+          include pages/not-found.pug
+        else
+          include pages/message.pug
+    include includes/site-footer.pug
+    script#app-state(type='application/json') !{appState}

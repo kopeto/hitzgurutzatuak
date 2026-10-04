@@ -1,0 +1,60 @@
+- const puzzle = data.puzzle
+section(data-crossword-game data-default-layout=puzzle.format === 'ipuz' ? 'xedera' : 'american')
+  .game-topbar
+    a(href='/jokoak'): button.btn.btn-sm.btn-outline-secondary(type='button')= t('common.back')
+    h2.game-title= puzzle.name
+    if user
+      span.game-timer(data-game-timer) 00:00
+  .game-wrapper
+    .puzzle
+      .grid-block.clue-layout-american(data-grid-block style=`--grid-cols:${puzzle.width};--grid-rows:${puzzle.height}`)
+        .grid.unselectable(data-crossword-grid role='grid' aria-label=t('game.gridLabel', { name: puzzle.name }))
+          each col in Array.from({length:puzzle.width}, (_, i) => i)
+            span.axis-label.axis-top-label(data-axis='column' style=`grid-column:${col + 2};grid-row:1` aria-hidden='true')= col + 1
+          each row in Array.from({length:puzzle.height}, (_, i) => i)
+            span.axis-label.axis-left-label(data-axis='row' style=`grid-column:1;grid-row:${row + 2}` aria-hidden='true')= row + 1
+          each cells, row in puzzle.void_grid
+            each cell, col in cells
+              - const word = puzzle.words.find(item => item.x === row && item.y === col)
+              - const cellClass = ['grid-cell', cell === '.' ? 'black' : '', col === 0 ? 'first-column' : '', row === 0 ? 'first-row' : ''].filter(Boolean).join(' ')
+              div(class=cellClass data-cell data-row=row data-col=col style=`grid-column:${col + 2};grid-row:${row + 2}` role='gridcell' aria-label=`${row + 1}. errenkada, ${col + 1}. zutabea`)
+                if word
+                  span.i_words= word.number
+                if cell !== '.'
+                  span.char
+        .active-clue-bar(role='status' data-active-clue)
+        .history-bar
+          button.btn.btn-sm.btn-outline-secondary(type='button' data-undo disabled)= t('game.undo')
+          button.btn.btn-sm.btn-outline-secondary(type='button' data-redo disabled)= t('game.redo')
+      section.clues.unselectable(aria-label=t('game.cluesLabel'))
+        .clue-layout-toggle(role='group' aria-label=t('game.clueLayout'))
+          button.btn.btn-sm.is-active(type='button' data-layout='american' aria-pressed='true')= t('game.americanMode')
+          button.btn.btn-sm(type='button' data-layout='xedera' aria-pressed='false')= t('game.xederaMode')
+        h2.clues-heading= t('game.across')
+        .clues_across(data-clues='right')
+          each word in puzzle.words.filter(item => item.dir === 'right').sort((a, b) => a.number - b.number)
+            button.clue-item(type='button' data-clue-dir=word.dir data-clue-x=word.x data-clue-y=word.y)
+              span.clue-num= `${word.number}.`
+              |  #{word.clue || '—'}
+        h2.clues-heading= t('game.down')
+        .clues_down(data-clues='down')
+          each word in puzzle.words.filter(item => item.dir === 'down').sort((a, b) => a.number - b.number)
+            button.clue-item(type='button' data-clue-dir=word.dir data-clue-x=word.x data-clue-y=word.y)
+              span.clue-num= `${word.number}.`
+              |  #{word.clue || '—'}
+    .game-notification-bar(role='status' data-game-notice)
+    nav.buttons(data-game-buttons)
+      .btn-section
+        span.btn-section-label= t('game.check')
+        button.btn.btn-outline-secondary(type='button' data-action='check-cell')= t('game.letter')
+        button.btn.btn-outline-secondary(type='button' data-action='check-word')= t('game.word')
+      .btn-section
+        span.btn-section-label= t('game.hint')
+        button.btn.btn-outline-secondary(type='button' data-action='solve-cell')= t('game.letter')
+        button.btn.btn-outline-secondary(type='button' data-action='solve-word')= t('game.word')
+        button.btn.btn-outline-secondary(type='button' data-action='solve-grid')= t('game.grid')
+      .btn-section
+        button.btn.btn-outline-danger(type='button' data-action='clear-grid')= t('game.clearGrid')
+        button.btn.btn-primary.btn-check-grid(type='button' data-action='check-grid')= t('game.checkGrid')
+        if user && puzzle.completed
+          button.btn.btn-outline-secondary(type='button' data-action='restart')= t('game.playAgain')

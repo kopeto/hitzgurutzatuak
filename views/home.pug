@@ -1,9 +1,5 @@
 extends layout
 
-block scripts
-  if useVite
-    script(type='module' src='/@vite/client')
-
 block content
   article.tournament-page
     section.tournament-cover(aria-labelledby='tournament-title')

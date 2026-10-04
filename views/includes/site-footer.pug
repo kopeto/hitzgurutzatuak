@@ -1,0 +1,10 @@
+footer.site-footer
+  .site-shell.site-footer-inner
+    div
+      a.brand.brand--footer(href='/')
+        span.brand-name #{t('site.name')}
+      p #{t('site.footer')}
+    nav.footer-links(aria-label=t('site.footerNavigation'))
+      a(href='/jokoak') #{t('nav.puzzles')}
+      a(href=user ? '/users/dashboard' : '/users/register')
+        | #{user ? t('nav.profile') : t('nav.createAccount')}

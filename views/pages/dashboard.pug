@@ -1,0 +1,57 @@
+section.dashboard
+  section.page-heading
+    .page-heading-copy
+      p.eyebrow= t('dashboard.eyebrow')
+      h1= t('dashboard.title')
+      p= t('dashboard.intro')
+    a.btn.btn-outline-primary(href='/jokoak')= t('home.browse')
+  .dashboard-stats-row
+    .stat-card
+      .stat-value= data.stats.completed
+      .stat-label= t('dashboard.completed')
+    .stat-card
+      .stat-value= data.stats.inProgress
+      .stat-label= t('dashboard.inProgress')
+    .stat-card
+      .stat-value= data.stats.total
+      .stat-label= t('dashboard.all')
+  if data.completed.length
+    h2.dashboard-section-title= `✓ ${t('dashboard.completed')}`
+    table.table.table-sm.table-hover
+      thead
+        tr
+          th= t('common.name')
+          th= t('common.size')
+          th= t('dashboard.completedAt')
+          th= t('dashboard.duration')
+          th
+      tbody
+        each session in data.completed
+          if session.puzzle
+            tr
+              td: a(href=`/jokoak/game/${session.puzzle._id}`)= session.puzzle.name || session.puzzle._id
+              td= `${session.puzzle.width}×${session.puzzle.height}`
+              td= session.completedAt ? new Intl.DateTimeFormat('eu').format(new Date(session.completedAt)) : '—'
+              td= session.durationSeconds == null ? '—' : `${Math.floor(session.durationSeconds / 60)} min ${String(session.durationSeconds % 60).padStart(2, '0')} s`
+              td
+  if data.inProgress.length
+    h2.dashboard-section-title= `⏳ ${t('dashboard.inProgress')}`
+    table.table.table-sm.table-hover
+      thead
+        tr
+          th= t('common.name')
+          th= t('common.size')
+          th= t('dashboard.startedAt')
+          th
+      tbody
+        each session in data.inProgress
+          if session.puzzle
+            tr
+              td= session.puzzle.name || session.puzzle._id
+              td= `${session.puzzle.width}×${session.puzzle.height}`
+              td= session.startedAt ? new Intl.DateTimeFormat('eu').format(new Date(session.startedAt)) : '—'
+              td
+                a.btn.btn-sm.btn-outline-primary(href=`/jokoak/game/${session.puzzle._id}`)= t('common.continue')
+  if !data.completed.length && !data.inProgress.length
+    p.text-muted= t('dashboard.empty')
+    a.btn.btn-primary(href='/jokoak')= t('dashboard.viewPuzzles')

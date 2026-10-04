@@ -28,8 +28,6 @@ node --version
 
 set "INSTALL_DEPS="
 if not exist "node_modules\.bin\nodemon.cmd" set "INSTALL_DEPS=1"
-if not exist "node_modules\.bin\vite.cmd" set "INSTALL_DEPS=1"
-if not exist "node_modules\@vitejs\plugin-react\package.json" set "INSTALL_DEPS=1"
 if defined INSTALL_DEPS (
     echo ==^> Garapeneko mendekotasunak instalatzen...
     call npm --silent ci

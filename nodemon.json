@@ -10,12 +10,10 @@
     "models/**",
     "routes/**",
     "services/**",
-    "vite.config.mjs"
-  ],
-  "ext": "js,mjs,cjs",
-  "ignore": [
-    "client/**",
-    "public/**",
     "views/**"
+  ],
+  "ext": "js,mjs,cjs,pug",
+  "ignore": [
+    "public/**"
   ]
 }

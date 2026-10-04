@@ -1,0 +1,5 @@
+section.empty-state.error-state
+  p.eyebrow= t('notFound.eyebrow')
+  h1= t('notFound.title')
+  p= t('notFound.text', { url: data.url || '' })
+  a.btn.btn-primary(href='/jokoak')= t('dashboard.viewPuzzles')

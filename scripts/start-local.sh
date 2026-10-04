@@ -22,7 +22,7 @@ fi
 
 echo "==> Node.js bertsioa: $(node --version)"
 
-if [[ ! -x node_modules/.bin/nodemon || ! -x node_modules/.bin/vite || ! -d node_modules/@vitejs/plugin-react ]]; then
+if [[ ! -x node_modules/.bin/nodemon ]]; then
   echo "==> Garapeneko mendekotasunak instalatzen..."
   npm --silent ci
 fi

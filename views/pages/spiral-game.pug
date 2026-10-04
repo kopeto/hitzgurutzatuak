@@ -1,0 +1,43 @@
+- const puzzle = data.puzzle
+- const cells = [...((puzzle.spiral && puzzle.spiral.cells) || [])].sort((a, b) => a.index - b.index)
+section(data-spiral-game)
+  .game-topbar
+    a(href='/jokoak'): button.btn.btn-sm.btn-outline-secondary(type='button')= t('common.back')
+    h2.game-title= puzzle.name
+  .game-wrapper
+    .spiral-layout
+      .spiral-board-card
+        .spiral-direction-switch
+          button.is-active(type='button' data-direction='inward')= t('spiralBuilder.inward')
+          button(type='button' data-direction='outward')= t('spiralBuilder.outward')
+        svg#spiral-board(viewBox=(puzzle.spiral && puzzle.spiral.viewBox) || '0 0 700 700' role='img' aria-label=`${puzzle.name} espiral jokoa`)
+          each cell in cells
+            path(class='spiral-cell' id=`s_cell_${cell.index}` data-spiral-cell=cell.index d=cell.path)
+          each cell in cells
+            if cell.labelX != null
+              text.spiral-order(x=cell.labelX y=cell.labelY text-anchor='middle' dominant-baseline='middle')= cell.index
+          each cell in cells
+            text.spiral-letter(data-spiral-letter=cell.index x=cell.x y=cell.y text-anchor='middle' dominant-baseline='central')
+        .game-notification-bar(role='status' data-game-notice)
+      aside.spiral-panel
+        h3.spiral-panel-title= t('game.cluesLabel')
+        .spiral-definitions
+          each direction in ['inward', 'outward']
+            - const defs = (puzzle.spiral && puzzle.spiral.clues) || []
+            .spiral-clue-column(data-definition-list=direction)
+              h2= t(`spiralBuilder.${direction}`)
+              .spiral-clues-list
+                each clue, index in defs
+                  - const match = String(clue).match(/^(\d+)-(\d+)\s*(.*)$/)
+                  if match
+                    - const start = Number(match[1]), end = Number(match[2])
+                    if (direction === 'inward' && start <= end) || (direction === 'outward' && start > end)
+                      button.spiral-clue-item(type='button' data-clue-start=direction === 'inward' ? start : end data-clue-end=direction === 'inward' ? end : start data-direction=direction)= match[3] || `${match[1]}-${match[2]}`
+        .spiral-status
+          p: strong Idatzita:
+            |  <span data-spiral-progress>0</span> / #{cells.length}
+        .spiral-actions
+          button.btn.btn-primary(type='button' data-action='check-grid')= t('game.checkGrid')
+          button.btn.btn-outline-danger(type='button' data-action='clear-grid')= t('game.clearGrid')
+          if user && puzzle.completed
+            button.btn.btn-outline-primary(type='button' data-action='restart')= t('game.playAgain')

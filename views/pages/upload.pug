@@ -1,0 +1,38 @@
+section.form-page
+  section.page-heading
+    .page-heading-copy
+      p.eyebrow= t('upload.eyebrow')
+      h1= t('upload.title')
+      p= t('upload.intro')
+    .page-actions
+      if user && user.master
+        a.btn.btn-outline-secondary(href='/jokoak/spiral-builder')= t('upload.builder')
+      a.btn.btn-outline-primary(href='/jokoak')= t('upload.backToCatalog')
+  .upload-card(data-upload data-max-files=data.maxUploadFiles data-max-file-size=data.maxUploadFileSize)
+    form.auth-form(data-upload-form)
+      .form-group
+        .upload-dropzone(data-dropzone)
+          input#filenames.upload-file-input(type='file' accept='.ipuz,.puz,.spl' multiple data-upload-files aria-label=t('upload.file'))
+          span.upload-dropzone-icon(aria-hidden='true')
+            svg(viewBox='0 0 48 48' fill='none')
+              path(d='M24 31V8m0 0-8 8m8-8 8 8M9 27v10a4 4 0 0 0 4 4h22a4 4 0 0 0 4-4V27' stroke='currentColor' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round')
+          .upload-dropzone-copy
+            strong(data-drop-title)= t('upload.dropTitle')
+            span= t('upload.dropHint', { count: data.maxUploadFiles, size: Math.ceil(data.maxUploadFileSize / (1024 * 1024)) })
+          button.btn.btn-outline-primary.upload-browse-button(type='button' data-browse)= t('upload.browseFiles')
+        small#upload-hint.form-hint= t('upload.hint')
+      .upload-selection(data-upload-selection hidden)
+        .upload-section-heading
+          strong(data-selected-count)
+          button.btn.btn-link.btn-sm(type='button' data-clear-files)= t('upload.clearSelection')
+        ul.upload-file-list(data-selected-files)
+      .alert.alert-danger(role='alert' data-upload-error hidden)
+      button.btn.btn-primary(type='submit' data-upload-submit disabled)= t('upload.submit', { count: 0 })
+    section.upload-progress(aria-live='polite' data-upload-progress hidden)
+      .upload-progress-heading
+        h2= t('upload.progressTitle')
+        span(data-batch-status)
+      p.form-hint(data-batch-count)
+      progress.upload-progress-bar(max='100' value='0' aria-label=t('upload.progressTitle'))
+      p.upload-summary(data-batch-summary hidden)
+      ul.upload-file-list.upload-results-list(data-batch-files)

@@ -1,9 +1,9 @@
 {
   "site": {
-    "name": "Hitz gurutzatuak",
-    "description": "Hitz gurutzatuak — Hitz jokoen jokoa",
+    "name": "Xedera",
+    "description": "Xedera — Euskal hitz jokoak",
     "footer": "Hitz jokoak euskaraz.",
-    "homeLinkLabel": "Hitz gurutzatuen hasiera",
+    "homeLinkLabel": "Xedera-ren hasiera",
     "footerNavigation": "Oineko nabigazioa"
   },
   "nav": {

@@ -9,40 +9,18 @@ html(lang='eu')
       meta(property='og:type' content='website')
     meta(charset='utf-8')
     meta(name='viewport' content='width=device-width, initial-scale=1')
+    link(rel='icon' type='image/svg+xml' href='/favicon.svg?v=20261004-2')
+    link(rel='icon' href='/favicon.ico?v=20261004-2' sizes='any')
     
     link(rel='stylesheet' href='/style/style.css?v=20261002-2')
-    script(src='/vendor/jquery/jquery.min.js')
     link(rel='stylesheet' href='/vendor/bootstrap/css/bootstrap.min.css')
-    script(src='/vendor/bootstrap/js/bootstrap.bundle.min.js')
     script#i18n-data(type='application/json') !{JSON.stringify(clientMessages)}
     script(src='/scripts/i18n.js')
-    script(src='/scripts/some_scripts.js')
+    script(src='/scripts/site.js' defer)
     block scripts
     block styles
   body.site-body
-    header.site-header
-      .site-shell.site-header-inner
-        a.brand(href='/' aria-label=t('site.homeLinkLabel'))
-          span.brand-mark HG
-          span.brand-name #{t('site.name')}
-        button.nav-toggle(type='button' aria-expanded='false' aria-controls='site-navigation' data-nav-toggle)
-          span.sr-only #{t('nav.open')}
-          span.nav-toggle-line
-          span.nav-toggle-line
-          span.nav-toggle-line
-        nav#site-navigation.site-navigation(data-site-navigation)
-          a(href='/') #{t('nav.home')}
-          a(href='/jokoak') #{t('nav.puzzles')}
-          if user && user.master
-            a(href='/master') #{t('nav.management')}
-          .navigation-account
-            if user
-              span.navigation-user #{user.username}
-              a.nav-login(href='/users/dashboard') #{t('nav.profile')}
-              a.nav-login(href='/users/logout') #{t('nav.signOut')}
-            else
-              a.nav-login(href='/users/login') #{t('nav.signIn')}
-              a.nav-login(href='/users/register') #{t('nav.createAccount')}
+    include includes/site-header.pug
     main.site-main
       .site-shell
         != messages('message', locals)
@@ -50,17 +28,5 @@ html(lang='eu')
           each error, i in errors
             div(class='alert alert-danger') #{error.msg}
         block content
-    footer.site-footer
-      .site-shell.site-footer-inner
-        div
-          a.brand.brand--footer(href='/')
-            span.brand-mark HG
-            span.brand-name #{t('site.name')}
-          p #{t('site.footer')}
-        nav.footer-links(aria-label=t('site.footerNavigation'))
-          a(href='/jokoak') #{t('nav.puzzles')}
-          if user
-            a(href='/users/dashboard') #{t('nav.profile')}
-          else
-            a(href='/users/register') #{t('nav.createAccount')}
-        block footer
+    include includes/site-footer.pug
+    block footer

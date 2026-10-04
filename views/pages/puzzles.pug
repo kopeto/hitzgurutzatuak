@@ -1,0 +1,67 @@
+mixin heading(eyebrow, title, text)
+  section.page-heading
+    .page-heading-copy
+      p.eyebrow= eyebrow
+      h1= title
+      if text
+        p= text
+
++heading(t('catalog.eyebrow'), t('catalog.title'), t('catalog.intro'))
+if user && user.master
+  aside.admin-note
+    strong #{t('catalog.adminMode')}
+    |  #{t('catalog.adminText')}
+if !data.puzzles.length
+  .empty-state
+    h2= t('catalog.emptyTitle')
+    p= user && user.master ? t('catalog.emptyAdmin') : t('catalog.emptyPlayer')
+    if user && user.master
+      a.btn.btn-primary(href='/jokoak/upload')= t('catalog.upload')
+else
+  .catalog-controls
+    label.search-field
+      span= t('catalog.search')
+      input.form-control(type='search' data-puzzle-search placeholder=t('catalog.searchPlaceholder'))
+    label.filter-field
+      span= t('catalog.type')
+      select.form-control(data-puzzle-type)
+        option(value='all')= t('common.all')
+        option(value='crossword')= t('catalog.crosswordType')
+        option(value='spiral')= t('catalog.spiralType')
+    if user
+      label.filter-field
+        span= t('catalog.status')
+        select.form-control(data-puzzle-status)
+          option(value='all')= t('common.all')
+          option(value='started')= t('catalog.inProgress')
+          option(value='completed')= t('catalog.completed')
+          option(value='notstarted')= t('catalog.notStarted')
+    p.catalog-count(data-catalog-count)
+  .puzzle-list
+    each puzzle in data.puzzles
+      - const status = data.statusMap[puzzle._id] || {}
+      - const gameType = puzzle.gameType || (puzzle.format === 'spl' ? 'spiral' : 'crossword')
+      - const started = status.status === 'started'
+      - const completed = status.status === 'completed'
+      - const dimension = gameType === 'spiral' ? puzzle.cellCount || puzzle.width * puzzle.height : `${puzzle.width}×${puzzle.height}`
+      - const statusText = completed ? t('catalog.completed') : started ? t('catalog.inProgress') : t('catalog.notStarted')
+      article.puzzle-list-item(data-puzzle-card data-search=`${puzzle.name} ${puzzle.author || ''}` data-type=gameType data-status=status.status || 'notstarted')
+        .puzzle-list-dimension= dimension
+        .puzzle-list-content
+          h2
+            a(href=`/jokoak/game/${puzzle._id}`)= puzzle.name
+          p.puzzle-author= puzzle.author || t('common.unknownAuthor')
+          .puzzle-list-details
+            span(class=`game-type-pill${gameType === 'spiral' ? ' game-type-pill--spiral' : ''}`)= gameType === 'spiral' ? t('catalog.spiralType') : t('catalog.crosswordType')
+            if completed
+              span= `✓ ${t('dashboard.duration')}: ${Math.floor((status.elapsedSeconds || 0) / 60)} min ${String((status.elapsedSeconds || 0) % 60).padStart(2, '0')} s`
+              span= status.errorCount ? (status.errorCount === 1 ? t('catalog.oneError') : `${status.errorCount} ${t('catalog.errors')}`) : (!status.usedVerify && !status.usedHints ? t('catalog.perfect') : '')
+            else
+              span= started ? t('catalog.savedGame') : t('catalog.ready')
+            span= puzzle.createdAt ? new Intl.DateTimeFormat('eu').format(new Date(puzzle.createdAt)) : '—'
+        .puzzle-list-status
+          span(class=`status-pill${completed ? ' status-pill--complete' : started ? ' status-pill--progress' : ''}`)= statusText
+        .puzzle-list-actions
+          a.btn.btn-primary(href=`/jokoak/game/${puzzle._id}`)= started ? t('common.continue') : t('common.play')
+          if user && user.master
+            button.btn.btn-outline-danger(type='button' data-delete-puzzle=puzzle._id data-name=puzzle.name)= t('common.delete')

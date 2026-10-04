@@ -1,0 +1,36 @@
+- const register = page === 'register'
+section.auth-page
+  .auth-card
+    h1= register ? t('nav.createAccount') : t('nav.signIn')
+    if data.errors && data.errors.length
+      .alert.alert-danger(role='alert')
+        ul.mb-0
+          each error in data.errors
+            li= error.msg
+    form.auth-form(method='post' action=register ? '/users/register' : '/users/login')
+      if register
+        .form-group
+          label(for='email')= t('auth.email')
+          input#email.form-control(type='email' name='email' autocomplete='email' required)
+      if register
+        .form-group
+          label(for='username')= t('auth.username')
+          input#username.form-control(type='text' name='username' autocomplete='username' minlength='3' maxlength='40' required)
+          small.form-hint= t('auth.usernameHint')
+      else
+        .form-group
+          label(for='username')= t('auth.username')
+          input#username.form-control(type='text' name='username' autocomplete='username' required)
+      .form-group
+        label(for='password')= t('auth.password')
+        input#password.form-control(type='password' name='password' autocomplete=register ? 'new-password' : 'current-password' minlength=register ? 4 : undefined required)
+        if register
+          small.form-hint= t('auth.passwordHint')
+      if register
+        .form-group
+          label(for='password2')= t('auth.repeatPassword')
+          input#password2.form-control(type='password' name='password2' autocomplete='new-password' required)
+      button.btn.btn-primary.btn-block(type='submit')= register ? t('nav.createAccount') : t('auth.enter')
+    p.auth-footer
+      | #{register ? t('auth.haveAccount') : t('auth.noAccount')}
+      a(href=register ? '/users/login' : '/users/register')= register ? t('nav.signIn') : t('nav.createAccount')

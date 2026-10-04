@@ -5,11 +5,11 @@ const UserModel = require('../models/user');
 const PlaySession = require('../models/playsession');
 const fs = require('fs');
 const path = require('path');
-const { renderReact, serializePuzzleSummary } = require('../services/react-view');
+const { renderPage, serializePuzzleSummary } = require('../services/page-view');
 
 function requireMaster(req, res, next) {
   if (req.isAuthenticated() && req.user.master) return next();
-  return renderReact(res, 'message', { message: 'Sarbidea ukatua', type: 'danger' }, { status: 403 });
+  return renderPage(res, 'message', { message: 'Sarbidea ukatua', type: 'danger' }, { status: 403 });
 }
 
 router.get('/', requireMaster, async (req, res) => {
@@ -97,7 +97,7 @@ router.get('/', requireMaster, async (req, res) => {
       console.error('Ezin izan da deskargen karpeta irakurri:', e);
     }
 
-    return renderReact(res, 'master', {
+    return renderPage(res, 'master', {
       stats,
       puzzles: puzzles.map(serializePuzzleSummary),
       users: users.map(({ _id, username, email, master }) => ({ _id, username, email, master })),
@@ -108,19 +108,19 @@ router.get('/', requireMaster, async (req, res) => {
     }, { title: res.locals.t('page.master') });
   } catch (err) {
     console.error(err);
-    return renderReact(res, 'message', { message: 'Errore bat gertatu da', type: 'danger' }, { status: 500 });
+    return renderPage(res, 'message', { message: 'Errore bat gertatu da', type: 'danger' }, { status: 500 });
   }
 });
 
 router.get('/download/:name', requireMaster, (req, res) => {
   const name = req.params.name;
-  if (!name || name.includes('..') || name.includes('/') || name.includes('\\')) return renderReact(res, 'message', { message: 'Izena baliogabea', type: 'danger' }, { status: 400 });
+  if (!name || name.includes('..') || name.includes('/') || name.includes('\\')) return renderPage(res, 'message', { message: 'Izena baliogabea', type: 'danger' }, { status: 400 });
   const downloadsDir = path.join(__dirname, '..', 'downloads');
   const filePath = path.join(downloadsDir, name);
   const resolved = path.resolve(filePath);
-  if (!resolved.startsWith(path.resolve(downloadsDir))) return renderReact(res, 'message', { message: 'Sarbidea ukatua', type: 'danger' }, { status: 400 });
+  if (!resolved.startsWith(path.resolve(downloadsDir))) return renderPage(res, 'message', { message: 'Sarbidea ukatua', type: 'danger' }, { status: 400 });
   fs.stat(filePath, (err, stat) => {
-    if (err || !stat.isFile()) return renderReact(res, 'message', { message: 'Fitxategia ez da aurkitu', type: 'warning' }, { status: 404 });
+    if (err || !stat.isFile()) return renderPage(res, 'message', { message: 'Fitxategia ez da aurkitu', type: 'warning' }, { status: 404 });
     res.download(filePath, name, (err) => {
       if (err) console.error('Errorea fitxategia deskargatzean:', err);
     });

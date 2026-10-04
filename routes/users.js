@@ -10,10 +10,10 @@ const passport = require('passport');
 const UserModel = require('../models/user');
 const PlaySession = require('../models/playsession');
 const CrosswordModel = require('../models/crosswords');
-const { renderReact, serializePuzzleSummary } = require('../services/react-view');
+const { renderPage, serializePuzzleSummary } = require('../services/page-view');
 
 router.get('/register',(req,res)=>{
-  return renderReact(res, 'register', {}, { title: res.locals.t('nav.createAccount') });
+  return renderPage(res, 'register', {}, { title: res.locals.t('nav.createAccount') });
 });
 
 router.post('/register',[
@@ -35,7 +35,7 @@ router.post('/register',[
 ], async (req,res)=>{
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return renderReact(res, 'register', { errors: errors.array() }, { status: 422, title: res.locals.t('nav.createAccount') });
+    return renderPage(res, 'register', { errors: errors.array() }, { status: 422, title: res.locals.t('nav.createAccount') });
   }
 
   try {
@@ -65,7 +65,7 @@ router.post('/register',[
 
 
 router.get('/login', (req,res)=>{
-  return renderReact(res, 'login', {}, { title: res.locals.t('nav.signIn') });
+  return renderPage(res, 'login', {}, { title: res.locals.t('nav.signIn') });
 });
 
 router.post('/login', (req,res,next)=>{
@@ -126,7 +126,7 @@ router.get('/dashboard', async (req, res) => {
       .sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt))
       .map(s => ({ ...s, puzzle: serializeSessionPuzzle(s, puzzleMap) }));
 
-    return renderReact(res, 'dashboard', {
+    return renderPage(res, 'dashboard', {
       stats: {
         completed:  completed.length,
         inProgress: inProgress.length,
@@ -137,7 +137,7 @@ router.get('/dashboard', async (req, res) => {
     }, { title: res.locals.t('page.dashboard') });
   } catch (err) {
     logError(err);
-    return renderReact(res, 'message', { message: 'Errore bat gertatu da', type: 'danger' }, { status: 500 });
+    return renderPage(res, 'message', { message: 'Errore bat gertatu da', type: 'danger' }, { status: 500 });
   }
 });
 

@@ -9,7 +9,6 @@ function safeJson(value) {
 
 function serializeUser(user) {
   if (!user) return null;
-
   return {
     id: user._id ? String(user._id) : undefined,
     username: user.username,
@@ -32,22 +31,26 @@ function serializePuzzleSummary(puzzle) {
   };
 }
 
-function renderReact(res, page, data = {}, options = {}) {
+function renderPage(res, page, data = {}, options = {}) {
+  const user = serializeUser(res.locals.user);
   const title = options.title || res.locals.t('site.name');
-  const state = {
+  const viewData = JSON.parse(safeJson(data));
+  const appState = {
     page,
-    data,
-    user: serializeUser(res.locals.user),
-    flash: res.locals.flash || {},
+    data: viewData,
+    user,
     messages: res.locals.clientMessages
   };
 
-  return res.status(options.status || 200).render('react', {
+  return res.status(options.status || 200).render('app', {
     title,
+    page,
+    data: viewData,
+    user,
+    flash: res.locals.flash || {},
     pageClass: page === 'spiralBuilder' ? 'spiral-builder-page' : '',
-    appState: safeJson(state),
-    useVite: process.env.NODE_ENV === 'development'
+    appState: safeJson(appState)
   });
 }
 
-module.exports = { renderReact, serializePuzzleSummary };
+module.exports = { renderPage, serializePuzzleSummary };

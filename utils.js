@@ -25,7 +25,7 @@ const logInfo = (info)=>{
 
 const notFoundHandler = (req,res)=>{
 	console.log(colors.red(logDate()+' - '+req.method+' '+req.url + ' ez da aurkitu.'));
-	require('./services/react-view').renderReact(res, 'notFound', { url: req.url }, {
+	require('./services/page-view').renderPage(res, 'notFound', { url: req.url }, {
     title: 'Ez da aurkitu',
     status: 404
   });

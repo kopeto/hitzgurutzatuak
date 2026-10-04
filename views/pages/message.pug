@@ -1,0 +1,4 @@
+section.message-page
+  .alert(class=`alert-${data.type || 'info'}` role='status')= data.message || t('page.notFound')
+  if data.url
+    a.btn.btn-outline-primary(href='/jokoak')= t('common.back')
