@@ -37,7 +37,38 @@ else
           option(value='completed')= t('catalog.completed')
           option(value='notstarted')= t('catalog.notStarted')
     p.catalog-count(data-catalog-count)
-  .puzzle-list
+  if user && user.master
+    .puzzle-bulk-toolbar(data-puzzle-bulk-toolbar)
+      label.puzzle-select-all
+        input.puzzle-select-checkbox(type='checkbox' data-select-all aria-label=t('catalog.selectAll'))
+        span= t('catalog.selectAll')
+      span.puzzle-selection-count(data-selection-count aria-live='polite')
+      button.puzzle-delete-selected(type='button' data-delete-selected disabled)
+        span= t('client.deleteSelected')
+  .puzzle-list(class=`puzzle-list--${puzzleListStyle}${user && user.master ? ' puzzle-list--selectable' : ''}` role='table' aria-label=t('catalog.title'))
+    .puzzle-list-header(role='row')
+      span(role='columnheader' aria-sort='none')
+        button.puzzle-sort-button(type='button' data-sort-column='type' data-sort-label=t('catalog.type'))
+          span= t('catalog.type')
+          span.puzzle-sort-indicator(data-sort-indicator) ↕
+      span(role='columnheader' aria-sort='none')
+        button.puzzle-sort-button(type='button' data-sort-column='size' data-sort-label=t('common.size'))
+          span= t('common.size')
+          span.puzzle-sort-indicator(data-sort-indicator) ↕
+      span(role='columnheader' aria-sort='none')
+        button.puzzle-sort-button(type='button' data-sort-column='name' data-sort-label=t('common.name'))
+          span= t('common.name')
+          span.puzzle-sort-indicator(data-sort-indicator) ↕
+      span(role='columnheader' aria-sort='none')
+        button.puzzle-sort-button(type='button' data-sort-column='status' data-sort-label=t('catalog.status'))
+          span= t('catalog.status')
+          span.puzzle-sort-indicator(data-sort-indicator) ↕
+      span(role='columnheader' aria-sort='none')
+        button.puzzle-sort-button(type='button' data-sort-column='date' data-sort-label=t('catalog.uploadDate'))
+          span= t('catalog.uploadDate')
+          span.puzzle-sort-indicator(data-sort-indicator) ↕
+      if user && user.master
+        span(role='columnheader')= t('catalog.actions')
     each puzzle in data.puzzles
       - const status = data.statusMap[puzzle._id] || {}
       - const gameType = puzzle.gameType || (puzzle.format === 'spl' ? 'spiral' : 'crossword')
@@ -45,23 +76,39 @@ else
       - const completed = status.status === 'completed'
       - const dimension = gameType === 'spiral' ? puzzle.cellCount || puzzle.width * puzzle.height : `${puzzle.width}×${puzzle.height}`
       - const statusText = completed ? t('catalog.completed') : started ? t('catalog.inProgress') : t('catalog.notStarted')
-      article.puzzle-list-item(data-puzzle-card data-search=`${puzzle.name} ${puzzle.author || ''}` data-type=gameType data-status=status.status || 'notstarted')
-        .puzzle-list-dimension= dimension
-        .puzzle-list-content
+      - const uploadDate = puzzle.createdAt ? new Intl.DateTimeFormat('eu').format(new Date(puzzle.createdAt)) : '—'
+      - const searchableDate = puzzle.createdAt ? new Date(puzzle.createdAt).toISOString().slice(0, 10) : ''
+      - const searchText = [puzzle.name, puzzle.author].filter(Boolean).join(' ')
+      - const gameTypeLabel = gameType === 'spiral' ? t('catalog.spiralType') : t('catalog.crosswordType')
+      - const sortSize = gameType === 'spiral' ? puzzle.cellCount || puzzle.width * puzzle.height : puzzle.width * puzzle.height
+      - const sortDate = puzzle.createdAt ? new Date(puzzle.createdAt).getTime() : 0
+      article.puzzle-list-item(data-puzzle-card data-search=searchText data-type=gameType data-status=status.status || 'notstarted' data-sort-type=gameTypeLabel data-sort-size=sortSize data-sort-name=puzzle.name data-sort-status=status.status || 'notstarted' data-sort-date=sortDate role='row')
+        .puzzle-list-type(role='cell')
+          if user && user.master
+            input.puzzle-select-checkbox(type='checkbox' data-select-puzzle value=puzzle._id aria-label=t('catalog.selectPuzzle', { name: puzzle.name }))
+          span(class=`game-type-pill${gameType === 'spiral' ? ' game-type-pill--spiral' : ''}`)= gameTypeLabel
+        .puzzle-list-dimension(role='cell')= dimension
+        .puzzle-list-content(role='cell')
           h2
             a(href=`/jokoak/game/${puzzle._id}`)= puzzle.name
-          p.puzzle-author= puzzle.author || t('common.unknownAuthor')
+          if puzzleListStyle === 'classic'
+            p.puzzle-author= puzzle.author || t('common.unknownAuthor')
           .puzzle-list-details
-            span(class=`game-type-pill${gameType === 'spiral' ? ' game-type-pill--spiral' : ''}`)= gameType === 'spiral' ? t('catalog.spiralType') : t('catalog.crosswordType')
+            if puzzleListStyle === 'compact'
+              span.puzzle-author= puzzle.author || t('common.unknownAuthor')
             if completed
               span= `✓ ${t('dashboard.duration')}: ${Math.floor((status.elapsedSeconds || 0) / 60)} min ${String((status.elapsedSeconds || 0) % 60).padStart(2, '0')} s`
               span= status.errorCount ? (status.errorCount === 1 ? t('catalog.oneError') : `${status.errorCount} ${t('catalog.errors')}`) : (!status.usedVerify && !status.usedHints ? t('catalog.perfect') : '')
             else
               span= started ? t('catalog.savedGame') : t('catalog.ready')
-            span= puzzle.createdAt ? new Intl.DateTimeFormat('eu').format(new Date(puzzle.createdAt)) : '—'
-        .puzzle-list-status
+        .puzzle-list-status(role='cell')
           span(class=`status-pill${completed ? ' status-pill--complete' : started ? ' status-pill--progress' : ''}`)= statusText
-        .puzzle-list-actions
-          a.btn.btn-primary(href=`/jokoak/game/${puzzle._id}`)= started ? t('common.continue') : t('common.play')
-          if user && user.master
-            button.btn.btn-outline-danger(type='button' data-delete-puzzle=puzzle._id data-name=puzzle.name)= t('common.delete')
+        .puzzle-list-date(role='cell')= uploadDate
+        if user && user.master
+          .puzzle-list-actions(role='cell')
+            a.puzzle-play-link(href=`/jokoak/game/${puzzle._id}`)= started ? t('common.continue') : t('common.play')
+            button.puzzle-delete-button(type='button' data-delete-puzzle=puzzle._id data-name=puzzle.name aria-label=t('common.delete') title=t('common.delete'))
+              svg(width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true' focusable='false')
+                path(d='M4 7h16')
+                path(d='M10 11v6M14 11v6')
+                path(d='M5 7l1 14h12l1-14M9 7V4h6v3')

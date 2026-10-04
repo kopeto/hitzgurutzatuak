@@ -271,15 +271,44 @@ router.get('/game/:id', async (req, res) => {
   }
 });
 
-router.delete('/game/:id', checkAuth, requireMaster, async (req, res) => {
+async function deletePuzzleRecords(ids) {
+  const puzzles = await CrosswordModel.find({ _id: { $in: ids } }, '_id').lean();
+  const deletedIds = puzzles.map(puzzle => puzzle._id.toString());
+  if (!deletedIds.length) return [];
+
+  await CrosswordModel.deleteMany({ _id: { $in: deletedIds } });
+  await Promise.all([
+    PlaySession.deleteMany({ puzzleId: { $in: deletedIds } }),
+    GameStateModel.deleteMany({ puzzleId: { $in: deletedIds } })
+  ]).catch(logError);
+  return deletedIds;
+}
+
+router.delete('/game', checkAuth, requireMaster, async (req, res) => {
+  const requestedIds = req.body?.ids;
+  if (!Array.isArray(requestedIds) || !requestedIds.length || requestedIds.length > 500
+    || requestedIds.some(id => typeof id !== 'string' || !/^[a-f\d]{24}$/i.test(id))) {
+    return res.status(400).json({ error: 'Aukeratutako jokoen zerrenda ez da baliozkoa.' });
+  }
+
   try {
-    await CrosswordModel.deleteOne({ _id: req.params.id });
-    req.flash('success', 'Jokoa ezabatu dugu');
-    res.end();
+    const deletedIds = await deletePuzzleRecords([...new Set(requestedIds)]);
+    return res.json({ deletedIds });
   } catch (err) {
     logError(err);
-    req.flash('danger', 'Erroreren bat izan da');
-    res.end();
+    return res.status(500).json({ error: 'Ezin izan dira ezabatu aukeratutako jokoak.' });
+  }
+});
+
+router.delete('/game/:id', checkAuth, requireMaster, async (req, res) => {
+  if (!/^[a-f\d]{24}$/i.test(req.params.id)) return res.status(404).json({ error: 'Jokoa ez da aurkitu.' });
+  try {
+    const deletedIds = await deletePuzzleRecords([req.params.id]);
+    if (!deletedIds.length) return res.status(404).json({ error: 'Jokoa ez da aurkitu.' });
+    return res.json({ deletedIds });
+  } catch (err) {
+    logError(err);
+    return res.status(500).json({ error: 'Ezin izan da jokoa ezabatu.' });
   }
 });
 

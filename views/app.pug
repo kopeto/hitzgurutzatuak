@@ -8,7 +8,7 @@ html(lang='eu')
     link(rel='icon' href='/favicon.ico?v=20261004-2' sizes='any')
     title #{title} | #{t('site.name')}
     link(rel='stylesheet' href='/vendor/bootstrap/css/bootstrap.min.css')
-    link(rel='stylesheet' href='/style/style.css?v=20261002-2')
+    link(rel='stylesheet' href='/style/style.css?v=20261004-6')
     link(rel='stylesheet' href='/style/cw.css?v=20261004-2-7')
     link(rel='stylesheet' href='/style/spiral.css')
     link(rel='stylesheet' href='/style/spiral_builder.css')
@@ -16,7 +16,7 @@ html(lang='eu')
     script#i18n-data(type='application/json') !{JSON.stringify(clientMessages)}
     script(src='/scripts/i18n.js')
     script(src='/scripts/site.js' defer)
-    script(src='/scripts/app.js' type='module')
+    script(src='/scripts/app.js?v=20261004-2' type='module')
   body(class=`site-body ${pageClass || ''}`)
     include includes/site-header.pug
     main.site-main

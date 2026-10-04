@@ -42,12 +42,61 @@ function initCatalog() {
   const search = document.querySelector('[data-puzzle-search]');
   const status = document.querySelector('[data-puzzle-status]');
   const type = document.querySelector('[data-puzzle-type]');
-  const cards = [...document.querySelectorAll('[data-puzzle-card]')];
   const count = document.querySelector('[data-catalog-count]');
+  const selectAll = document.querySelector('[data-select-all]');
+  const selectionCount = document.querySelector('[data-selection-count]');
+  const deleteSelected = document.querySelector('[data-delete-selected]');
+  const list = document.querySelector('.puzzle-list');
+  const sortButtons = [...document.querySelectorAll('[data-sort-column]')];
+  const cards = () => [...document.querySelectorAll('[data-puzzle-card]')];
+  const selectedCards = () => cards().filter((card) => card.querySelector('[data-select-puzzle]')?.checked);
+  let sortColumn = '';
+  let sortDirection = 1;
+  const sortRows = (column) => {
+    if (sortColumn === column) sortDirection *= -1;
+    else {
+      sortColumn = column;
+      sortDirection = 1;
+    }
+    const dataKey = { type: 'sortType', size: 'sortSize', name: 'sortName', status: 'sortStatus', date: 'sortDate' }[column];
+    const statusOrder = { notstarted: 0, started: 1, completed: 2 };
+    const compare = (first, second) => {
+      const firstValue = first.dataset[dataKey] || '';
+      const secondValue = second.dataset[dataKey] || '';
+      let result;
+      if (column === 'size' || column === 'date') result = Number(firstValue) - Number(secondValue);
+      else if (column === 'status') result = statusOrder[firstValue] - statusOrder[secondValue];
+      else result = firstValue.localeCompare(secondValue, 'eu', { numeric: true, sensitivity: 'base' });
+      if (!result && column !== 'name') result = first.dataset.sortName.localeCompare(second.dataset.sortName, 'eu', { sensitivity: 'base' });
+      return result * sortDirection;
+    };
+    if (list) list.append(...cards().sort(compare));
+    sortButtons.forEach((button) => {
+      const active = button.dataset.sortColumn === column;
+      const header = button.closest('[role="columnheader"]');
+      const indicator = button.querySelector('[data-sort-indicator]');
+      button.setAttribute('aria-pressed', String(active));
+      if (header) header.setAttribute('aria-sort', active ? (sortDirection === 1 ? 'ascending' : 'descending') : 'none');
+      if (indicator) indicator.textContent = active ? (sortDirection === 1 ? '▲' : '▼') : '↕';
+    });
+  };
+  const updateSelection = () => {
+    const allCards = cards();
+    const visibleCards = allCards.filter((card) => !card.hidden && card.querySelector('[data-select-puzzle]'));
+    const selected = selectedCards();
+    const visibleSelected = visibleCards.filter((card) => card.querySelector('[data-select-puzzle]').checked).length;
+    allCards.forEach((card) => card.classList.toggle('is-selected', Boolean(card.querySelector('[data-select-puzzle]')?.checked)));
+    if (selectionCount) selectionCount.textContent = selected.length ? t('client.selectedCount', { count: selected.length }) : '';
+    if (deleteSelected) deleteSelected.disabled = selected.length === 0;
+    if (selectAll) {
+      selectAll.checked = visibleCards.length > 0 && visibleSelected === visibleCards.length;
+      selectAll.indeterminate = visibleSelected > 0 && visibleSelected < visibleCards.length;
+    }
+  };
   const update = () => {
     const query = (search?.value || '').trim().toLocaleLowerCase('eu');
     let visible = 0;
-    cards.forEach((card) => {
+    cards().forEach((card) => {
       const match = card.dataset.search.toLocaleLowerCase('eu').includes(query)
         && (!status || status.value === 'all' || card.dataset.status === status.value)
         && (!type || type.value === 'all' || card.dataset.type === type.value);
@@ -55,20 +104,59 @@ function initCatalog() {
       if (match) visible += 1;
     });
     if (count) count.textContent = t('client.puzzleCount', { count: visible });
+    updateSelection();
   };
   [search, status, type].forEach((element) => element?.addEventListener('input', update));
+  [status, type].forEach((element) => element?.addEventListener('change', update));
   update();
+  document.addEventListener('change', (event) => {
+    if (event.target.matches('[data-select-all]')) {
+      cards().filter((card) => !card.hidden).forEach((card) => {
+        const checkbox = card.querySelector('[data-select-puzzle]');
+        if (checkbox) checkbox.checked = event.target.checked;
+      });
+      updateSelection();
+    } else if (event.target.matches('[data-select-puzzle]')) updateSelection();
+  });
   document.addEventListener('click', async (event) => {
-    const button = event.target.closest('[data-delete-puzzle]');
-    if (!button) return;
-    const id = button.dataset.deletePuzzle;
-    const name = button.dataset.name || 'puzle hau';
-    if (!window.confirm(t('client.deleteConfirm', { name }))) return;
-    button.disabled = true;
-    const response = await fetch(`/jokoak/game/${encodeURIComponent(id)}`, { method: 'DELETE' });
-    if (response.ok) button.closest('[data-puzzle-card]')?.remove();
-    else {
-      button.disabled = false;
+    const sortButton = event.target.closest('[data-sort-column]');
+    if (sortButton) {
+      sortRows(sortButton.dataset.sortColumn);
+      return;
+    }
+
+    const singleButton = event.target.closest('[data-delete-puzzle]');
+    if (singleButton) {
+      const id = singleButton.dataset.deletePuzzle;
+      const name = singleButton.dataset.name || 'puzle hau';
+      if (!window.confirm(t('client.deleteConfirm', { name }))) return;
+      singleButton.disabled = true;
+      try {
+        const response = await fetch(`/jokoak/game/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('delete failed');
+        singleButton.closest('[data-puzzle-card]')?.remove();
+      } catch {
+        singleButton.disabled = false;
+        window.alert(t('client.deleteFailed'));
+      }
+      update();
+      return;
+    }
+
+    const bulkButton = event.target.closest('[data-delete-selected]');
+    if (!bulkButton) return;
+    const selected = selectedCards();
+    if (!selected.length || !window.confirm(t('client.deleteSelectedConfirm', { count: selected.length }))) return;
+    bulkButton.disabled = true;
+    try {
+      const response = await fetch('/jokoak/game', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selected.map((card) => card.querySelector('[data-select-puzzle]').value) })
+      });
+      if (!response.ok) throw new Error('bulk delete failed');
+      selected.forEach((card) => card.remove());
+    } catch {
       window.alert(t('client.deleteFailed'));
     }
     update();

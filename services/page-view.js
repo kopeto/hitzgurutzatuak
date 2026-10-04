@@ -1,3 +1,5 @@
+const { puzzleListStyle } = require('../config/ui');
+
 function safeJson(value) {
   return JSON.stringify(value)
     .replace(/</g, '\\u003c')
@@ -49,6 +51,7 @@ function renderPage(res, page, data = {}, options = {}) {
     user,
     flash: res.locals.flash || {},
     pageClass: page === 'spiralBuilder' ? 'spiral-builder-page' : '',
+    puzzleListStyle,
     appState: safeJson(appState)
   });
 }
