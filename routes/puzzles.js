@@ -20,15 +20,18 @@ function requireMaster(req, res, next) {
 
 // Helper: strip solution data before sending to client.
 // clues[] is the flat DB array (always populated); w.clue is a per-word copy (only on newer uploads).
-function sanitizeWords(words, clues, format) {
+function sanitizeWords(words, clues) {
+  const startCells = [...new Map(words.map(word => [`${word.x}-${word.y}`, { x: word.x, y: word.y }])).values()]
+    .sort((a, b) => a.x - b.x || a.y - b.y);
+  const numberByStartCell = new Map(startCells.map((cell, index) => [`${cell.x}-${cell.y}`, index + 1]));
+
   return words.map((w, i) => ({
     dir: w.dir,
     x: w.x,
     y: w.y,
     length: w.length,
-    number: format === 'ipuz' ? null : w.number,
-    clue: clues?.[i] || w.clue || '',
-    format
+    number: numberByStartCell.get(`${w.x}-${w.y}`),
+    clue: clues?.[i] || w.clue || ''
     // Do NOT include w.word (the answer)
   }));
 }
@@ -246,7 +249,7 @@ router.get('/game/:id', async (req, res) => {
       width:          puzzle.width,
       height:         puzzle.height,
       void_grid:      puzzle.void_grid,
-      words:          sanitizeWords(puzzle.words, puzzle.clues, puzzle.format),
+      words:          sanitizeWords(puzzle.words, puzzle.clues),
       completed:      isCompleted,
       elapsedSeconds: savedElapsed,
       cellResults:    savedCellResults,

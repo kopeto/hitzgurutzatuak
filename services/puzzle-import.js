@@ -3,7 +3,6 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const Crossword = require('../cw/crossword');
-const iPuzCrossword = require('../cw/ipuz');
 const SpiralPuzzle = require('../cw/spiral');
 const CrosswordModel = require('../models/crosswords');
 
@@ -87,12 +86,10 @@ async function importPuzzle(uploadedFile) {
     const format = detectFormat(uploadedFile.originalname);
     let crossword;
 
-    if (format === 'ipuz') {
-      crossword = new iPuzCrossword(uploadedFile.path);
-    } else if (format === 'spl') {
+    if (format === 'spl') {
       crossword = new SpiralPuzzle(uploadedFile.path);
     } else {
-      crossword = new Crossword(uploadedFile.path);
+      crossword = new Crossword(uploadedFile.path, format);
     }
 
     validateCrossword(crossword);

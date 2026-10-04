@@ -11,41 +11,55 @@
    ============================================================================= */
 
 .grid {
-  border-top: 1px solid black;
-  border-left: 1px solid black;
-}
-
-.grid tbody {
   display: grid;
-  grid-template-columns: repeat(var(--grid-cols, 15), min(60px, calc(100% / var(--grid-cols, 15))));
+  position: relative;
+  cursor: default;
+  width: max-content;
+  max-width: 100%;
+  justify-self: center;
+  gap: 0;
+  grid-template-columns: var(--grid-axis-gutter) repeat(var(--grid-cols, 15), var(--grid-cell-size));
+  grid-template-rows: var(--grid-axis-gutter) repeat(var(--grid-rows, 15), var(--grid-cell-size));
+  --grid-cell-size: max(0px, min(60px, calc((100cqw - var(--grid-axis-gutter, 0px)) / var(--grid-cols, 15))));
 }
 
-.grid tr {
-  display: contents;
+.grid-block.clue-layout-american .axis-label {
+  visibility: hidden;
 }
 
-.grid td {
+.grid-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: white;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 1;
   border-right: 1px solid black;
   border-bottom: 1px solid black;
 }
 
-.grid tbody td {
-  aspect-ratio: 1;
-  width: 100%;
-  font-size: clamp(0.6rem, calc(min(50px, 100cqw / var(--grid-cols, 15)) * 0.7), 1.8em);
-  background-color: white;
-  text-align: center;
-  vertical-align: middle;
-  position: relative;
-  line-height: 1;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.grid-cell.first-row {
+  border-top: 1px solid black;
 }
 
+.grid-cell.first-column {
+  border-left: 1px solid black;
+}
+
+.grid-cell { font-size: clamp(0.6rem, calc(min(50px, 100cqw / var(--grid-cols, 15)) * 0.7), 1.8em); }
+
 /* Cell number label */
-.grid td span.i_words {
+.grid-cell span.i_words {
   position: absolute;
   top: 1px;
   left: 2px;
@@ -56,33 +70,33 @@
 }
 
 /* Cell states */
-.grid tbody td:hover            { background-color: #ffe066; }
-.grid td.focus_across,
-.grid td.focus_right,
-.grid td.focus_down             { background-color: #b8d8e8; }
-.grid td.selected_cell          { background-color: #ffd700; }
-.grid td.black                  { background-color: black; }
-.grid td.black:hover            { background-color: black; }
-.grid td.empty-warn             { background-color: #fff9c4 !important; }
+.grid-cell:hover            { background-color: #ffe066; }
+.grid-cell.focus_across,
+.grid-cell.focus_right,
+.grid-cell.focus_down       { background-color: #b8d8e8; }
+.grid-cell.selected_cell    { background-color: #ffd700; }
+.grid-cell.black            { background-color: black; }
+.grid-cell.black:hover      { background-color: black; }
+.grid-cell.empty-warn       { background-color: #fff9c4 !important; }
 
 /* Correct / wrong cell background colours */
-.grid td.right  { background-color: #c8f5c8 !important; }
-.grid td.wrong  { background-color: #ffc8c8 !important; }
-.grid td.wrong .char { opacity: 0.45; }
+.grid-cell.right  { background-color: #c8f5c8 !important; }
+.grid-cell.wrong  { background-color: #ffc8c8 !important; }
+.grid-cell.wrong .char { opacity: 0.45; }
 /* Higher-specificity !important rules restore interaction states */
-.grid td.right:hover, .grid td.wrong:hover                                         { background-color: #ffe066 !important; }
-.grid td.right.focus_across, .grid td.right.focus_down,
-.grid td.right.focus_right,
-.grid td.wrong.focus_across, .grid td.wrong.focus_down                             { background-color: #b8d8e8 !important; }
-.grid td.right.focus_across:hover, .grid td.right.focus_down:hover,
-.grid td.right.focus_right:hover,
-.grid td.wrong.focus_across:hover, .grid td.wrong.focus_down:hover                 { background-color: #ffe066 !important; }
-.grid td.right.selected_cell, .grid td.wrong.selected_cell                         { background-color: #ffd700 !important; }
+.grid-cell.right:hover, .grid-cell.wrong:hover                                         { background-color: #ffe066 !important; }
+.grid-cell.right.focus_across, .grid-cell.right.focus_down,
+.grid-cell.right.focus_right,
+.grid-cell.wrong.focus_across, .grid-cell.wrong.focus_down                             { background-color: #b8d8e8 !important; }
+.grid-cell.right.focus_across:hover, .grid-cell.right.focus_down:hover,
+.grid-cell.right.focus_right:hover,
+.grid-cell.wrong.focus_across:hover, .grid-cell.wrong.focus_down:hover                 { background-color: #ffe066 !important; }
+.grid-cell.right.selected_cell, .grid-cell.wrong.selected_cell                         { background-color: #ffd700 !important; }
 /* Restore char opacity when cell is interacted with */
-.grid td.wrong:hover .char,
-.grid td.wrong.focus_across .char, .grid td.wrong.focus_down .char,
-.grid td.wrong.focus_right .char,
-.grid td.wrong.selected_cell .char                           { opacity: 1; }
+.grid-cell.wrong:hover .char,
+.grid-cell.wrong.focus_across .char, .grid-cell.wrong.focus_down .char,
+.grid-cell.wrong.focus_right .char,
+.grid-cell.wrong.selected_cell .char                           { opacity: 1; }
 .answer { display: none; }
 
 .cell-hint {
@@ -101,6 +115,8 @@
    ============================================================================= */
 
 .clues {
+  position: relative;
+  z-index: 1;
   text-align: left;
   width: 100%;
   min-width: 0;
@@ -117,6 +133,27 @@
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.08em;
+}
+
+.clue-layout-toggle {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+  align-self: flex-start;
+  padding: 0.2rem;
+  border-radius: 0.4rem;
+  background: #eef4f7;
+}
+
+.clue-layout-toggle .btn {
+  color: #526159;
+  border: 0;
+  background: transparent;
+}
+
+.clue-layout-toggle .btn.is-active {
+  color: #fff;
+  background: #176b4d;
 }
 
 .clues_across, .clues_down {
@@ -225,7 +262,8 @@
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   align-items: start;
-  gap: 0.5rem;
+  column-gap: 1.25rem;
+  row-gap: 1rem;
   padding: 0.75em 0;
   width: 100%;
 }
@@ -237,52 +275,29 @@
   flex-grow: 0;
   flex-shrink: 0;
   width: 100%;
+  box-sizing: border-box;
   padding-left: 1.35rem;
   min-width: 0;
-  max-width: none;
+  max-width: 100%;
+  --grid-axis-gutter: 1.95rem;
   container-type: inline-size;
   container-name: grid-block;
 }
 
-.grid {
-  position: relative;
-  cursor: default;
-  flex: 1 1 0;
-  min-width: 0;
-  margin: 0;
-}
-
-.grid-axis-wrapper {
-  width: 100%;
-}
-
-.axis-top {
-  margin-left: 1.95rem;
-  margin-bottom: 0.15rem;
-  display: grid;
-  grid-template-columns: repeat(var(--grid-cols, 15), min(60px, calc(100% / var(--grid-cols, 15))));
-}
-
-.axis-main {
-  display: flex;
-  align-items: stretch;
-}
-
-.axis-left {
-  flex: 0 0 1.8rem;
-  margin-right: 0.15rem;
-  display: grid;
-  grid-template-rows: repeat(var(--grid-rows, 15), min(60px, calc(100% / var(--grid-rows, 15))));
-}
-
 .axis-label {
   display: flex;
+  width: var(--grid-cell-size);
+  height: var(--grid-cell-size);
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 700;
   color: #34423b;
   line-height: 1;
+}
+
+.axis-left-label {
+  width: var(--grid-axis-gutter);
 }
 
 .active-clue-bar {
@@ -433,8 +448,10 @@
     padding: 0.75rem;
   }
   .puzzle {
+    grid-template-columns: minmax(0, 1fr);
     display: flex;
     flex-direction: column;
+    gap: 1rem;
   }
   .clues {
     width: 100%;
@@ -447,6 +464,6 @@
   .grid-block {
     width: 100%;
     min-width: unset;
-    max-width: calc(var(--grid-cols, 15) * 40px);
+    max-width: 100%;
   }
 }

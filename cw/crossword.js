@@ -1,170 +1,163 @@
-
 const fs = require('fs');
 const path = require('path');
+const IPuzReader = require('./ipuz-reader');
 
-function string_from_buffer(buf, init, end){
-  let str = '';
-  for(let index=init; index<end; index++){
-    str+=String.fromCharCode(buf[index]);
+function readNullTerminatedString(buffer, offset) {
+  const end = buffer.indexOf(0, offset);
+  if (end === -1) throw new Error('Invalid .puz file: unterminated text field');
+  return { value: buffer.toString('latin1', offset, end), nextOffset: end + 1 };
+}
+
+function readGrid(buffer, offset, width, height) {
+  if (offset + width * height > buffer.length) {
+    throw new Error('Invalid .puz file: grid is truncated');
   }
-  return str;
+
+  return Array.from({ length: height }, (_, row) =>
+    Array.from(buffer.subarray(offset + row * width, offset + (row + 1) * width), byte => String.fromCharCode(byte))
+  );
 }
 
-function grid_from_buffer(buf,offset,w,h){
-    var grid=new Array(h);
-    for(i=0;i<h;i++){
-        grid[i] = new Array(w);
-        for(j=0;j<w;j++){
-            grid[i][j]=String.fromCharCode(buf[offset]);
-            offset++;
-        }
+function wordsFromPuzGrid(grid, clues) {
+  const height = grid.length;
+  const width = height ? grid[0].length : 0;
+  const words = [];
+  let number = 0;
+
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      if (grid[row][col] === '.') continue;
+
+      const startsAcross = (col === 0 || grid[row][col - 1] === '.')
+        && col + 1 < width && grid[row][col + 1] !== '.';
+      const startsDown = (row === 0 || grid[row - 1][col] === '.')
+        && row + 1 < height && grid[row + 1][col] !== '.';
+      if (!startsAcross && !startsDown) continue;
+
+      number++;
+      if (startsAcross) {
+        let end = col;
+        while (end < width && grid[row][end] !== '.') end++;
+        words.push({
+          word: grid[row].slice(col, end).join(''),
+          dir: 'right', x: row, y: col, length: end - col, number,
+          clue: clues[words.length] || ''
+        });
+      }
+      if (startsDown) {
+        let end = row;
+        while (end < height && grid[end][col] !== '.') end++;
+        words.push({
+          word: grid.slice(row, end).map(line => line[col]).join(''),
+          dir: 'down', x: row, y: col, length: end - row, number,
+          clue: clues[words.length] || ''
+        });
+      }
     }
-    return grid;
-}
-function clues_from_buffer(buf,offset,filesize){
-    var clues=new Array();
-    var i=0;
-    while(offset<filesize){
-        var init = offset;
-        while(buf.readUInt8(offset)!=0){
-            offset++;
-        }
-        if(init!=offset){
-            clues[i]=string_from_buffer(buf,init,offset);
-            i++;
-        }
-        offset++;
-    }
-    return clues;
-}
-
-function words_from_grid(grid,w,h){
-    var words = new Array();
-    var cellNumber = 0;
-    var wordIndex = 0;
-
-    for(let i=0; i<h;i++){
-        for(let j=0;j<w;j++){
-            let startsAcross = (j==0 || grid[i][j-1]=='.') && grid[i][j]!='.' && j+1<w && grid[i][j+1]!='.';
-            let startsDown   = (i==0 || grid[i-1][j]=='.') && grid[i][j]!='.' && i+1<h && grid[i+1][j]!='.';
-
-            if(startsAcross || startsDown){
-                cellNumber++;
-
-                if(startsAcross){
-                    let word = {word:"",dir:'right',x:i,y:j,length:0,number:cellNumber,index:wordIndex++,x:i,y:j};
-                    let index = j;
-                    while(index<w && grid[i][index]!='.') {
-                        word.word += grid[i][index];
-                        index++;
-                    }
-                    word.length = index - j;
-                    words.push(word);
-                }
-
-                if(startsDown){
-                    let word = {word:"",dir:'down',x:i,y:j,length:0,number:cellNumber,index:wordIndex++,x:i,y:j};
-                    let index = i;
-                    while(index<h && grid[index][j]!='.') {
-                        word.word += grid[index][j];
-                        index++;
-                    }
-                    word.length = index - i;
-                    words.push(word);
-                }
-            }
-        }
-    }
-    return words;
+  }
+  return words;
 }
 
+/** Shared crossword representation and entry point for .puz and .ipuz files. */
+class Crossword {
+  constructor(filepath, sourceFormat) {
+    const format = sourceFormat || this._detectFormat(filepath);
+    this.filename = filepath;
 
-class Crossword{
-    constructor(filepath){
-        try{
-            const buffer = fs.readFileSync(filepath);
-            this.filename = filepath;
-            this.filesize = buffer.length;
-            this.format = 'puz';  // Mark as .puz format
-            this.width = buffer.readUInt8(0x2c);
-            this.height = buffer.readUInt8(0x2d);
-
-            //console.log("Grid size: "+width+"x"+height);
-
-            const filled_grid_position = 0x34;
-            const void_grid_position = filled_grid_position + this.width*this.height;
-            const cw_info_position = void_grid_position + this.width*this.height;
-
-            this.filled_grid = grid_from_buffer(buffer,filled_grid_position,this.width,this.height);
-            this.void_grid = grid_from_buffer(buffer,void_grid_position,this.width,this.height);
-
-
-
-            var info_index = cw_info_position;
-            var aux_index = cw_info_position;
-            while(buffer.readUInt8(info_index)!=0){
-                info_index++;
-            }
-            this.cw_name = string_from_buffer(buffer,aux_index,info_index);
-            info_index++;
-            aux_index = info_index;
-
-            while(buffer.readUInt8(info_index)!=0){
-                info_index++;
-            }
-            this.cw_author = string_from_buffer(buffer,aux_index,info_index);
-            info_index++;
-            aux_index = info_index;
-
-            while(buffer.readUInt8(info_index)!=0){
-                info_index++;
-            }
-            this.cw_copyright =string_from_buffer(buffer,aux_index,info_index);
-            info_index++;
-            aux_index = info_index;
-
-            if(this.cw_name=="") this.cw_name = "Unknown";
-            if(this.cw_author=="") this.cw_author = "Unknown";
-            if(this.cw_copyright=="") this.cw_copyright = "Unknown";
-
-            this.clues = clues_from_buffer(buffer,info_index,this.filesize);
-            this.words = words_from_grid(this.filled_grid,this.width,this.height);
-
-            // .puz clue order: cell-number ascending, across before down at each numbered cell.
-            // words_from_grid builds words[] in the exact same order, so a direct 1:1 assignment is correct.
-            for (let i = 0; i < this.words.length; i++) {
-                this.words[i].clue = this.clues[i];
-            }
-
-        } catch(ex){
-            console.log("Error name: "+ex.name);
-            console.log("Error message: "+ex.message);
-            return;
-        }
+    if (format === 'ipuz') {
+      Object.assign(this, new IPuzReader(filepath));
+    } else if (format === 'puz') {
+      this._readPuz(filepath);
+    } else {
+      throw new Error(`Unsupported crossword format: ${format}`);
     }
 
-    print_grid(){
-        for(let i=0;i<this.height;i++){
-            for(let j=0;j<this.width;j++){
-                process.stdout.write(this.filled_grid[i][j]);
-            }
-            console.log();
-        }
+    this.gameType = 'crossword';
+    this._normalizeStructure();
+  }
+
+  _detectFormat(filepath) {
+    const extension = path.extname(filepath).toLowerCase();
+    if (extension === '.ipuz') return 'ipuz';
+    if (extension === '.puz') return 'puz';
+
+    const firstCharacter = fs.readFileSync(filepath, 'utf8').trimStart()[0];
+    return firstCharacter === '{' ? 'ipuz' : 'puz';
+  }
+
+  _readPuz(filepath) {
+    const buffer = fs.readFileSync(filepath);
+    if (buffer.length < 0x34) throw new Error('Invalid .puz file: header is truncated');
+
+    this.format = 'puz';
+    this.width = buffer.readUInt8(0x2c);
+    this.height = buffer.readUInt8(0x2d);
+    if (!this.width || !this.height) throw new Error('Invalid .puz file: missing grid dimensions');
+
+    const gridStart = 0x34;
+    const gridSize = this.width * this.height;
+    this.filled_grid = readGrid(buffer, gridStart, this.width, this.height);
+    this.void_grid = readGrid(buffer, gridStart + gridSize, this.width, this.height);
+
+    const title = readNullTerminatedString(buffer, gridStart + gridSize * 2);
+    const author = readNullTerminatedString(buffer, title.nextOffset);
+    const copyright = readNullTerminatedString(buffer, author.nextOffset);
+    this.cw_name = title.value || 'Unknown';
+    this.cw_author = author.value || 'Unknown';
+    this.cw_copyright = copyright.value || 'Unknown';
+
+    const clues = [];
+    let offset = copyright.nextOffset;
+    while (offset < buffer.length) {
+      const clue = readNullTerminatedString(buffer, offset);
+      if (clue.value) clues.push(clue.value);
+      offset = clue.nextOffset;
     }
 
-    print_words_and_clues(){
-        for(var i=0;i<this.words.length;i++){
-            console.log("["+i+"] "+this.words[i].word+" - "+this.clues[i]);
-        }
-    }
+    this.words = wordsFromPuzGrid(this.filled_grid, clues);
+    this.clues = this.words.map(word => word.clue);
+  }
 
-    print_info(){
-        console.log("Name: "+this.cw_name);
-        console.log("Author: "+this.cw_author);
-        console.log("Copyright: "+this.cw_copyright);
+  _normalizeStructure() {
+    this.cw_name = this.cw_name || 'Unknown';
+    this.cw_author = this.cw_author || 'Unknown';
+    this.cw_copyright = this.cw_copyright || 'Unknown';
+
+    const directionOrder = { right: 0, down: 1 };
+    this.words = (Array.isArray(this.words) ? this.words : [])
+      .map(word => ({
+        word: String(word.word || ''),
+        dir: word.dir,
+        x: Number(word.x),
+        y: Number(word.y),
+        length: Number(word.length),
+        number: Number(word.number),
+        index: 0,
+        clue: String(word.clue || '')
+      }))
+      .sort((a, b) => a.x - b.x || a.y - b.y || directionOrder[a.dir] - directionOrder[b.dir])
+      .map((word, index) => ({ ...word, index }));
+
+    this.clues = this.words.map(word => word.clue);
+    if (!Array.isArray(this.start_labels)) {
+      this.start_labels = Array.from({ length: this.height }, () => Array(this.width).fill(null));
     }
+  }
+
+  print_grid() {
+    this.filled_grid.forEach(row => console.log(row.join('')));
+  }
+
+  print_words_and_clues() {
+    this.words.forEach((word, index) => console.log(`[${index}] ${word.word} - ${word.clue}`));
+  }
+
+  print_info() {
+    console.log('Name: ' + this.cw_name);
+    console.log('Author: ' + this.cw_author);
+    console.log('Copyright: ' + this.cw_copyright);
+    console.log('Format: ' + this.format);
+  }
 }
 
-//     filePath = path.join(__dirname,  process.argv[2]);
-
-module.exports =  Crossword ;
+module.exports = Crossword;

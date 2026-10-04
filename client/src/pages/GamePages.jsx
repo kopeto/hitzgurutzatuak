@@ -25,6 +25,7 @@ function formatTimer(seconds) {
 
 export function CrosswordGame({ puzzle, user, t }) {
   const [grid, setGrid] = useState(() => emptyGrid(puzzle.void_grid));
+  const [clueLayout, setClueLayout] = useState(() => puzzle.format === 'ipuz' ? 'xedera' : 'american');
   const [selected, setSelected] = useState(null);
   const [feedback, setFeedback] = useState({});
   const [notice, setNotice] = useState(null);
@@ -433,65 +434,75 @@ export function CrosswordGame({ puzzle, user, t }) {
       </div>
       <div className='game-wrapper'>
         <div className='puzzle'>
-          <div className='grid-block'>
+          <div
+            className={`grid-block clue-layout-${clueLayout}`}
+            style={{ '--grid-cols': puzzle.width, '--grid-rows': puzzle.height }}
+          >
             <div
-              className='grid-axis-wrapper'
-              style={{ '--grid-cols': puzzle.width, '--grid-rows': puzzle.height }}
+              className={`grid unselectable${completed ? ' grid-frozen' : ''}`}
+              role='grid'
+              aria-label={t('game.gridLabel', { name: puzzle.name })}
             >
-              <div className='axis-top'>
+              <>
                 {Array.from({ length: puzzle.width }, (_, index) => (
-                  <span className='axis-label' key={index}>
+                  <span
+                    className='axis-label axis-top-label'
+                    key={`column-${index}`}
+                    style={{ gridColumn: index + 2, gridRow: 1 }}
+                    aria-hidden='true'
+                  >
                     {index + 1}
                   </span>
                 ))}
-              </div>
-              <div className='axis-main'>
-                <div className='axis-left'>
-                  {Array.from({ length: puzzle.height }, (_, index) => (
-                    <span className='axis-label' key={index}>
-                      {index + 1}
-                    </span>
-                  ))}
-                </div>
-                <table
-                  className={`grid unselectable${completed ? ' grid-frozen' : ''}`}
-                  role='grid'
-                  aria-label={t('game.gridLabel', { name: puzzle.name })}
-                >
-                  <tbody>
-                    {puzzle.void_grid.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {row.map((cell, col) => {
-                          if (cell === '.') return <td className='black' key={col} />;
-                          const number = puzzle.words.find(
-                            (word) => word.x === rowIndex && word.y === col
-                          )?.number;
-                          const feedbackItem = feedback[keyFor(rowIndex, col)];
-                          const selectedCell = selected?.row === rowIndex && selected?.col === col;
-                          const focused = activeWord && isCellInWord(activeWord, rowIndex, col);
-                          return (
-                            <td
-                              key={col}
-                              className={`${selectedCell ? 'selected_cell ' : ''}${focused ? `focus_${selected.dir} ` : ''}${feedbackItem?.correct ? 'right ' : feedbackItem ? 'wrong ' : ''}${feedbackItem?.empty ? 'empty-warn' : ''}`}
-                              onClick={() => chooseCell(rowIndex, col)}
-                              role='gridcell'
-                              aria-label={`${rowIndex + 1}. errenkada, ${col + 1}. zutabea`}
-                            >
-                              {number != null && <span className='i_words'>{number}</span>}
-                              <span className='char'>{grid[rowIndex][col]}</span>
-                              {feedbackItem &&
-                                !feedbackItem.correct &&
-                                feedbackItem.correctLetter && (
-                                  <span className='cell-hint'>{feedbackItem.correctLetter}</span>
-                                )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                {Array.from({ length: puzzle.height }, (_, index) => (
+                  <span
+                    className='axis-label axis-left-label'
+                    key={`row-${index}`}
+                    style={{ gridColumn: 1, gridRow: index + 2 }}
+                    aria-hidden='true'
+                  >
+                    {index + 1}
+                  </span>
+                ))}
+              </>
+              {puzzle.void_grid.map((row, rowIndex) => row.map((cell, col) => {
+                const number = puzzle.words.find(
+                  (word) => word.x === rowIndex && word.y === col
+                )?.number;
+                const feedbackItem = feedback[keyFor(rowIndex, col)];
+                const selectedCell = selected?.row === rowIndex && selected?.col === col;
+                const focused = activeWord && isCellInWord(activeWord, rowIndex, col);
+                const xederaOffset = 1;
+                const cellClasses = [
+                  'grid-cell',
+                  cell === '.' ? 'black' : '',
+                  col === 0 ? 'first-column' : '',
+                  rowIndex === 0 ? 'first-row' : '',
+                  selectedCell ? 'selected_cell' : '',
+                  focused ? `focus_${selected.dir}` : '',
+                  feedbackItem?.correct ? 'right' : feedbackItem ? 'wrong' : '',
+                  feedbackItem?.empty ? 'empty-warn' : ''
+                ].filter(Boolean).join(' ');
+
+                return (
+                  <div
+                    key={`${rowIndex}-${col}`}
+                    className={cellClasses}
+                    style={{ gridColumn: col + xederaOffset + 1, gridRow: rowIndex + xederaOffset + 1 }}
+                    onClick={cell === '.' ? undefined : () => chooseCell(rowIndex, col)}
+                    role='gridcell'
+                    aria-label={`${rowIndex + 1}. errenkada, ${col + 1}. zutabea`}
+                  >
+                    {clueLayout === 'american' && number != null && (
+                      <span className='i_words'>{number}</span>
+                    )}
+                    {cell !== '.' && <span className='char'>{grid[rowIndex][col]}</span>}
+                    {feedbackItem && !feedbackItem.correct && feedbackItem.correctLetter && (
+                      <span className='cell-hint'>{feedbackItem.correctLetter}</span>
+                    )}
+                  </div>
+                );
+              }))}
             </div>
             <div className='active-clue-bar' role='status'>
               {activeClue}
@@ -514,10 +525,29 @@ export function CrosswordGame({ puzzle, user, t }) {
             </div>
           </div>
           <section className='clues unselectable' aria-label={t('game.cluesLabel')}>
+            <div className='clue-layout-toggle' role='group' aria-label={t('game.clueLayout')}>
+              <button
+                type='button'
+                className={`btn btn-sm${clueLayout === 'american' ? ' is-active' : ''}`}
+                aria-pressed={clueLayout === 'american'}
+                onClick={() => setClueLayout('american')}
+              >
+                {t('game.americanMode')}
+              </button>
+              <button
+                type='button'
+                className={`btn btn-sm${clueLayout === 'xedera' ? ' is-active' : ''}`}
+                aria-pressed={clueLayout === 'xedera'}
+                onClick={() => setClueLayout('xedera')}
+              >
+                {t('game.xederaMode')}
+              </button>
+            </div>
             <ClueList
               direction='right'
               title={t('game.across')}
               words={across}
+              layout={clueLayout}
               selected={activeWord}
               onSelect={(word) => setSelected({ row: word.x, col: word.y, dir: word.dir })}
             />
@@ -525,6 +555,7 @@ export function CrosswordGame({ puzzle, user, t }) {
               direction='down'
               title={t('game.down')}
               words={down}
+              layout={clueLayout}
               selected={activeWord}
               onSelect={(word) => setSelected({ row: word.x, col: word.y, dir: word.dir })}
             />
@@ -574,15 +605,26 @@ export function CrosswordGame({ puzzle, user, t }) {
   );
 }
 
-function ClueList({ direction, title, words, selected, onSelect }) {
+function ClueList({ direction, title, words, layout, selected, onSelect }) {
   const isAcross = direction === 'right';
   const className = isAcross ? 'clues_across' : 'clues_down';
-  const isIpuz = words[0]?.format === 'ipuz';
 
-  if (isIpuz) {
+  const renderClue = (word, number, grouped = false) => (
+    <button
+      type='button'
+      className={`clue-item${grouped ? ' clue-line' : ''}${selected?.x === word.x && selected?.y === word.y && selected?.dir === word.dir ? ' selected_clue' : ''}`}
+      key={`${word.x}-${word.y}-${word.dir}`}
+      onClick={() => onSelect(word)}
+    >
+      {number != null && <span className='clue-num'>{number}.</span>}{' '}
+      {word.clue?.trim() || '—'}
+    </button>
+  );
+
+  if (layout === 'xedera') {
     const groups = words.reduce((result, word) => {
       const coordinate = isAcross ? word.x : word.y;
-      result[coordinate] = [...(result[coordinate] || []), word];
+      (result[coordinate] ||= []).push(word);
       return result;
     }, {});
 
@@ -599,13 +641,7 @@ function ClueList({ direction, title, words, selected, onSelect }) {
                   .map((word, index) => (
                     <div className='ipuz-clue-row' key={`${word.x}-${word.y}-${word.dir}`}>
                       {index === 0 && <span className='clue-num'>{Number(coordinate) + 1}.</span>}
-                      <button
-                        type='button'
-                        className={`clue-item clue-line${selected?.x === word.x && selected?.y === word.y && selected?.dir === word.dir ? ' selected_clue' : ''}`}
-                        onClick={() => onSelect(word)}
-                      >
-                        {word.clue || '—'}
-                      </button>
+                      {renderClue(word, null, true)}
                     </div>
                   ))}
               </div>
@@ -619,16 +655,7 @@ function ClueList({ direction, title, words, selected, onSelect }) {
     <>
       <h2 className='clues-heading'>{title}</h2>
       <div className={className}>
-        {words.map((word) => (
-          <button
-            type='button'
-            className={`clue-item${selected?.x === word.x && selected?.y === word.y && selected?.dir === word.dir ? ' selected_clue' : ''}`}
-            key={`${word.x}-${word.y}-${word.dir}`}
-            onClick={() => onSelect(word)}
-          >
-            <span className='clue-num'>{word.number}.</span> {word.clue || '—'}
-          </button>
-        ))}
+        {words.map((word) => renderClue(word, word.number))}
       </div>
     </>
   );

@@ -9,12 +9,13 @@ const router = express.Router();
 
 // Return only fields needed by the client; never include the solution.
 function serializeGameWords(words) {
-  return words.map(({ dir, x, y, length, number }) => ({
-    dir,
-    x,
-    y,
-    length,
-    number
+  const startCells = [...new Map(words.map(word => [`${word.x}-${word.y}`, { x: word.x, y: word.y }])).values()]
+    .sort((a, b) => a.x - b.x || a.y - b.y);
+  const numberByStartCell = new Map(startCells.map((cell, index) => [`${cell.x}-${cell.y}`, index + 1]));
+
+  return words.map(({ dir, x, y, length }) => ({
+    dir, x, y, length,
+    number: numberByStartCell.get(`${x}-${y}`)
   }));
 }
 
