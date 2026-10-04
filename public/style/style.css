@@ -262,7 +262,7 @@ select:focus-visible {
 .puzzle-list--compact .puzzle-list-item:nth-of-type(even) { background: rgba(237, 241, 233, 0.38); }
 .puzzle-list--compact .puzzle-list-item:nth-of-type(even):hover { background: rgba(223, 240, 229, 0.65); }
 .puzzle-list--compact .puzzle-list-item:not(:last-child) { border-bottom-color: var(--line); }
-.puzzle-list--compact .puzzle-list-dimension { width: auto; height: auto; align-self: stretch; border: 0; border-radius: 0; color: var(--brand-dark); background: var(--brand-pale); }
+.puzzle-list--compact .puzzle-list-dimension { width: auto; height: auto; align-self: stretch; border: 0; border-radius: 0; color: inherit; background: transparent; }
 .puzzle-list--compact .puzzle-list-content { display: block; }
 .puzzle-list--compact .puzzle-list-details { gap: 0.5rem; margin-top: 0.2rem; }
 .puzzle-list--compact .puzzle-list-details .puzzle-author { margin: 0; color: var(--ink-soft); font-size: 0.92rem; }
