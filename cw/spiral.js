@@ -6,12 +6,12 @@ class SpiralPuzzle {
     const data = JSON.parse(rawData);
 
     if (!data || (data.format !== 'spl' && data.kind !== 'hitzgurutzatuak/spiral/v1')) {
-      throw new Error('Not a valid SPL spiral puzzle');
+      throw new Error('SPL fitxategiak ez du baliozko espiral formatua.');
     }
 
     const cells = Array.isArray(data.cells) ? data.cells : [];
     if (cells.length === 0) {
-      throw new Error('SPL puzzle has no cells');
+      throw new Error('SPL fitxategiak ez du laukirik.');
     }
 
     const normalizedCells = cells
@@ -28,16 +28,16 @@ class SpiralPuzzle {
     normalizedCells.sort((a, b) => a.index - b.index);
 
     if (normalizedCells.length !== cells.length) {
-      throw new Error('SPL puzzle has invalid cells');
+      throw new Error('SPL fitxategiak lauki baliogabeak ditu.');
     }
 
     const answer = String(data.answer || '').trim().toUpperCase();
     if (!answer) {
-      throw new Error('SPL puzzle has no answer');
+      throw new Error('SPL fitxategiak ez du erantzunik.');
     }
 
     if (answer.length !== normalizedCells.length) {
-      throw new Error('SPL answer length must match number of cells');
+      throw new Error('Erantzunaren eta lauki kopuruaren luzerak bat etorri behar dute.');
     }
 
     const clues = Array.isArray(data.clues)

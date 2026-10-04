@@ -4,13 +4,13 @@ const IPuzReader = require('./ipuz-reader');
 
 function readNullTerminatedString(buffer, offset) {
   const end = buffer.indexOf(0, offset);
-  if (end === -1) throw new Error('Invalid .puz file: unterminated text field');
+  if (end === -1) throw new Error('.puz fitxategiak amaitu gabeko testu eremu bat du.');
   return { value: buffer.toString('latin1', offset, end), nextOffset: end + 1 };
 }
 
 function readGrid(buffer, offset, width, height) {
   if (offset + width * height > buffer.length) {
-    throw new Error('Invalid .puz file: grid is truncated');
+    throw new Error('.puz fitxategiko taula osatu gabe dago.');
   }
 
   return Array.from({ length: height }, (_, row) =>
@@ -69,7 +69,7 @@ class Crossword {
     } else if (format === 'puz') {
       this._readPuz(filepath);
     } else {
-      throw new Error(`Unsupported crossword format: ${format}`);
+      throw new Error(`Hitz gurutzatuaren formatu hau ez da onartzen: ${format}`);
     }
 
     this.gameType = 'crossword';
@@ -87,12 +87,12 @@ class Crossword {
 
   _readPuz(filepath) {
     const buffer = fs.readFileSync(filepath);
-    if (buffer.length < 0x34) throw new Error('Invalid .puz file: header is truncated');
+    if (buffer.length < 0x34) throw new Error('.puz fitxategiaren goiburua osatu gabe dago.');
 
     this.format = 'puz';
     this.width = buffer.readUInt8(0x2c);
     this.height = buffer.readUInt8(0x2d);
-    if (!this.width || !this.height) throw new Error('Invalid .puz file: missing grid dimensions');
+    if (!this.width || !this.height) throw new Error('.puz fitxategiak ez ditu taularen neurriak zehazten.');
 
     const gridStart = 0x34;
     const gridSize = this.width * this.height;
@@ -102,9 +102,9 @@ class Crossword {
     const title = readNullTerminatedString(buffer, gridStart + gridSize * 2);
     const author = readNullTerminatedString(buffer, title.nextOffset);
     const copyright = readNullTerminatedString(buffer, author.nextOffset);
-    this.cw_name = title.value || 'Unknown';
-    this.cw_author = author.value || 'Unknown';
-    this.cw_copyright = copyright.value || 'Unknown';
+    this.cw_name = title.value || 'Izengabea';
+    this.cw_author = author.value || 'Egile ezezaguna';
+    this.cw_copyright = copyright.value || 'Ezezaguna';
 
     const clues = [];
     let offset = copyright.nextOffset;
@@ -119,9 +119,9 @@ class Crossword {
   }
 
   _normalizeStructure() {
-    this.cw_name = this.cw_name || 'Unknown';
-    this.cw_author = this.cw_author || 'Unknown';
-    this.cw_copyright = this.cw_copyright || 'Unknown';
+    this.cw_name = this.cw_name || 'Izengabea';
+    this.cw_author = this.cw_author || 'Egile ezezaguna';
+    this.cw_copyright = this.cw_copyright || 'Ezezaguna';
 
     const directionOrder = { right: 0, down: 1 };
     this.words = (Array.isArray(this.words) ? this.words : [])

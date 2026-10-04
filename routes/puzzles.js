@@ -25,15 +25,19 @@ function sanitizeWords(words, clues) {
     .sort((a, b) => a.x - b.x || a.y - b.y);
   const numberByStartCell = new Map(startCells.map((cell, index) => [`${cell.x}-${cell.y}`, index + 1]));
 
-  return words.map((w, i) => ({
-    dir: w.dir,
-    x: w.x,
-    y: w.y,
-    length: w.length,
-    number: numberByStartCell.get(`${w.x}-${w.y}`),
-    clue: clues?.[i] || w.clue || ''
-    // Do NOT include w.word (the answer)
-  }));
+  return words.map((w, i) => {
+    const clue = String(clues?.[i] || w.clue || '').trim();
+    const displayClue = !clue || /^ninguna pista\.?$/i.test(clue) ? '-' : clue;
+    return {
+      dir: w.dir,
+      x: w.x,
+      y: w.y,
+      length: w.length,
+      number: numberByStartCell.get(`${w.x}-${w.y}`),
+      clue: displayClue
+      // Do NOT include w.word (the answer)
+    };
+  });
 }
 
 router.get('/', async (req, res) => {
@@ -283,6 +287,31 @@ async function deletePuzzleRecords(ids) {
   ]).catch(logError);
   return deletedIds;
 }
+
+router.patch('/game/:id', checkAuth, requireMaster, async (req, res) => {
+  if (!/^[a-f\d]{24}$/i.test(req.params.id)) return res.status(404).json({ error: 'Jokoa ez da aurkitu.' });
+  if (typeof req.body?.name !== 'string' || typeof req.body?.author !== 'string') {
+    return res.status(400).json({ error: 'Izenburua edo egilea ez da baliozkoa.' });
+  }
+  const name = req.body.name.trim();
+  const author = req.body.author.trim();
+  if (!name || name.length > 200 || author.length > 200) {
+    return res.status(400).json({ error: 'Izenburua edo egilea ez da baliozkoa.' });
+  }
+
+  try {
+    const puzzle = await CrosswordModel.findByIdAndUpdate(
+      req.params.id,
+      { $set: { name, author } },
+      { new: true, runValidators: true }
+    ).select('name author').lean();
+    if (!puzzle) return res.status(404).json({ error: 'Jokoa ez da aurkitu.' });
+    return res.json({ id: puzzle._id.toString(), name: puzzle.name, author: puzzle.author || '' });
+  } catch (err) {
+    logError(err);
+    return res.status(500).json({ error: 'Ezin izan dira jokoaren datuak gorde.' });
+  }
+});
 
 router.delete('/game', checkAuth, requireMaster, async (req, res) => {
   const requestedIds = req.body?.ids;

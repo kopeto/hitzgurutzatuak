@@ -194,6 +194,13 @@ select:focus-visible {
 .puzzle-delete-button { display: inline-grid; width: 2.2rem; height: 2.2rem; place-items: center; border: 1px solid transparent; border-radius: 0.55rem; color: #748078; background: transparent; transition: color 140ms ease, background 140ms ease, border-color 140ms ease; }
 .puzzle-delete-button:hover, .puzzle-delete-button:focus-visible { border-color: #f1d5d5; color: var(--danger); background: #fff2f2; }
 .puzzle-delete-button:disabled { opacity: 0.5; cursor: wait; }
+.puzzle-row-icon-button { display: inline-grid; width: 2.2rem; height: 2.2rem; place-items: center; border: 1px solid transparent; border-radius: 0.55rem; color: #748078; background: transparent; transition: color 140ms ease, background 140ms ease, border-color 140ms ease; }
+.puzzle-row-icon-button:hover, .puzzle-row-icon-button:focus-visible { border-color: #c6d7cb; color: var(--brand); background: var(--brand-pale); }
+.puzzle-row-icon-button:disabled { opacity: 0.5; cursor: wait; }
+.puzzle-row-icon-button[hidden], .puzzle-edit-fields[hidden], .puzzle-display[hidden] { display: none; }
+.puzzle-edit-fields { display: grid; gap: 0.45rem; width: 100%; }
+.puzzle-edit-fields .form-control { min-width: 0; min-height: 2.35rem; padding: 0.35rem 0.6rem; }
+.puzzle-list-item.is-editing { background: rgba(223, 240, 229, 0.55); }
 .puzzle-bulk-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 0.85rem; margin: 0 0 0.6rem; padding: 0.55rem 0.75rem; border: 1px solid var(--line); border-radius: 0.7rem; color: var(--ink-soft); background: rgba(255, 255, 255, 0.58); }
 .puzzle-select-all { display: inline-flex; align-items: center; gap: 0.55rem; margin: 0; color: var(--ink); font-weight: 700; cursor: pointer; }
 .puzzle-select-checkbox { width: 1.05rem; height: 1.05rem; margin: 0; accent-color: var(--brand); cursor: pointer; }
@@ -221,11 +228,11 @@ select:focus-visible {
 }
 
 .puzzle-list--selectable.puzzle-list--compact .puzzle-list-header,
-.puzzle-list--selectable.puzzle-list--compact .puzzle-list-item { grid-template-columns: 11rem 5.5rem minmax(0, 1fr) 8rem 8.5rem 9rem; }
+.puzzle-list--selectable.puzzle-list--compact .puzzle-list-item { grid-template-columns: 11rem 5.5rem minmax(0, 1fr) 8rem 8.5rem 13rem; }
 .puzzle-list--classic .puzzle-list-item { grid-template-columns: 11rem 5.5rem minmax(0, 1fr) 8rem 8.5rem; }
-.puzzle-list--selectable.puzzle-list--classic .puzzle-list-item { grid-template-columns: 11rem 5.5rem minmax(0, 1fr) 8rem 8.5rem 9rem; }
+.puzzle-list--selectable.puzzle-list--classic .puzzle-list-item { grid-template-columns: 11rem 5.5rem minmax(0, 1fr) 8rem 8.5rem 13rem; }
 .puzzle-list--classic .puzzle-list-header { display: grid; grid-template-columns: 11rem 5.5rem minmax(0, 1fr) 8rem 8.5rem; align-items: center; border-bottom: 1px solid var(--line); color: var(--ink-soft); font-weight: 750; }
-.puzzle-list--selectable.puzzle-list--classic .puzzle-list-header { grid-template-columns: 11rem 5.5rem minmax(0, 1fr) 8rem 8.5rem 9rem; }
+.puzzle-list--selectable.puzzle-list--classic .puzzle-list-header { grid-template-columns: 11rem 5.5rem minmax(0, 1fr) 8rem 8.5rem 13rem; }
 
 .puzzle-list--compact .puzzle-list-header {
   align-items: center;
@@ -411,7 +418,7 @@ select:focus-visible {
   .puzzle-list--compact .puzzle-list-header, .puzzle-list--compact .puzzle-list-item,
   .puzzle-list--classic .puzzle-list-header, .puzzle-list--classic .puzzle-list-item { min-width: 47rem; }
   .puzzle-list--selectable.puzzle-list--compact .puzzle-list-header, .puzzle-list--selectable.puzzle-list--compact .puzzle-list-item,
-  .puzzle-list--selectable.puzzle-list--classic .puzzle-list-header, .puzzle-list--selectable.puzzle-list--classic .puzzle-list-item { min-width: 56rem; }
+  .puzzle-list--selectable.puzzle-list--classic .puzzle-list-header, .puzzle-list--selectable.puzzle-list--classic .puzzle-list-item { min-width: 60rem; }
   .puzzle-list--compact .puzzle-list-status, .puzzle-list--classic .puzzle-list-status { display: flex; }
   .puzzle-list--compact .puzzle-list-date, .puzzle-list--classic .puzzle-list-date { display: flex; }
   .puzzle-list--compact .puzzle-list-actions, .puzzle-list--classic .puzzle-list-actions { grid-column: auto; }

@@ -15,6 +15,11 @@ function normalizeLetter(value) {
   return /^\p{L}$/u.test(uppercase) ? uppercase : '';
 }
 
+function displayClue(value) {
+  const clue = String(value || '').trim();
+  return !clue || /^ninguna pista\.?$/i.test(clue) ? '-' : clue;
+}
+
 function notify(element, message, type = 'info', permanent = false) {
   if (!element) return;
   element.textContent = message;
@@ -83,6 +88,22 @@ function initCatalog() {
       if (indicator) indicator.textContent = active ? (sortDirection === 1 ? '▲' : '▼') : '↕';
     });
   };
+  const setEditMode = (card, editing) => {
+    card.classList.toggle('is-editing', editing);
+    card.querySelector('[data-puzzle-display]').hidden = editing;
+    card.querySelector('[data-puzzle-edit]').hidden = !editing;
+    card.querySelector('[data-edit-puzzle]').hidden = editing;
+    card.querySelector('[data-save-puzzle]').hidden = !editing;
+    card.querySelector('[data-cancel-edit]').hidden = !editing;
+    if (editing) {
+      card.querySelector('[data-edit-name]').value = card.dataset.puzzleName;
+      card.querySelector('[data-edit-author]').value = card.dataset.puzzleAuthor;
+      card.querySelector('[data-edit-name]').focus();
+    } else {
+      card.querySelector('[data-edit-name]').value = card.dataset.puzzleName;
+      card.querySelector('[data-edit-author]').value = card.dataset.puzzleAuthor;
+    }
+  };
   const updateSelection = () => {
     const allCards = cards();
     const visibleCards = allCards.filter((card) => !card.hidden && card.querySelector('[data-select-puzzle]'));
@@ -122,10 +143,72 @@ function initCatalog() {
       updateSelection();
     } else if (event.target.matches('[data-select-puzzle]')) updateSelection();
   });
+  document.addEventListener('keydown', (event) => {
+    if (!event.target.matches('[data-edit-name], [data-edit-author]')) return;
+    const card = event.target.closest('[data-puzzle-card]');
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      card.querySelector('[data-save-puzzle]').click();
+    } else if (event.key === 'Escape') card.querySelector('[data-cancel-edit]').click();
+  });
   document.addEventListener('click', async (event) => {
     const sortButton = event.target.closest('[data-sort-column]');
     if (sortButton) {
       sortRows(sortButton.dataset.sortColumn);
+      return;
+    }
+
+    const editButton = event.target.closest('[data-edit-puzzle]');
+    if (editButton) {
+      setEditMode(editButton.closest('[data-puzzle-card]'), true);
+      return;
+    }
+
+    const cancelButton = event.target.closest('[data-cancel-edit]');
+    if (cancelButton) {
+      setEditMode(cancelButton.closest('[data-puzzle-card]'), false);
+      return;
+    }
+
+    const saveButton = event.target.closest('[data-save-puzzle]');
+    if (saveButton) {
+      const card = saveButton.closest('[data-puzzle-card]');
+      const nameInput = card.querySelector('[data-edit-name]');
+      const authorInput = card.querySelector('[data-edit-author]');
+      const name = nameInput.value.trim();
+      const author = authorInput.value.trim();
+      if (!name) {
+        nameInput.reportValidity();
+        nameInput.focus();
+        return;
+      }
+      saveButton.disabled = true;
+      card.querySelector('[data-cancel-edit]').disabled = true;
+      try {
+        const response = await fetch(`/jokoak/game/${encodeURIComponent(card.querySelector('[data-delete-puzzle]').dataset.deletePuzzle)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, author })
+        });
+        if (!response.ok) throw new Error('puzzle update failed');
+        const updated = await response.json();
+        card.dataset.puzzleName = updated.name;
+        card.dataset.puzzleAuthor = updated.author;
+        card.dataset.sortName = updated.name;
+        card.dataset.search = [updated.name, updated.author].filter(Boolean).join(' ');
+        card.querySelector('[data-puzzle-name-display]').textContent = updated.name;
+        card.querySelector('[data-puzzle-author-display]').textContent = updated.author || t('common.unknownAuthor');
+        card.querySelector('[data-delete-puzzle]').dataset.name = updated.name;
+        card.querySelector('[data-select-puzzle]')?.setAttribute('aria-label', t('catalog.selectPuzzle', { name: updated.name }));
+        setEditMode(card, false);
+        update();
+        if (sortColumn === 'name') sortRows('name', sortDirection);
+      } catch {
+        window.alert(t('client.editFailed'));
+      } finally {
+        saveButton.disabled = false;
+        card.querySelector('[data-cancel-edit]').disabled = false;
+      }
       return;
     }
 
@@ -378,7 +461,7 @@ function initCrossword() {
   const renderGrid = () => {
     cells.forEach((cell) => renderCell(Number(cell.dataset.row), Number(cell.dataset.col)));
     const word = selectedWord();
-    root.querySelector('[data-active-clue]').textContent = word?.clue || '';
+    root.querySelector('[data-active-clue]').textContent = word ? displayClue(word.clue) : '';
     root.querySelector('[data-undo]').disabled = !history.length || completed;
     root.querySelector('[data-redo]').disabled = !redo.length || completed;
     root.querySelectorAll('[data-clue-dir]').forEach((button) => {
@@ -439,7 +522,7 @@ function initCrossword() {
       number.textContent = `${word.number}.`;
       button.append(number, document.createTextNode(' '));
     }
-    button.append(document.createTextNode(word.clue?.trim() || '—'));
+    button.append(document.createTextNode(displayClue(word.clue)));
     button.addEventListener('click', () => setSelected({ row: word.x, col: word.y, dir: word.dir }));
     return button;
   };

@@ -17,7 +17,7 @@ class IPuzReader {
       const data = JSON.parse(rawData);
 
       if (!data.kind || !data.kind[0] || !data.kind[0].includes('crossword')) {
-        throw new Error('Not a valid iPuz crossword');
+        throw new Error('iPuz fitxategiak ez du baliozko hitz gurutzatu formatua.');
       }
 
       this.filename = filepath;
@@ -28,13 +28,13 @@ class IPuzReader {
       this.height = data.dimensions?.height || 0;
 
       if (!this.width || !this.height) {
-        throw new Error('Invalid or missing puzzle dimensions');
+        throw new Error('Puzlearen neurriak falta dira edo baliogabeak dira.');
       }
 
       // Extract metadata
-      this.cw_name = data.title || data.author || 'Unknown';
-      this.cw_author = data.author || 'Unknown';
-      this.cw_copyright = data.copyright || 'Unknown';
+      this.cw_name = data.title || data.author || 'Izengabea';
+      this.cw_author = data.author || 'Egile ezezaguna';
+      this.cw_copyright = data.copyright || 'Ezezaguna';
 
       // Build grids from puzzle and solution
       this.filled_grid = this._buildFilledGrid(data);

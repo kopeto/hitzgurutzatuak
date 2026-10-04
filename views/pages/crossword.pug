@@ -1,4 +1,5 @@
 - const puzzle = data.puzzle
+- const displayClue = clue => { const text = String(clue || '').trim(); return !text || /^ninguna pista\.?$/i.test(text) ? '-' : text; }
 - const groupedDefinitions = direction => { const grouped = new Map(); puzzle.words.filter(word => word.dir === direction).forEach(word => { const coordinate = direction === 'right' ? word.x : word.y; if (!grouped.has(coordinate)) grouped.set(coordinate, []); grouped.get(coordinate).push(word); }); return [...grouped.entries()].sort((a, b) => a[0] - b[0]); }
 section(data-crossword-game data-default-layout='xedera')
   .game-topbar
@@ -35,7 +36,7 @@ section(data-crossword-game data-default-layout='xedera')
               .ipuz-clue-row
                 if index === 0
                   span.clue-num= `${group[0] + 1}.`
-                button.clue-item.clue-line(type='button' data-clue-dir=word.dir data-clue-x=word.x data-clue-y=word.y)= word.clue || '—'
+                button.clue-item.clue-line(type='button' data-clue-dir=word.dir data-clue-x=word.x data-clue-y=word.y)= displayClue(word.clue)
         h2.clues-heading= t('game.down')
         .clues_down(data-clues='down')
           each group in groupedDefinitions('down')
@@ -43,7 +44,7 @@ section(data-crossword-game data-default-layout='xedera')
               .ipuz-clue-row
                 if index === 0
                   span.clue-num= `${group[0] + 1}.`
-                button.clue-item.clue-line(type='button' data-clue-dir=word.dir data-clue-x=word.x data-clue-y=word.y)= word.clue || '—'
+                button.clue-item.clue-line(type='button' data-clue-dir=word.dir data-clue-x=word.x data-clue-y=word.y)= displayClue(word.clue)
         label.clue-layout-option
           input(type='checkbox' data-american-mode)
           span= t('game.americanMode')
