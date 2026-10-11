@@ -10,7 +10,7 @@ html(lang='eu')
     link(rel='stylesheet' href='/vendor/bootstrap/css/bootstrap.min.css')
     link(rel='stylesheet' href='/style/style.css?v=20261011-1')
     if page === 'game' || page === 'spiralGame'
-      link(rel='stylesheet' href='/style/cw.css?v=20261011-1')
+      link(rel='stylesheet' href='/style/cw.css?v=20261011-2')
     if page === 'spiralGame'
       link(rel='stylesheet' href='/style/spiral.css?v=20261011-2')
     if page === 'spiralBuilder'
@@ -19,7 +19,7 @@ html(lang='eu')
     script#i18n-data(type='application/json') !{JSON.stringify(clientMessages)}
     script(src='/scripts/i18n.js')
     script(src='/scripts/site.js' defer)
-    script(src='/scripts/app.js?v=20261011-1' type='module')
+    script(src='/scripts/app.js?v=20261011-2' type='module')
   body(class=`site-body ${pageClass || ''}`)
     include includes/site-header.pug
     main.site-main

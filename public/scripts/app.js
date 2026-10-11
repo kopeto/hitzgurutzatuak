@@ -20,6 +20,68 @@ function displayClue(value) {
   return !clue || /^ninguna pista\.?$/i.test(clue) ? '-' : clue;
 }
 
+function createTouchKeyboard(root, { onLetter, onBackspace }) {
+  const supportsTouch = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  if (!supportsTouch) return { show() {}, hide() {} };
+
+  const keyboard = document.createElement('section');
+  keyboard.className = 'game-touch-keyboard';
+  keyboard.hidden = true;
+  keyboard.setAttribute('role', 'group');
+  keyboard.setAttribute('aria-label', t('game.keyboard'));
+
+  const header = document.createElement('div');
+  header.className = 'game-touch-keyboard__head';
+  const title = document.createElement('span');
+  title.textContent = 'QWERTY';
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'game-touch-keyboard__key game-touch-keyboard__key--close';
+  close.dataset.touchKey = 'close';
+  close.textContent = '⌄';
+  close.setAttribute('aria-label', t('game.closeKeyboard'));
+  header.append(title, close);
+  keyboard.append(header);
+
+  ['qwertyuiop', 'asdfghjklñ', 'zxcvbnm'].forEach((letters, rowIndex) => {
+    const row = document.createElement('div');
+    row.className = `game-touch-keyboard__row${rowIndex === 1 ? ' game-touch-keyboard__row--middle' : ''}`;
+    for (const character of letters) {
+      const key = document.createElement('button');
+      key.type = 'button';
+      key.className = 'game-touch-keyboard__key';
+      key.dataset.touchKey = character;
+      key.textContent = character.toLocaleUpperCase('eu');
+      key.setAttribute('aria-label', key.textContent);
+      row.append(key);
+    }
+    if (rowIndex === 2) {
+      const backspace = document.createElement('button');
+      backspace.type = 'button';
+      backspace.className = 'game-touch-keyboard__key game-touch-keyboard__key--action';
+      backspace.dataset.touchKey = 'backspace';
+      backspace.textContent = '⌫';
+      backspace.setAttribute('aria-label', t('game.deleteLetter'));
+      row.append(backspace);
+    }
+    keyboard.append(row);
+  });
+
+  keyboard.addEventListener('click', (event) => {
+    const key = event.target.closest('[data-touch-key]');
+    if (!key || !keyboard.contains(key)) return;
+    if (key.dataset.touchKey === 'close') keyboard.hidden = true;
+    else if (key.dataset.touchKey === 'backspace') onBackspace();
+    else onLetter(normalizeLetter(key.dataset.touchKey));
+  });
+  root.append(keyboard);
+
+  return {
+    show() { keyboard.hidden = false; },
+    hide() { keyboard.hidden = true; }
+  };
+}
+
 function notify(element, message, type = 'info', permanent = false) {
   if (!element) return;
   element.textContent = message;
@@ -413,6 +475,7 @@ function initCrossword() {
   let layout = root.dataset.defaultLayout || 'xedera';
   const americanMode = root.querySelector('[data-american-mode]');
   let selected = null;
+  let touchKeyboard = null;
   let scrolledWord = null;
   let feedback = Object.fromEntries((puzzle.cellResults || []).map((item) => [`${item.row}-${item.col}`, item]));
   let history = [];
@@ -526,7 +589,11 @@ function initCrossword() {
     button.addEventListener('click', () => setSelected({ row: word.x, col: word.y, dir: word.dir }));
     return button;
   };
-  const setSelected = (next) => { selected = next; renderGrid(); };
+  const setSelected = (next) => {
+    selected = next;
+    renderGrid();
+    if (!completed) touchKeyboard?.show();
+  };
   const setValue = (row, col, value, record = true) => {
     if (completed || puzzle.void_grid[row]?.[col] === '.') return;
     const previous = grid[row][col];
@@ -550,6 +617,18 @@ function initCrossword() {
       ? alternate : wordAt(row, col, 'right') ? 'right' : 'down';
     setSelected({ row, col, dir: nextDir });
   };
+  touchKeyboard = createTouchKeyboard(root, {
+    onLetter: (letter) => {
+      if (!selected || completed || !letter) return;
+      setValue(selected.row, selected.col, letter);
+      move(selected.row, selected.col, selected.dir);
+    },
+    onBackspace: () => {
+      if (!selected || completed) return;
+      if (grid[selected.row][selected.col]) setValue(selected.row, selected.col, '');
+      else move(selected.row, selected.col, selected.dir, true);
+    }
+  });
   const applyResults = (items) => {
     items.forEach((item) => { feedback[`${item.row}-${item.col}`] = item; });
     renderGrid();
@@ -565,6 +644,7 @@ function initCrossword() {
   };
   const setCompleted = () => {
     completed = true;
+    touchKeyboard?.hide();
     timerRunning = false;
     window.clearInterval(timerHandle);
     root.querySelector('[data-game-buttons]')?.classList.add('game-actions--finished');
@@ -767,6 +847,7 @@ function initSpiralGame() {
   let activeIndex = 0;
   let results = {};
   let saveHandle;
+  let touchKeyboard = null;
   const matching = () => definitions[direction].filter((item) => selected >= item.start && selected <= item.end);
   const active = () => matching()[activeIndex] || matching()[0];
   const render = () => {
@@ -801,7 +882,10 @@ function initSpiralGame() {
       button.type = 'button'; button.className = 'spiral-clue-item';
       button.dataset.direction = dir; button.dataset.definitionIndex = index;
       button.textContent = `${dir === 'outward' ? definition.end : definition.start}-${dir === 'outward' ? definition.start : definition.end}${definition.text ? ` ${definition.text}` : ''}`;
-      button.addEventListener('click', () => { direction = dir; selected = definition.anchor; activeIndex = index; render(); });
+      button.addEventListener('click', () => {
+        direction = dir; selected = definition.anchor; activeIndex = index; render();
+        if (!puzzle.completed) touchKeyboard?.show();
+      });
       return button;
     }));
   });
@@ -818,6 +902,8 @@ function initSpiralGame() {
     saveHandle = window.setTimeout(save, 600);
     render();
   };
+  const step = () => direction === 'inward' ? 1 : -1;
+  const nextCell = (offset) => Math.min(cells.length, Math.max(1, selected + offset));
   const selectCell = (index, cycle = false, preferred = null) => {
     const candidates = definitions[direction].filter((item) => index >= item.start && index <= item.end);
     const current = candidates.indexOf(active());
@@ -825,27 +911,38 @@ function initSpiralGame() {
     activeIndex = cycle && index === selected && candidates.length > 1 && current >= 0 ? (current + 1) % candidates.length : preferredIndex >= 0 ? preferredIndex : 0;
     selected = index;
     render();
+    if (!puzzle.completed) touchKeyboard?.show();
   };
+  const eraseSelectedCell = () => {
+    if (values[selected - 1]) update(selected, '');
+    else { const index = nextCell(-step()); selectCell(index); update(index, ''); }
+  };
+  touchKeyboard = createTouchKeyboard(root, {
+    onLetter: (letter) => {
+      if (puzzle.completed || !letter) return;
+      const definition = active();
+      update(selected, letter);
+      selectCell(nextCell(step()), false, definition);
+    },
+    onBackspace: eraseSelectedCell
+  });
   root.querySelectorAll('[data-spiral-cell]').forEach((path) => path.addEventListener('click', () => selectCell(Number(path.dataset.spiralCell), true)));
   root.querySelectorAll('[data-direction]').forEach((button) => button.addEventListener('click', () => { direction = button.dataset.direction; activeIndex = 0; render(); }));
   document.addEventListener('keydown', (event) => {
     if (!root.contains(document.activeElement) && document.activeElement !== document.body) return;
     if (puzzle.completed || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
-    const step = direction === 'inward' ? 1 : -1;
-    const next = (offset) => Math.min(cells.length, Math.max(1, selected + offset));
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault();
-      const index = next((event.key === 'ArrowRight' ? 1 : -1) * step);
+      const index = nextCell((event.key === 'ArrowRight' ? 1 : -1) * step());
       selectCell(index);
     } else if (event.key === 'Backspace') {
       event.preventDefault();
-      if (values[selected - 1]) update(selected, '');
-      else { const index = next(-step); selectCell(index); update(index, ''); }
+      eraseSelectedCell();
     } else if (normalizeLetter(event.key)) {
       event.preventDefault();
       const definition = active();
       update(selected, normalizeLetter(event.key));
-      selectCell(next(step), false, definition);
+      selectCell(nextCell(step()), false, definition);
     }
   });
   root.querySelector('[data-action="clear-grid"]').addEventListener('click', () => {

@@ -259,6 +259,98 @@
   box-sizing: border-box;
 }
 
+.game-touch-keyboard {
+  position: fixed;
+  z-index: 1200;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  gap: 0.35rem;
+  width: min(100%, 38rem);
+  margin: 0 auto;
+  padding: 0.45rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  border: 1px solid #c8d0d5;
+  border-bottom: 0;
+  border-radius: 0.9rem 0.9rem 0 0;
+  background: #e8edf0;
+  box-shadow: 0 -0.5rem 1.5rem rgba(24, 36, 31, 0.18);
+  color: #18241f;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.game-touch-keyboard[hidden] {
+  display: none;
+}
+
+.game-touch-keyboard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 1.7rem;
+  padding: 0 0.1rem;
+  color: #526159;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.game-touch-keyboard__row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(0.18rem, 0.7vw, 0.35rem);
+}
+
+.game-touch-keyboard__row--middle {
+  padding: 0 2.5%;
+}
+
+.game-touch-keyboard__key {
+  display: grid;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 3.35rem;
+  height: clamp(2.55rem, 8.5vw, 3.2rem);
+  place-items: center;
+  padding: 0.15rem;
+  border: 1px solid #c2cbd1;
+  border-radius: 0.45rem;
+  color: #18241f;
+  background: #fff;
+  box-shadow: 0 2px 0 #c2cbd1;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.game-touch-keyboard__key:active {
+  transform: translateY(2px);
+  background: #dff0e5;
+  box-shadow: none;
+}
+
+.game-touch-keyboard__key--close {
+  flex: 0 0 2.25rem;
+  max-width: none;
+  height: 1.8rem;
+  border-radius: 0.4rem;
+  font-size: 1.1rem;
+}
+
+.game-touch-keyboard__key--action {
+  flex: 1.5 1 0;
+  max-width: 4.5rem;
+  color: #fff;
+  background: #526159;
+  border-color: #526159;
+  box-shadow: 0 2px 0 #3d4942;
+  font-size: 1.35rem;
+}
+
 .puzzle {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
