@@ -779,6 +779,7 @@ function initSpiralGame() {
     });
     root.querySelectorAll('[data-spiral-letter]').forEach((label) => { label.textContent = values[Number(label.dataset.spiralLetter) - 1] || ''; });
     root.querySelector('[data-spiral-progress]').textContent = values.filter(Boolean).length;
+    root.querySelector('[data-active-clue]').textContent = displayClue(active()?.text);
     root.querySelectorAll('[data-direction]').forEach((button) => button.classList.toggle('is-active', button.dataset.direction === direction));
     root.querySelectorAll('[data-definition-list]').forEach((list) => list.querySelectorAll('[data-definition-index]').forEach((button) => {
       button.classList.toggle('is-selected', list.dataset.definitionList === direction && active() === definitions[list.dataset.definitionList][Number(button.dataset.definitionIndex)]);

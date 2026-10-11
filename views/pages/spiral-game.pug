@@ -18,6 +18,7 @@ section(data-spiral-game)
               text.spiral-order(x=cell.labelX y=cell.labelY text-anchor='middle' dominant-baseline='middle')= cell.index
           each cell in cells
             text.spiral-letter(data-spiral-letter=cell.index x=cell.x y=cell.y text-anchor='middle' dominant-baseline='central')
+        .active-clue-bar(role='status' data-active-clue)
         .game-notification-bar(role='status' data-game-notice)
       aside.spiral-panel
         h3.spiral-panel-title= t('game.cluesLabel')
