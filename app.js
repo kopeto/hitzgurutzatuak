@@ -32,6 +32,7 @@ db.once('open',()=>{
 db.on('error',(err)=>{logError(err); process.exit(1);});
 
 const app = express();
+const isDevelopment = process.env.NODE_ENV === 'development';
 if (process.env.TRUST_PROXY === 'true') {
   app.set('trust proxy', 1);
 } else if (/^\d+$/.test(process.env.TRUST_PROXY || '')) {
@@ -39,6 +40,7 @@ if (process.env.TRUST_PROXY === 'true') {
 }
 
 app.use(helmet({
+  strictTransportSecurity: isDevelopment ? false : undefined,
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -48,6 +50,7 @@ app.use(helmet({
       connectSrc: process.env.NODE_ENV === 'development'
         ? ["'self'", 'ws:', 'wss:']
         : ["'self'"],
+      upgradeInsecureRequests: isDevelopment ? null : [],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
