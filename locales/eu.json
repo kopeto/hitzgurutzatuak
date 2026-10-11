@@ -3,12 +3,12 @@
     "name": "Xedera",
     "description": "Xedera — Euskal hitz jokoak",
     "footer": "Hitz jokoak euskaraz.",
-    "homeLinkLabel": "Xedera-ren hasiera",
+    "homeLinkLabel": "Xedera-ren sarrera",
     "footerNavigation": "Oineko nabigazioa"
   },
   "nav": {
     "open": "Nabigazioa ireki",
-    "home": "Hasiera",
+    "home": "Sarrera",
     "puzzles": "Jokoak",
     "management": "Kudeaketa",
     "profile": "Jokalariaren gunea",
