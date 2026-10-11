@@ -1,42 +1,87 @@
+mixin builderHelp(id, message)
+  span.builder-help-tooltip(id=id role='tooltip')= message
+
 section.spiral-builder-shell(data-spiral-builder)
-  aside.spiral-builder-aside
-    p.spiral-builder-intro= t('spiralBuilder.intro')
-    .spiral-builder-status(role='status' data-builder-status)
-    form#spiral-builder-form(autoComplete='off' data-builder-form)
-      .builder-row
+  header.spiral-builder-heading
+    div
+      p.eyebrow= t('spiralBuilder.eyebrow')
+      .spiral-builder-title.builder-help
+        h1(tabindex='0' aria-describedby='builder-intro-help')= t('spiralBuilder.title')
+        +builderHelp('builder-intro-help', t('spiralBuilder.intro'))
+
+  .spiral-builder-layout
+    form#spiral-builder-form.spiral-builder-editor(autoComplete='off' data-builder-form)
+      section.builder-card
+        .builder-section-heading
+          .builder-section-title.builder-help
+            h2(tabindex='0' aria-describedby='builder-setup-help')= t('spiralBuilder.settingsTitle')
+            +builderHelp('builder-setup-help', t('spiralBuilder.setupHint'))
+        .builder-fields-grid
+          .builder-field
+            label(for='builder-title')= t('spiralBuilder.titleField')
+            input#builder-title.form-control(type='text' data-field='title' placeholder=t('spiralBuilder.placeholderTitle'))
+          .builder-field
+            label(for='builder-author')= t('spiralBuilder.authorField')
+            input#builder-author.form-control(type='text' data-field='author' placeholder=t('spiralBuilder.placeholderAuthor'))
+          .builder-field
+            label(for='builder-count')
+              span.builder-help.builder-field-label-help
+                span.builder-help-text(tabindex='0' aria-describedby='builder-count-help')= t('spiralBuilder.cellCount')
+                +builderHelp('builder-count-help', t('spiralBuilder.cellCountHelp'))
+            input#builder-count.form-control(type='number' min='1' max='400' step='1' data-field='cellCount' aria-describedby='builder-count-help')
+          .builder-field
+            label(for='builder-size')
+              span.builder-help.builder-field-label-help
+                span.builder-help-text(tabindex='0' aria-describedby='builder-size-help')= t('spiralBuilder.cellSize')
+                +builderHelp('builder-size-help', t('spiralBuilder.cellSizeHelp'))
+            input#builder-size.form-control(type='number' min='12' max='120' step='1' data-field='cellSize' aria-describedby='builder-size-help')
+        label.spiral-builder-switch(for='show-numbers')
+          input#show-numbers(type='checkbox' data-field='showNumbers')
+          span= t('spiralBuilder.showNumbers')
+        .spiral-builder-file-actions-heading
+          .builder-section-title.builder-help
+            h3(tabindex='0' aria-describedby='builder-output-help')= t('spiralBuilder.outputTitle')
+            +builderHelp('builder-output-help', t('spiralBuilder.outputHelp'))
+        .spiral-builder-file-actions
+          button.btn.btn-primary(type='button' data-builder-action='download' data-requires-valid-answer)= t('spiralBuilder.download')
+          label.btn.btn-outline-primary.mb-0
+            span= t('spiralBuilder.import')
+            input.sr-only(type='file' accept='.spl' data-builder-import)
+          button.btn.btn-outline-danger(type='button' data-builder-action='reset')= t('spiralBuilder.reset')
+
+      section.builder-card.builder-answer-card
+        .builder-section-heading
+          .builder-section-title.builder-help
+            h2(tabindex='0' aria-describedby='builder-answer-help')= t('spiralBuilder.answer')
+            +builderHelp('builder-answer-help', t('spiralBuilder.answerHelp'))
         .builder-field
-          label(for='builder-title')= t('spiralBuilder.titleField')
-          input#builder-title.form-control(data-field='title')
-        .builder-field
-          label(for='builder-author')= t('spiralBuilder.authorField')
-          input#builder-author.form-control(data-field='author')
-      .builder-row
-        .builder-field
-          label(for='builder-count')= t('spiralBuilder.cellCount')
-          input#builder-count.form-control(type='number' min='1' max='400' data-field='cellCount')
-        .builder-field
-          label(for='builder-size')= t('spiralBuilder.cellSize')
-          input#builder-size.form-control(type='number' min='12' max='120' data-field='cellSize')
+          label(for='builderAnswer')
+            span.builder-help.builder-field-label-help
+              span.builder-help-text(tabindex='0' aria-describedby='builder-answer-format-help')= t('spiralBuilder.answer')
+              +builderHelp('builder-answer-format-help', t('spiralBuilder.answerFormatHelp'))
+          textarea#builderAnswer.form-control(rows='3' data-field='answer' spellcheck='false' aria-describedby='builder-answer-format-help')
+        .spiral-answer-meter
+          span(data-answer-count)
+          .spiral-answer-progress(role='progressbar' aria-valuemin='0' data-answer-progress aria-label=t('spiralBuilder.answer'))
+            span
+        .spiral-builder-status(role='status' aria-live='polite' data-builder-status)
+
       each direction in ['inward', 'outward']
-        .builder-field(data-definition-editor=direction)
-          .clue-editor-heading
-            label= t(`spiralBuilder.${direction}`)
-            button.clue-add-btn.btn.btn-outline-secondary.btn-sm(type='button' data-add-definition=direction aria-label=t('spiralBuilder.addDefinition')) +
-          .clue-editor
-            .clue-editor-list(data-definition-rows=direction)
-      .builder-field
-        label(for='builderAnswer')= t('spiralBuilder.answer')
-        textarea#builderAnswer.form-control(rows='2' data-field='answer')
-      .spiral-builder-switch
-        input#show-numbers(type='checkbox' data-field='showNumbers')
-        label(for='show-numbers')= t('spiralBuilder.showNumbers')
-      .spiral-builder-actions
-        button.btn.btn-primary(type='button' data-builder-action='download')= t('spiralBuilder.download')
-        button.btn.btn-outline-secondary(type='button' data-builder-action='download-html')= t('spiralBuilder.downloadHtml')
-        button.btn.btn-outline-secondary(type='button' data-builder-action='save')= t('spiralBuilder.saveDraft')
-        button.btn.btn-outline-secondary(type='button' data-builder-action='load')= t('spiralBuilder.loadDraft')
-        label.btn.btn-outline-secondary.mb-0
-          | #{t('spiralBuilder.import')}
-          input.sr-only(type='file' accept='.spl,application/json' data-builder-import)
-        button.btn.btn-outline-danger(type='button' data-builder-action='reset')= t('spiralBuilder.reset')
-  main.spiral-builder-main(data-builder-preview)
+        section.builder-card.builder-definition-card(data-definition-editor=direction)
+          .builder-section-heading.builder-section-heading--definition
+            .builder-section-title.builder-help
+              h2(tabindex='0' aria-describedby=`builder-${direction}-help`)= t(`spiralBuilder.${direction}`)
+              +builderHelp(`builder-${direction}-help`, t(`spiralBuilder.${direction}Help`))
+            span.spiral-builder-count(data-definition-count=direction)
+            button.clue-add-btn.btn.btn-outline-primary(type='button' data-add-definition=direction aria-label=t('spiralBuilder.addDefinition'))
+              span(aria-hidden='true') +
+              span= t('spiralBuilder.addDefinition')
+          .clue-editor-list(data-definition-rows=direction)
+
+    aside.spiral-builder-preview-panel
+      header.spiral-builder-preview-heading
+        .builder-section-title.builder-help
+          h2(tabindex='0' aria-describedby='builder-preview-help')= t('spiralBuilder.previewTitle')
+          +builderHelp('builder-preview-help', t('spiralBuilder.previewHelp'))
+        span.spiral-preview-live= t('spiralBuilder.livePreview')
+      .spiral-builder-preview-frame(data-builder-preview)

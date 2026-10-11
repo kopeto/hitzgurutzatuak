@@ -1044,34 +1044,61 @@ function buildSpiral(count, size) {
 function initSpiralBuilder() {
   const root = document.querySelector('[data-spiral-builder]');
   if (!root) return;
-  let builderState;
-  try { builderState = normalizeBuilderState(JSON.parse(localStorage.getItem('hitzgurutzatuak-spiral-draft') || '{}')); }
-  catch { builderState = { ...builderInitial }; }
+  let builderState = normalizeBuilderState();
   const $ = (selector) => root.querySelector(selector);
   const fields = {
     title: $('[data-field="title"]'), author: $('[data-field="author"]'),
     cellCount: $('[data-field="cellCount"]'), cellSize: $('[data-field="cellSize"]'),
     answer: $('[data-field="answer"]'), showNumbers: $('[data-field="showNumbers"]')
   };
+  $('[data-builder-form]').addEventListener('submit', (event) => event.preventDefault());
   const filename = (value) => String(value || 'espirala').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/(^-|-$)/g, '').toLowerCase() || 'espirala';
   const lines = (direction) => builderLines(builderState[`${direction}Defs`], direction);
   const valid = () => Array.from(builderState.answer).length === builderState.cellCount;
   const updateStatus = () => {
-    const status = $('[data-builder-status]'), length = Array.from(builderState.answer).length;
-    status.classList.toggle('text-danger', !valid());
-    status.textContent = valid() ? t('spiralBuilder.downloadReady') : `${t('spiralBuilder.validateLength')} (${length}/${builderState.cellCount})`;
+    const status = $('[data-builder-status]'), current = Array.from(builderState.answer).length;
+    const total = Number(builderState.cellCount) || 1, ready = valid();
+    status.classList.toggle('text-danger', !ready);
+    status.textContent = ready ? t('spiralBuilder.downloadReady') : `${t('spiralBuilder.validateLength')} (${current}/${total})`;
+    const count = $('[data-answer-count]'), progress = $('[data-answer-progress]');
+    count.textContent = t('spiralBuilder.answerProgress', { current, total });
+    progress.setAttribute('aria-valuemax', total);
+    progress.setAttribute('aria-valuenow', Math.min(current, total));
+    progress.firstElementChild.style.width = `${Math.min(current / total, 1) * 100}%`;
+    root.querySelectorAll('[data-requires-valid-answer]').forEach((button) => { button.disabled = !ready; });
   };
   const renderEditors = () => ['inward', 'outward'].forEach((direction) => {
     const container = $(`[data-definition-rows="${direction}"]`);
     const defs = direction === 'outward' ? [...builderState.outwardDefs].reverse() : builderState.inwardDefs;
-    container.replaceChildren(...defs.map((definition, displayIndex) => {
+    const count = $(`[data-definition-count="${direction}"]`);
+    if (count) count.textContent = t('spiralBuilder.definitionCount', { count: defs.length });
+    const rows = defs.map((definition, displayIndex) => {
       const index = direction === 'outward' ? defs.length - displayIndex - 1 : displayIndex;
       const start = direction === 'outward' ? definition.end : definition.start;
       const end = direction === 'outward' ? definition.start : definition.end;
-      const row = document.createElement('div'); row.className = 'clue-row';
-      row.innerHTML = `<div class="clue-row-head"><input class="form-control clue-start" type="number" data-def-field="start" data-direction="${direction}" data-index="${index}" value="${escapeHtml(start)}" aria-label="${escapeHtml(t('spiralBuilder.startCell'))}"><input class="form-control clue-end" type="number" data-def-field="end" data-direction="${direction}" data-index="${index}" value="${escapeHtml(end)}" aria-label="${escapeHtml(t('spiralBuilder.endCell'))}"><button class="btn btn-outline-danger btn-sm clue-remove" type="button" data-remove-definition="${direction}" data-index="${index}">${escapeHtml(t('spiralBuilder.removeDefinition'))}</button></div><textarea class="form-control clue-text" data-def-field="text" data-direction="${direction}" data-index="${index}" placeholder="${escapeHtml(t('spiralBuilder.definition'))}">${escapeHtml(definition.text)}</textarea><div class="clue-word-preview">${escapeHtml(t('spiralBuilder.wordPreview'))}: ${escapeHtml(builderWord(builderState.answer, start, end))}</div>`;
+      const row = document.createElement('article');
+      row.className = 'clue-row';
+      row.innerHTML = `<div class="clue-row-heading"><h3 aria-label="${escapeHtml(t('spiralBuilder.definitionNumber', { number: displayIndex + 1 }))}">${displayIndex + 1}</h3><button class="btn btn-outline-danger btn-sm clue-remove" type="button" data-remove-definition="${direction}" data-index="${index}" aria-label="${escapeHtml(t('spiralBuilder.removeDefinition'))}" title="${escapeHtml(t('spiralBuilder.removeDefinition'))}"><span aria-hidden="true">×</span></button></div><div class="clue-row-range"><label class="clue-range-field"><span>${escapeHtml(t('spiralBuilder.startCell'))}</span><input class="form-control clue-start" type="number" min="1" max="${builderState.cellCount}" step="1" data-def-field="start" data-direction="${direction}" data-index="${index}" value="${escapeHtml(start)}" aria-label="${escapeHtml(t('spiralBuilder.startCell'))}"></label><label class="clue-range-field"><span>${escapeHtml(t('spiralBuilder.endCell'))}</span><input class="form-control clue-end" type="number" min="1" max="${builderState.cellCount}" step="1" data-def-field="end" data-direction="${direction}" data-index="${index}" value="${escapeHtml(end)}" aria-label="${escapeHtml(t('spiralBuilder.endCell'))}"></label></div><label class="clue-row-text"><span>${escapeHtml(t('spiralBuilder.definition'))}</span><textarea class="form-control clue-text" rows="1" data-def-field="text" data-direction="${direction}" data-index="${index}" placeholder="${escapeHtml(t('spiralBuilder.definition'))}">${escapeHtml(definition.text)}</textarea></label><p class="clue-word-preview">${escapeHtml(t('spiralBuilder.wordPreview'))}: ${escapeHtml(builderWord(builderState.answer, start, end))}</p>`;
       return row;
-    }));
+    });
+    if (!rows.length) {
+      const empty = document.createElement('div');
+      empty.className = 'clue-editor-empty';
+      const label = document.createElement('span');
+      label.className = 'builder-help builder-empty-label';
+      label.tabIndex = 0;
+      label.setAttribute('aria-describedby', `builder-${direction}-empty-help`);
+      label.textContent = t('spiralBuilder.definitionCount', { count: 0 });
+      const tooltip = document.createElement('span');
+      tooltip.className = 'builder-help-tooltip';
+      tooltip.id = `builder-${direction}-empty-help`;
+      tooltip.setAttribute('role', 'tooltip');
+      tooltip.textContent = t('spiralBuilder.noDefinitions');
+      label.append(tooltip);
+      empty.append(label);
+      rows.push(empty);
+    }
+    container.replaceChildren(...rows);
   });
   const renderPreview = () => {
     const spiral = buildSpiral(builderState.cellCount, builderState.cellSize), letters = Array.from(builderState.answer);
@@ -1086,7 +1113,6 @@ function initSpiralBuilder() {
       else field.value = builderState[name];
     });
   };
-  const saveDraft = () => localStorage.setItem('hitzgurutzatuak-spiral-draft', JSON.stringify(builderState));
   const payload = () => ({ kind: 'hitzgurutzatuak/spiral/v1', format: 'spl', title: builderState.title || 'Espirala', author: builderState.author || 'Ezezaguna', viewBox: '0 0 760 760', answer: builderState.answer, clues: [...lines('inward'), ...lines('outward')], cells: buildSpiral(builderState.cellCount, builderState.cellSize).cells });
   const downloadFile = (name, content, type) => {
     const url = URL.createObjectURL(new Blob([content], { type })), link = document.createElement('a');
@@ -1097,8 +1123,6 @@ function initSpiralBuilder() {
     if (field) {
       if (field === 'cellCount') {
         builderState.cellCount = clamp(Number(event.target.value) || 1, 1, 400);
-        builderState.answer = Array.from(builderState.answer).slice(0, builderState.cellCount).join('');
-        fields.cellCount.value = builderState.cellCount; fields.answer.value = builderState.answer;
       } else if (field === 'cellSize') builderState.cellSize = clamp(Number(event.target.value) || 12, 12, 120);
       else if (field === 'answer') builderState.answer = Array.from(event.target.value.toLocaleUpperCase('eu').replace(/\s+/g, '')).slice(0, builderState.cellCount).join('');
       else if (field === 'showNumbers') builderState.showNumbers = event.target.checked;
@@ -1125,6 +1149,12 @@ function initSpiralBuilder() {
       row.querySelector('.clue-word-preview').textContent = `${t('spiralBuilder.wordPreview')}: ${builderWord(builderState.answer, start, end)}`;
     }
   });
+  root.addEventListener('change', (event) => {
+    const { field } = event.target.dataset;
+    if (field !== 'cellCount' && field !== 'cellSize') return;
+    if (field === 'cellCount') builderState.answer = Array.from(builderState.answer).slice(0, builderState.cellCount).join('');
+    syncFields(); renderEditors(); renderPreview();
+  });
   root.addEventListener('click', (event) => {
     const add = event.target.closest('[data-add-definition]');
     const remove = event.target.closest('[data-remove-definition]');
@@ -1136,24 +1166,22 @@ function initSpiralBuilder() {
     } else if (remove) {
       builderState[`${remove.dataset.removeDefinition}Defs`].splice(Number(remove.dataset.index), 1);
       renderEditors(); renderPreview();
-    } else if (action?.dataset.builderAction === 'save') saveDraft();
-    else if (action?.dataset.builderAction === 'load') {
-      try { builderState = normalizeBuilderState(JSON.parse(localStorage.getItem('hitzgurutzatuak-spiral-draft') || '{}')); syncFields(); renderEditors(); renderPreview(); }
-      catch { window.alert('Ezin izan da zirriborroa kargatu.'); }
     } else if (action?.dataset.builderAction === 'reset') {
-      builderState = { ...builderInitial, inwardDefs: [], outwardDefs: [] }; syncFields(); renderEditors(); renderPreview();
-    } else if (action?.dataset.builderAction === 'download' || action?.dataset.builderAction === 'download-html') {
+      builderState = { ...builderInitial, inwardDefs: [], outwardDefs: [] };
+      syncFields(); renderEditors(); renderPreview();
+    } else if (action?.dataset.builderAction === 'download') {
       if (!valid()) return window.alert(t('spiralBuilder.validateLength'));
       const data = payload();
-      if (action.dataset.builderAction === 'download') downloadFile(`${filename(data.title)}.spl`, `${JSON.stringify(data, null, 2)}\n`, 'application/json;charset=utf-8');
-      else {
-        const paths = data.cells.map((cell) => `<path d="${cell.path}" fill="#fff" stroke="#222"/><text x="${cell.x}" y="${cell.y}" text-anchor="middle" dominant-baseline="central">${escapeHtml(data.answer[cell.index - 1])}</text>`).join('');
-        downloadFile(`${filename(data.title)}.html`, `<!doctype html><html lang="eu"><meta charset="utf-8"><title>${escapeHtml(data.title)}</title><body><h1>${escapeHtml(data.title)}</h1><p>${escapeHtml(data.author)}</p><svg viewBox="${data.viewBox}" width="760">${paths}</svg><ol>${data.clues.map((clue) => `<li>${escapeHtml(clue)}</li>`).join('')}</ol></body></html>`, 'text/html;charset=utf-8');
-      }
+      downloadFile(`${filename(data.title)}.spl`, `${JSON.stringify(data, null, 2)}\n`, 'application/json;charset=utf-8');
     }
   });
   $('[data-builder-import]').addEventListener('change', (event) => {
     const file = event.target.files?.[0]; if (!file) return;
+    if (!file.name.toLocaleLowerCase().endsWith('.spl')) {
+      window.alert(t('spiralBuilder.invalidFile'));
+      event.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       try {

@@ -14,12 +14,12 @@ html(lang='eu')
     if page === 'spiralGame'
       link(rel='stylesheet' href='/style/spiral.css?v=20261011-2')
     if page === 'spiralBuilder'
-      link(rel='stylesheet' href='/style/spiral_builder.css?v=20261011-1')
-      link(rel='stylesheet' href='/style/spiral_builder_pdf.css?v=20261011-1')
+      link(rel='stylesheet' href='/style/spiral_builder.css?v=20261011-6')
+      link(rel='stylesheet' href='/style/spiral_builder_pdf.css?v=20261011-4')
     script#i18n-data(type='application/json') !{JSON.stringify(clientMessages)}
     script(src='/scripts/i18n.js')
     script(src='/scripts/site.js' defer)
-    script(src='/scripts/app.js?v=20261011-2' type='module')
+    script(src='/scripts/app.js?v=20261011-7' type='module')
   body(class=`site-body ${pageClass || ''}`)
     include includes/site-header.pug
     main.site-main
