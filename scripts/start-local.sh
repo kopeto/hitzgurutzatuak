@@ -6,7 +6,7 @@ repo_root="$(cd -- "$script_dir/.." && pwd)"
 cd "$repo_root"
 
 export NODE_ENV=development
-export HOST=127.0.0.1
+export HOST=0.0.0.0
 export PORT=3000
 export DB_CONNECTION=mongodb://127.0.0.1:27017/HG_develop
 
@@ -39,7 +39,8 @@ echo "==> Tokiko master erabiltzailea prestatzen..."
 node create-master.js master 1234 master@hitzgurutzatuak.local
 
 echo
-echo "==> Tokiko aplikazioa: http://localhost:$PORT"
+echo "==> Aplikazioa sareko interfaze guztietan entzuten: 0.0.0.0:$PORT"
+echo "==> Beste gailuetatik, ireki http://<ordenagailuaren-IP>:$PORT"
 echo "==> Garapenerako erabiltzailea: master / 1234"
 echo "==> Sakatu Ctrl+C aplikazioa gelditzeko."
 echo
