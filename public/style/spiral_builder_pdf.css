@@ -1,7 +1,4 @@
-* {
-  box-sizing: border-box;
-}
-
+/* Compact builder workspace and print adjustments; load after spiral_builder.css. */
 body.site-body.spiral-builder-page {
   overflow: hidden;
 }
@@ -67,23 +64,7 @@ body.site-body.spiral-builder-page {
   margin: 0.08rem 0 0.15rem;
 }
 
-.spiral-builder-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 0 0 6px;
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-  color: #46524a;
-}
-
 #spiral-builder-form {
-  display: grid;
-  gap: 0.32rem;
-  align-content: start;
-}
-
-.spiral-builder-page .spiral-builder-aside form {
   display: grid;
   gap: 0.32rem;
   align-content: start;
@@ -136,19 +117,6 @@ body.site-body.spiral-builder-page {
   line-height: 1 !important;
   font-weight: 700;
   text-align: center;
-}
-
-.clue-editor > [data-add-clue] {
-  width: 100%;
-  min-height: 34px;
-  max-height: 34px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1;
 }
 
 .clue-editor-list {
@@ -221,28 +189,9 @@ body.site-body.spiral-builder-page {
   font-weight: 700;
 }
 
-.spiral-builder-page .spiral-builder-aside form label {
-  display: block;
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
 #spiral-builder-form textarea,
 #spiral-builder-form input[type='text'],
 #spiral-builder-form input[type='number'] {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #777;
-  border-radius: 5px;
-  background: #fff;
-  color: #171717;
-  font: 700 0.84rem/1.25 Consolas, monospace;
-}
-
-.spiral-builder-page .spiral-builder-aside form textarea,
-.spiral-builder-page .spiral-builder-aside form input[type='text'],
-.spiral-builder-page .spiral-builder-aside form input[type='number'] {
   width: 100%;
   padding: 6px 8px;
   border: 1px solid #777;
@@ -263,17 +212,6 @@ body.site-body.spiral-builder-page {
   min-height: 0;
   resize: vertical;
   text-transform: uppercase;
-}
-
-.spiral-builder-page .spiral-builder-aside form textarea {
-  min-height: 0;
-  resize: vertical;
-  text-transform: uppercase;
-}
-
-#builderInwardClues,
-#builderOutwardClues {
-  height: 76px;
 }
 
 #builderAnswer {
@@ -340,27 +278,6 @@ body.site-body.spiral-builder-page {
   font-weight: 700;
 }
 
-.spiral-builder-actions .btn-primary {
-  color: #fff;
-  border-color: #174a91;
-  background: #245bb6;
-}
-
-.spiral-builder-actions .btn:hover {
-  filter: brightness(.96);
-}
-
-.spiral-builder-file {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
 .spiral-page {
   width: min(100%, 900px);
   max-height: 100%;
@@ -397,14 +314,6 @@ body.site-body.spiral-builder-page {
 
 .spiral-page-body {
   padding: 6px 8px 0;
-}
-
-.spiral-page-intro {
-  margin: 0 0 12px;
-  padding: 0 0 0 0;
-  color: #555;
-  font-size: 0.95rem;
-  line-height: 1.35;
 }
 
 .spiral-page-art {
@@ -488,11 +397,11 @@ body.site-body.spiral-builder-page {
 }
 
 @media (max-width: 980px) {
-  body.site-body {
+  body.site-body.spiral-builder-page {
     overflow: auto;
   }
 
-  .site-footer {
+  .spiral-builder-page .site-footer {
     display: block;
   }
 
@@ -510,10 +419,6 @@ body.site-body.spiral-builder-page {
 
   .spiral-builder-aside {
     overflow: visible;
-  }
-
-  #spiral-builder-form {
-    height: auto;
   }
 }
 

@@ -29,7 +29,8 @@ body.site-body {
   caret-color: transparent;
 }
 
-body.site-body :is(a, button, select, [role="button"], input[type="checkbox"], input[type="radio"]) {
+body.site-body
+  :is(a, button, select, [role="button"], input[type="checkbox"], input[type="radio"]) {
   cursor: pointer;
 }
 

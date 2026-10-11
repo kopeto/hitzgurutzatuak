@@ -1,3 +1,4 @@
+/* Base styles for builder controls and the exported spiral preview. */
 :root {
   --builder-bg: #ecebe7;
   --builder-ink: #171717;
@@ -48,32 +49,12 @@
   margin: 0.25rem 0 0.35rem;
 }
 
-.spiral-builder-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 0 0 12px;
-  font-variant-numeric: tabular-nums;
-  color: #46524a;
-}
-
 #spiral-builder-form {
   display: grid;
   gap: 0.2rem;
 }
 
-.spiral-builder-aside form {
-  display: grid;
-  gap: 0.2rem;
-}
-
 #spiral-builder-form label {
-  display: block;
-  margin: 14px 0 7px;
-  font-weight: 700;
-}
-
-.spiral-builder-aside form label {
   display: block;
   margin: 14px 0 7px;
   font-weight: 700;
@@ -91,25 +72,7 @@
   font: 700 1rem/1.4 Consolas, monospace;
 }
 
-.spiral-builder-aside form textarea,
-.spiral-builder-aside form input[type='text'],
-.spiral-builder-aside form input[type='number'] {
-  width: 100%;
-  padding: 12px;
-  border: 2px solid var(--builder-border);
-  border-radius: 7px;
-  background: #fff;
-  color: var(--builder-ink);
-  font: 700 1rem/1.4 Consolas, monospace;
-}
-
 #spiral-builder-form textarea {
-  min-height: 170px;
-  resize: vertical;
-  text-transform: uppercase;
-}
-
-.spiral-builder-aside form textarea {
   min-height: 170px;
   resize: vertical;
   text-transform: uppercase;
@@ -161,21 +124,6 @@
   filter: brightness(.96);
 }
 
-.spiral-builder-file {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-.spiral-builder-canvas-wrap {
-  width: min(100%, 850px);
-}
-
 .spiral-builder-preview {
   display: block;
   width: 100%;
@@ -192,22 +140,12 @@
   fill: #f6f6f3;
 }
 
-.spiral-preview-cell.is-even {
-  fill: #fefefd;
-}
-
 .spiral-preview-letter {
   cursor: default;
 }
 
 .spiral-preview-number {
   pointer-events: none;
-}
-
-.spiral-builder-footnote {
-  margin: 12px 0 0;
-  color: #555;
-  line-height: 1.42;
 }
 
 @media (max-width: 800px) {

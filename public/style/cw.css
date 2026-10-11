@@ -2,10 +2,6 @@
    BASE
    ============================================================================= */
 
-.game-wrapper * {
-  transition: all .2s ease-out;
-}
-
 /* =============================================================================
    GRID TABLE
    ============================================================================= */
@@ -50,7 +46,11 @@
   line-height: 1;
   border-right: 1px solid black;
   border-bottom: 1px solid black;
+  font-size: clamp(0.6rem, calc(min(50px, 100cqw / var(--grid-cols, 15)) * 0.7), 1.8em);
+  transition: background-color 0.2s ease-out;
 }
+
+.grid-cell .char { transition: opacity 0.2s ease-out; }
 
 .grid-cell.first-row {
   border-top: 1px solid black;
@@ -59,8 +59,6 @@
 .grid-cell.first-column {
   border-left: 1px solid black;
 }
-
-.grid-cell { font-size: clamp(0.6rem, calc(min(50px, 100cqw / var(--grid-cols, 15)) * 0.7), 1.8em); }
 
 /* Cell number label */
 .grid-cell span.i_words {
@@ -178,6 +176,7 @@
   background: transparent;
   text-align: left;
   line-height: 1.35;
+  transition: background-color 0.2s ease-out, color 0.2s ease-out;
 }
 
 .clue-item:hover {
@@ -384,11 +383,13 @@
 /* Frozen grid — editing disabled after game ends, but selection still works */
 .grid-frozen {
   opacity: 0.85;
+  transition: opacity 0.2s ease-out;
 }
 
 .game-actions--finished button:not(.btn-restart) {
   pointer-events: none;
   opacity: 0.45;
+  transition: opacity 0.2s ease-out;
 }
 
 /* =============================================================================
