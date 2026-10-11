@@ -111,14 +111,15 @@
   overflow: hidden;
 }
 
-.spiral-definition-group {
+.spiral-clue-column {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
 }
 
-.spiral-definition-group h4 {
+.spiral-clue-column h2 {
   flex: 0 0 auto;
   margin: 0 0 0.25rem;
   color: #526159;
@@ -190,7 +191,7 @@
     overflow: visible;
   }
 
-  .spiral-definition-group {
+  .spiral-clue-column {
     overflow: visible;
   }
 
