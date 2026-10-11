@@ -21,7 +21,7 @@ section(data-spiral-game)
         .active-clue-bar(role='status' data-active-clue)
         .game-notification-bar(role='status' data-game-notice)
       aside.spiral-panel
-        h3.spiral-panel-title= t('game.cluesLabel')
+        //- h3.spiral-panel-title= t('game.cluesLabel')
         .spiral-definitions
           each direction in ['inward', 'outward']
             - const defs = (puzzle.spiral && puzzle.spiral.clues) || []
