@@ -2,7 +2,7 @@
 
 /**
  * Script to create master user
- * Usage: node create-master.js [username] [password] [email]
+ * Usage: node create-master.js [username] <password> [email]
  */
 
 require('dotenv/config');
@@ -14,12 +14,28 @@ const config = require('./config/database');
 const UserModel = require('./models/user');
 
 const username = (process.argv[2] || 'master').trim().toLowerCase();
-const password = process.argv[3] || '1234';
+const passwordArgument = process.argv[3];
 const email = process.argv[4] || `${username}@hitzgurutzatuak.local`;
 
+async function readPasswordFromStdin() {
+  const chunks = [];
+  for await (const chunk of process.stdin) chunks.push(chunk);
+  return Buffer.concat(chunks).toString('utf8');
+}
+
 async function createMasterUser() {
+  const password = passwordArgument === '--password-stdin'
+    ? await readPasswordFromStdin()
+    : passwordArgument;
+
+  if (!password) {
+    console.error('Usage: node create-master.js [username] <password> [email]');
+    process.exitCode = 2;
+    return;
+  }
+
   try {
-    console.log(colors.cyan(`\nMongoDBra konektatzen: ${config.database}`));
+    console.log(colors.cyan('\nMongoDBra konektatzen...'));
     await mongoose.connect(config.database);
     console.log(colors.green('✓ MongoDBra konektatuta\n'));
 
@@ -42,7 +58,7 @@ async function createMasterUser() {
       console.log(`  Erabiltzaile-izena: ${updated.username}`);
       console.log(`  Helbide elektronikoa: ${updated.email}`);
       console.log(`  Administratzailea: ${updated.master ? 'Bai' : 'Ez'}`);
-      console.log(`  Pasahitza: ${password}\n`);
+      console.log();
       
       await mongoose.disconnect();
       process.exit(0);
@@ -64,7 +80,6 @@ async function createMasterUser() {
     console.log(colors.green('✓ Master erabiltzailea sortu da:'));
     console.log(`  Erabiltzaile-izena: ${username}`);
     console.log(`  Helbide elektronikoa: ${email}`);
-    console.log(`  Pasahitza: ${password}`);
     console.log('  Administratzailea: Bai\n');
 
     await mongoose.disconnect();
