@@ -5,7 +5,7 @@ for %%I in ("%~dp0..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" || exit /b 1
 
 set "NODE_ENV=development"
-set "HOST=127.0.0.1"
+set "HOST=0.0.0.0"
 set "PORT=3000"
 set "DB_CONNECTION=mongodb://127.0.0.1:27017/HG_develop"
 
@@ -49,7 +49,8 @@ call node create-master.js master 1234 master@hitzgurutzatuak.local
 if errorlevel 1 goto :failed
 
 echo.
-echo ==^> Tokiko aplikazioa: http://localhost:%PORT%
+echo ==^> Aplikazioa sareko interfaze guztietan entzuten: 0.0.0.0:%PORT%
+echo ==^> Beste gailuetatik, ireki http://^<ordenagailuaren-IP^>:%PORT%
 echo ==^> Garapenerako erabiltzailea: master / 1234
 echo ==^> Sakatu Ctrl+C aplikazioa gelditzeko.
 echo.

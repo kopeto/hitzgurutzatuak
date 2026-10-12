@@ -25,6 +25,18 @@ body.site-body {
   background: radial-gradient(circle at 15% 0%, rgba(231, 173, 56, 0.11), transparent 26rem), var(--paper);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.55;
+  cursor: default;
+  caret-color: transparent;
+}
+
+body.site-body
+  :is(a, button, select, [role="button"], input[type="checkbox"], input[type="radio"]) {
+  cursor: pointer;
+}
+
+body.site-body :is(input, textarea, [contenteditable="true"]) {
+  cursor: text;
+  caret-color: auto;
 }
 
 a { color: var(--brand-dark); text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
