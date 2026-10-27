@@ -7,10 +7,7 @@ mixin heading(eyebrow, title, text)
         p= text
 
 +heading(t('catalog.eyebrow'), t('catalog.title'), t('catalog.intro'))
-if user && user.master
-  aside.admin-note
-    strong #{t('catalog.adminMode')}
-    |  #{t('catalog.adminText')}
+
 if !data.puzzles.length
   .empty-state
     h2= t('catalog.emptyTitle')
