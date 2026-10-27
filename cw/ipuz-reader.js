@@ -322,10 +322,10 @@ class IPuzReader {
       }
     }
 
-    // Down extraction in column-major order (column by column, top to bottom)
-    // to align with column-based clue grouping.
-    for (let j = 0; j < w; j++) {
-      for (let i = 0; i < h; i++) {
+    // Down clues without numbers follow start cells in row-major order too.
+    // Column grouping belongs to the display, after each clue is assigned.
+    for (let i = 0; i < h; i++) {
+      for (let j = 0; j < w; j++) {
         if (grid[i][j] === '.') continue;
 
         const startsDown = (i === 0 || grid[i - 1][j] === '.');

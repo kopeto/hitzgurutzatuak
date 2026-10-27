@@ -6,6 +6,8 @@
 
 Both formats provide the same game fields: dimensions, solution grid (`filled_grid`), playable grid (`void_grid`), title, author, clues, and word entries. Each word entry uses `word`, `dir`, `x`, `y`, `length`, `number`, `index`, and `clue`. Word numbers are assigned by start cell in row-major order, with Across before Down at the same cell. iPuz single-cell entries remain supported.
 
+For iPuz, numbered clues match the labels in the source grid. Unnumbered clues are assigned in start-cell row-major order for both Across and Down; grouping Down clues by column is a display step and must not change their assignment.
+
 The importer chooses the source format from the filename and calls `new Crossword(path, format)`. Spirals continue to use `SpiralPuzzle`.
 
 ## Clue display modes
