@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const fs = require('fs/promises');
 const path = require('path');
 
+const upload = require('../config/uploadconfig');
 const Crossword = require('../cw/crossword');
 const SpiralPuzzle = require('../cw/spiral');
 const CrosswordModel = require('../models/crosswords');
@@ -68,11 +69,50 @@ function detectFormat(filename) {
   return 'puz';
 }
 
+function archivePath(uploadedFile) {
+  const directory = path.dirname(path.resolve(uploadedFile.path));
+  if (path.dirname(directory) !== upload.uploadDirectory
+    || !/^\d{4}-\d{2}-\d{2}$/.test(path.basename(directory))) {
+    return null;
+  }
+  const filename = upload.sanitizeOriginalFilename(uploadedFile.originalname);
+  return path.basename(uploadedFile.path) === filename ? null : path.join(directory, filename);
+}
+
+async function archiveFile(sourcePath, destination, content) {
+  const extension = path.extname(destination);
+  const baseName = destination.slice(0, destination.length - extension.length);
+  let suffix = null;
+
+  while (true) {
+    const candidate = suffix === null ? destination : `${baseName}_${suffix}${extension}`;
+    try {
+      await fs.link(sourcePath, candidate);
+      return { path: candidate, created: true };
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+
+      let existingContent;
+      try {
+        existingContent = await fs.readFile(candidate);
+      } catch (readError) {
+        if (readError.code === 'ENOENT') continue;
+        throw readError;
+      }
+
+      if (existingContent.equals(content)) return { path: candidate, created: false };
+      suffix = suffix === null ? 2 : suffix + 1;
+    }
+  }
+}
+
 async function importPuzzle(uploadedFile) {
   if (!uploadedFile || !uploadedFile.path) {
     throw new PuzzleImportError('Ez da fitxategirik jaso.');
   }
 
+  let archivedPath = null;
+  let archiveCreated = false;
   try {
     const content = await fs.readFile(uploadedFile.path);
     const fileHash = crypto.createHash('sha256').update(content).digest('hex');
@@ -110,10 +150,25 @@ async function importPuzzle(uploadedFile) {
       fileHash
     });
 
+    const destination = archivePath(uploadedFile);
+    if (destination) {
+      const archive = await archiveFile(uploadedFile.path, destination, content);
+      archivedPath = archive.path;
+      archiveCreated = archive.created;
+      await removeTemporaryFile(uploadedFile.path);
+    }
+
     await puzzle.save();
+    if (archivedPath) {
+      uploadedFile.path = archivedPath;
+      uploadedFile.destination = path.dirname(archivedPath);
+      uploadedFile.filename = path.basename(archivedPath);
+    }
     return puzzle;
-  } finally {
+  } catch (error) {
+    if (archiveCreated) await removeTemporaryFile(archivedPath);
     await removeTemporaryFile(uploadedFile.path);
+    throw error;
   }
 }
 

@@ -22,7 +22,7 @@ logs/
 /coverage/
 
 ### Uploads / downloads
-uploads/*.puz
+/uploads/
 
 ###
 jokoak/

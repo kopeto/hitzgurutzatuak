@@ -35,10 +35,17 @@ async function processBatch(batchId) {
 
     try {
       if (!file.storedFilename) throw new Error('Ez da fitxategia aurkitu.');
-      const puzzle = await importPuzzle({
-        path: path.join(upload.uploadDirectory, path.basename(file.storedFilename)),
+      // New batches include the upload date; older ones still use a bare filename.
+      const filePath = path.resolve(upload.uploadDirectory, file.storedFilename);
+      if (!filePath.startsWith(`${upload.uploadDirectory}${path.sep}`)) {
+        throw new Error('Fitxategiaren bidea ez da baliozkoa.');
+      }
+      const uploadedFile = {
+        path: filePath,
         originalname: file.filename
-      });
+      };
+      const puzzle = await importPuzzle(uploadedFile);
+      file.storedFilename = path.relative(upload.uploadDirectory, uploadedFile.path);
       file.status = 'imported';
       file.puzzleId = puzzle._id;
       file.puzzleName = puzzle.name;

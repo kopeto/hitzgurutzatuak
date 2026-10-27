@@ -323,7 +323,7 @@ function initUpload() {
   const submit = root.querySelector('[data-upload-submit]');
   const error = root.querySelector('[data-upload-error]');
   const progress = root.querySelector('[data-upload-progress]');
-  const maxFiles = Number(root.dataset.maxFiles || 25);
+  const maxFiles = Number(root.dataset.maxFiles || 1000);
   let selected = [];
   let batch = null;
   let busy = false;

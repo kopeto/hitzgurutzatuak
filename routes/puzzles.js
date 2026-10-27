@@ -2,6 +2,7 @@ const { logError } = require('../utils');
 const checkAuth = require('../auth/authenticate.js');
 const express = require('express');
 const fs = require('fs/promises');
+const path = require('path');
 const router = express.Router();
 const CrosswordModel = require('../models/crosswords');
 const PuzzleUploadBatch = require('../models/puzzleuploadbatch');
@@ -125,7 +126,7 @@ router.post('/upload/batches', checkAuth, upload.multiple, async (req, res) => {
   const files = [
     ...uploadedFiles.map(file => ({
       filename: file.originalname,
-      storedFilename: file.filename,
+      storedFilename: path.relative(upload.uploadDirectory, file.path),
       status: 'queued'
     })),
     ...rejectedFiles.map(file => ({

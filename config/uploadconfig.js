@@ -8,10 +8,10 @@ const configuredMaxSize = Number.parseInt(process.env.MAX_PUZ_UPLOAD_BYTES || '5
 const maxFileSize = Number.isFinite(configuredMaxSize) && configuredMaxSize > 0
   ? configuredMaxSize
   : 5242880;
-const configuredMaxBatchFiles = Number.parseInt(process.env.MAX_PUZ_BATCH_FILES || '25', 10);
+const configuredMaxBatchFiles = Number.parseInt(process.env.MAX_PUZ_BATCH_FILES || '1000', 10);
 const maxBatchFiles = Number.isFinite(configuredMaxBatchFiles) && configuredMaxBatchFiles > 0
   ? configuredMaxBatchFiles
-  : 25;
+  : 1000;
 
 fs.mkdirSync(uploadDirectory, { recursive: true });
 
@@ -45,9 +45,26 @@ function fileFilter(req, file, callback) {
   return callback(null, true);
 }
 
+function uploadDate(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Madrid',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+  const value = type => parts.find(part => part.type === type).value;
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
 const storage = multer.diskStorage({
-  destination: (req, file, callback) => callback(null, uploadDirectory),
-  filename: (req, file, callback) => callback(null, `${crypto.randomUUID()}.puz`)
+  destination: (req, file, callback) => {
+    req.puzzleUploadDirectory = req.puzzleUploadDirectory || path.join(uploadDirectory, uploadDate());
+    fs.mkdir(req.puzzleUploadDirectory, { recursive: true }, error => {
+      callback(error, req.puzzleUploadDirectory);
+    });
+  },
+  // Keep uploads separate until validation; the archive uses the original name.
+  filename: (req, file, callback) => callback(null, `.${crypto.randomUUID()}.tmp`)
 });
 
 const multerUpload = multer({
