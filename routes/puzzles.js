@@ -13,6 +13,7 @@ const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import')
 const { enqueueBatch } = require('../services/puzzle-upload-queue');
 const { createEmptyGrid } = require('../services/game-grid');
 const { renderPage, serializePuzzleSummary } = require('../services/page-view');
+const { deletePuzzleRecords } = require('../services/puzzle-deletion');
 const {
   GroupError, isId, listGroups, sortGroups, flattenGroups, parseGroupIds,
   validateAssignableGroups, withGroupWrite
@@ -65,12 +66,12 @@ async function renderGroup(req, res) {
       breadcrumbs.unshift(parent);
       parent = byId.get(parent.parentId);
     }
-    const puzzles = await CrosswordModel.find(group.systemKey === 'all' ? {} : { groupIds: group._id })
+    const puzzles = group.systemKey === 'root' ? [] : await CrosswordModel.find(group.systemKey === 'all' ? {} : { groupIds: group._id })
       .select('name author width height gameType format spiral.cells createdAt groupIds').lean();
 
     // For logged-in users build a map puzzleId → session info
     let statusMap = {};
-    if (req.user) {
+    if (req.user && puzzles.length) {
       const userId = req.user._id.toString();
       const sessions = await PlaySession.find({ userId, puzzleId: { $in: puzzles.map(p => p._id.toString()) } });
       sessions.forEach(s => {
@@ -102,7 +103,7 @@ router.get('/upload', checkAuth, async (req, res, next) => {
     return renderPage(res, 'upload', {
       maxUploadFiles: upload.maxBatchFiles,
       maxUploadFileSize: upload.maxFileSize,
-      groups: flattenGroups(await listGroups()).filter(group => group.systemKey !== 'all')
+      groups: flattenGroups(await listGroups()).filter(group => !group.systemKey)
     }, { title: res.locals.t('page.upload') });
   } catch (error) { next(error); }
 });
@@ -312,19 +313,6 @@ router.get('/game/:id', async (req, res) => {
     res.redirect('/jokoak');
   }
 });
-
-async function deletePuzzleRecords(ids) {
-  const puzzles = await CrosswordModel.find({ _id: { $in: ids } }, '_id').lean();
-  const deletedIds = puzzles.map(puzzle => puzzle._id.toString());
-  if (!deletedIds.length) return [];
-
-  await CrosswordModel.deleteMany({ _id: { $in: deletedIds } });
-  await Promise.all([
-    PlaySession.deleteMany({ puzzleId: { $in: deletedIds } }),
-    GameStateModel.deleteMany({ puzzleId: { $in: deletedIds } })
-  ]).catch(logError);
-  return deletedIds;
-}
 
 router.patch('/game/:id', checkAuth, requireMaster, async (req, res) => {
   if (!/^[a-f\d]{24}$/i.test(req.params.id)) return res.status(404).json({ error: 'Jokoa ez da aurkitu.' });

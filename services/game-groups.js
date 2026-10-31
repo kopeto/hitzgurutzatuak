@@ -71,11 +71,16 @@ async function ensureGameGroups() {
       const root = await GameGroup.findOneAndUpdate({ systemKey: 'root' }, {
         $setOnInsert: { name: 'Jokoak', description: '', parentId: null, sortOrder: 0 }
       }, { upsert: true, new: true, setDefaultsOnInsert: true });
-      await GameGroup.findOneAndUpdate({ systemKey: 'all' }, {
+      const all = await GameGroup.findOneAndUpdate({ systemKey: 'all' }, {
         $setOnInsert: { name: 'Guztiak', description: '', parentId: root._id, sortOrder: 0 }
       }, { upsert: true, new: true, setDefaultsOnInsert: true });
-      // Only legacy documents are migrated. Re-running never reassigns classified games.
-      await Crossword.updateMany({ groupIds: { $exists: false } }, { $set: { groupIds: [root._id] } });
+      // System pages never own games. Keep every ordinary membership and the game itself.
+      const systemIds = [root._id, all._id];
+      await Crossword.updateMany({ groupIds: { $exists: false } }, { $set: { groupIds: [] } });
+      await Promise.all([
+        Crossword.updateMany({ groupIds: { $in: systemIds } }, { $pull: { groupIds: { $in: systemIds } } }),
+        PuzzleUploadBatch.updateMany({ groupIds: { $in: systemIds } }, { $pull: { groupIds: { $in: systemIds } } })
+      ]);
     })().catch(error => { initialization = undefined; throw error; });
   }
   return initialization;
@@ -100,8 +105,8 @@ async function validateAssignableGroups(ids) {
   if (!groupIds.length) return [];
   await ensureGameGroups();
   const groups = await GameGroup.find({ _id: { $in: groupIds } }).lean();
-  if (groups.length !== groupIds.length || groups.some(group => group.systemKey === 'all')) {
-    throw new GroupError('Hautatutako taldea ez dago erabilgarri. Guztiak automatikoa da.');
+  if (groups.length !== groupIds.length || groups.some(group => group.systemKey)) {
+    throw new GroupError('Jokoak azpitaldeetan bakarrik eslei daitezke. Jokoak hasierako orria da eta Guztiak automatikoa da.');
   }
   return groupIds;
 }
@@ -209,7 +214,10 @@ async function changeMembership(input) {
       [new mongoose.Types.ObjectId(targetId)]
     ] } } }];
     await Crossword.updateMany({ _id: { $in: puzzleIds } }, update);
-    return { count: puzzleIds.length };
+    const updated = await Crossword.find({ _id: { $in: puzzleIds } }).select('_id groupIds').lean();
+    return { count: updated.length, puzzles: updated.map(puzzle => ({
+      _id: String(puzzle._id), groupIds: (puzzle.groupIds || []).map(String)
+    })) };
   });
 }
 

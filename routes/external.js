@@ -23,6 +23,8 @@ const requireApiKey = require('../auth/apikey');
 const upload = require('../config/uploadconfig');
 const CrosswordModel = require('../models/crosswords');
 const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import');
+const { deletePuzzleRecords } = require('../services/puzzle-deletion');
+const { isId } = require('../services/game-groups');
 const { logError, logInfo } = require('../utils');
 
 // Max 30 requests per minute per IP
@@ -97,9 +99,10 @@ router.get('/puzzles', async (req, res) => {
 // DELETE /external/puzzle/:id  — delete a puzzle by id
 // ---------------------------------------------------------------------------
 router.delete('/puzzle/:id', async (req, res) => {
+  if (!isId(req.params.id)) return res.status(404).json({ error: true, message: 'Puzlea ez da aurkitu.' });
   try {
-    const result = await CrosswordModel.deleteOne({ _id: req.params.id });
-    if (result.deletedCount === 0) {
+    const deletedIds = await deletePuzzleRecords([req.params.id]);
+    if (!deletedIds.length) {
       return res.status(404).json({ error: true, message: 'Puzlea ez da aurkitu.' });
     }
     return res.json({ error: false, message: 'Puzlea ezabatu da.' });

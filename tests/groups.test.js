@@ -151,8 +151,8 @@ test('persistent group management and public pages with an isolated MongoDB', {
   const fields = (group, changes) => ({ name: group.name, description: group.description, parentId: group.parentId, sortOrder: group.sortOrder, ...changes });
   let a, b, c, child, puzzle;
 
-  await suite.test('migration assigns legacy games once, and permissions protect every management operation', async () => {
-    assert.deepEqual((await Crossword.findById(legacyId)).groupIds.map(String), [root._id]);
+  await suite.test('migration keeps legacy games in Guztiak without root memberships, and management stays protected', async () => {
+    assert.deepEqual((await Crossword.findById(legacyId)).groupIds.map(String), []);
     for (const role of [null, 'user']) {
       for (const [url, method, body] of [
         ['/master/groups', 'GET'], ['/master/groups', 'POST', {}],
@@ -197,6 +197,42 @@ test('persistent group management and public pages with an isolated MongoDB', {
     assert.equal((await request(`/master/groups/${all._id}`, 'PATCH', fields(all, { description: 'Denak hemen' }))).status, 200);
   });
 
+  await suite.test('Jokoak is a landing page; assignment and uploads reject it, and migration removes old root memberships', async () => {
+    const legacyRootGame = await Crossword.create({ name: 'Former root game', width: 2, height: 2, groupIds: [root._id, c._id] });
+    const legacyBatch = await PuzzleUploadBatch.create({ ownerId: userId, groupIds: [root._id, c._id], files: [] });
+    const rootHtml = await (await request('/jokoak', 'GET', undefined, null)).text();
+    assert.equal(rootHtml.includes('catalog-games'), false);
+    assert.equal(rootHtml.includes('Former root game'), false);
+    assert.ok(rootHtml.includes(`href="${all.url}"`));
+    for (const payload of [
+      { action: 'add', targetId: root._id },
+      { action: 'move', sourceId: c._id, targetId: root._id },
+      { action: 'remove', sourceId: root._id }
+    ]) assert.equal((await request('/master/groups/memberships', 'POST', {
+      ...payload, puzzleIds: [String(legacyRootGame._id)]
+    })).status, 400);
+    const uploadHtml = await (await request('/jokoak/upload')).text();
+    assert.equal(uploadHtml.includes(`<option value="${root._id}">`), false);
+    assert.equal(uploadHtml.includes(`<option value="${all._id}">`), false);
+    const form = new FormData();
+    form.append('filename', new Blob([ipuz('Blocked root upload')]), 'blocked.ipuz');
+    form.append('groupIds', root._id);
+    const rejected = await fetch(baseUrl + '/jokoak/upload/batches', { method: 'POST', headers: { 'x-test-role': 'master' }, body: form });
+    assert.equal(rejected.status, 400);
+    assert.equal(await Crossword.countDocuments({ name: 'Blocked root upload' }), 0);
+    const blockedPath = path.join(directory, 'blocked-root.ipuz');
+    await fs.writeFile(blockedPath, ipuz('Blocked root import'));
+    await assert.rejects(importPuzzle({ path: blockedPath, originalname: 'blocked-root.ipuz' }, { groupIds: [root._id] }), groups.GroupError);
+    await assert.rejects(fs.stat(blockedPath), { code: 'ENOENT' });
+    await run(process.execPath, [path.join(__dirname, '../scripts/migrate-game-groups.js')], { env: { ...process.env, DB_CONNECTION: uri } });
+    assert.deepEqual((await Crossword.findById(legacyRootGame._id)).groupIds.map(String), [c._id]);
+    assert.deepEqual((await PuzzleUploadBatch.findById(legacyBatch._id)).groupIds.map(String), [c._id]);
+    assert.equal(await Crossword.countDocuments({ groupIds: root._id }), 0);
+    const allHtml = await (await request('/jokoak/guztiak', 'GET', undefined, null)).text();
+    assert.ok(allHtml.includes('Former root game'));
+    assert.ok(allHtml.includes('Legacy game'));
+  });
+
   await suite.test('add, move and remove preserve other memberships and existing progress', async () => {
     puzzle = await Crossword.create({ name: 'Multi group', width: 2, height: 2, groupIds: [a._id, c._id] });
     const session = await PlaySession.create({ userId: String(userId), puzzleId: String(puzzle._id), elapsedSeconds: 42 });
@@ -204,6 +240,12 @@ test('persistent group management and public pages with an isolated MongoDB', {
     const membership = async (action, sourceId, targetId, expected = 200) => {
       const response = await request('/master/groups/memberships', 'POST', { action, sourceId, targetId, puzzleIds: [String(puzzle._id)] });
       assert.equal(response.status, expected, await response.clone().text());
+      if (expected === 200) {
+        const result = await response.json();
+        assert.deepEqual(result.puzzles, [{
+          _id: String(puzzle._id), groupIds: (await Crossword.findById(puzzle._id)).groupIds.map(String)
+        }]);
+      }
     };
     await membership('move', a._id, b._id);
     assert.deepEqual((await Crossword.findById(puzzle._id)).groupIds.map(String).sort(), [b._id, c._id].sort());
@@ -213,6 +255,7 @@ test('persistent group management and public pages with an isolated MongoDB', {
     await membership('remove', c._id);
     assert.deepEqual((await Crossword.findById(puzzle._id)).groupIds.map(String), []);
     await membership('add', null, all._id, 400);
+    await membership('add', null, root._id, 400);
     await membership('move', a._id, b._id, 400);
     assert.equal((await PlaySession.findById(session._id)).elapsedSeconds, 42);
     assert.equal((await GameState.findOne({ puzzleId: String(puzzle._id) })).elapsedSeconds, 42);
@@ -224,6 +267,37 @@ test('persistent group management and public pages with an isolated MongoDB', {
     const aHtml = await (await request(a.url, 'GET', undefined, null)).text();
     assert.equal(aHtml.includes('Multi group'), false);
     assert.equal((await request(`/master/groups/${a._id}`, 'DELETE')).status, 200);
+  });
+
+  await suite.test('permanent deletion removes games from Guztiak, all subgroups and saved progress', async () => {
+    const victims = await Crossword.create([
+      { name: 'Delete everywhere single', width: 2, height: 2, groupIds: [b._id, c._id] },
+      { name: 'Delete everywhere bulk', width: 2, height: 2, groupIds: [b._id, c._id] }
+    ]);
+    const ids = victims.map(game => String(game._id));
+    for (const id of ids) {
+      await PlaySession.create({ userId: String(userId), puzzleId: id, elapsedSeconds: 7 });
+      await GameState.create({ playerId: String(userId), puzzleId: id, elapsedSeconds: 7 });
+    }
+    const denied = await fetch(baseUrl + '/jokoak/game', {
+      method: 'DELETE', redirect: 'manual',
+      headers: { 'Content-Type': 'application/json', 'x-test-role': 'user' }, body: JSON.stringify({ ids })
+    });
+    assert.equal(denied.status, 302);
+    assert.equal(await Crossword.countDocuments({ _id: { $in: ids } }), 2);
+    assert.equal((await request('/jokoak/game', 'DELETE', { ids: ['invalid'] })).status, 400);
+    assert.equal((await request(`/jokoak/game/${ids[0]}`, 'DELETE')).status, 200);
+    const bulk = await request('/jokoak/game', 'DELETE', { ids: [ids[1], ids[1]] });
+    assert.equal(bulk.status, 200);
+    assert.deepEqual((await bulk.json()).deletedIds, [ids[1]]);
+    assert.equal(await Crossword.countDocuments({ _id: { $in: ids } }), 0);
+    assert.equal(await PlaySession.countDocuments({ puzzleId: { $in: ids } }), 0);
+    assert.equal(await GameState.countDocuments({ puzzleId: { $in: ids } }), 0);
+    assert.ok(await Crossword.findById(puzzle._id));
+    for (const url of ['/jokoak/guztiak', b.url, c.url]) {
+      const html = await (await request(url, 'GET', undefined, null)).text();
+      assert.equal(html.includes('Delete everywhere'), false);
+    }
   });
 
   await suite.test('uploads persist chosen groups and pending batches prevent deletion', async () => {
@@ -298,10 +372,15 @@ test('persistent group management and public pages with an isolated MongoDB', {
   });
 
   if (process.env.GROUPS_BROWSER_TEST === '1') {
-    await suite.test('Chrome: create, edit, add and move games, and render mobile and empty sections', async () => {
-      await require('./helpers/group-browser')({
-        baseUrl, directory, rootId: root._id, bId: b._id, cId: c._id, puzzleId: String(puzzle._id)
+    await suite.test('Chrome: management forms, native drag and drop, multiple games, live counts and persistence', async () => {
+      const companion = await Crossword.create({ name: 'Drag companion', groupIds: [b._id, c._id], width: 2, height: 2 });
+      const result = await require('./helpers/group-browser')({
+        baseUrl, directory, rootId: root._id, bId: b._id, cId: c._id,
+        puzzleId: String(puzzle._id), companionId: String(companion._id)
       });
+      assert.equal(await Crossword.countDocuments({ _id: { $in: result.deletedIds } }), 0);
+      assert.equal(await PlaySession.countDocuments({ puzzleId: { $in: result.deletedIds } }), 0);
+      assert.equal(await GameState.countDocuments({ puzzleId: { $in: result.deletedIds } }), 0);
     });
   }
 });

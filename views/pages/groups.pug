@@ -2,7 +2,7 @@ section.page-heading
   .page-heading-copy
     p.eyebrow= t('nav.management')
     h1= t('groups.management')
-    p= t('groups.intro')
+    p= t('groups.dragIntro')
   .page-actions
     a.btn.btn-outline-primary(href='/master')= t('groups.backToManagement')
     a.btn.btn-outline-secondary(href='/jokoak')= t('groups.viewCatalog')
@@ -11,89 +11,134 @@ section.group-manager(data-group-manager)
   .group-manager-layout
     aside.group-tree-panel
       h2= t('groups.structure')
+      p.form-hint= t('groups.treeHint')
       nav.group-tree(aria-label=t('groups.structure'))
         each group in data.groups
-          button.group-tree-item(type='button' data-group-id=group._id style=`--group-depth: ${group.depth}`)
-            span= group.name
-            if group.systemKey === 'all'
-              small= t('groups.automatic')
-    .group-editor-panel
-      .group-editor-heading
-        h2(data-group-editor-title)= t('groups.edit')
-        a.btn.btn-sm.btn-outline-secondary(data-group-view)= t('groups.viewPage')
-      form.group-editor(data-group-form)
-        .form-group
-          label(for='group-name')= t('common.name')
-          input#group-name.form-control(type='text' maxlength='200' required data-group-name)
-        .form-group
-          label(for='group-description')= t('groups.description')
-          textarea#group-description.form-control(rows='7' maxlength='20000' data-group-description)
-          small.form-hint= t('groups.descriptionHint')
-        .group-editor-fields
-          .form-group
-            label(for='group-parent')= t('groups.parent')
-            select#group-parent.form-control(data-group-parent)
-          .form-group
-            label(for='group-order')= t('groups.order')
-            input#group-order.form-control(type='number' min='0' max='1000000' step='1' value='0' required data-group-order)
-        p.form-hint(data-group-system-hint hidden)= t('groups.protectedHint')
-        .group-editor-actions
-          button.btn.btn-primary(type='submit')= t('groups.save')
-          button.btn.btn-outline-primary(type='button' data-group-create)= t('groups.createChild')
-          button.btn.btn-outline-secondary(type='button' data-group-cancel hidden)= t('groups.cancel')
-          button.btn.btn-outline-danger(type='button' data-group-delete)= t('groups.delete')
-  section.group-games-panel
-    h2= t('groups.organizeGames')
-    p.form-hint= t('groups.membershipHint')
-    .catalog-controls
-      label.search-field
-        span= t('catalog.search')
-        input.form-control(type='search' data-group-game-search placeholder=t('catalog.searchPlaceholder'))
-      label.filter-field
-        span= t('groups.group')
-        select.form-control(data-group-game-filter)
-          option(value='all')= t('common.all')
-          option(value='unassigned')= t('groups.unassigned')
-          each group in data.groups
-            if group.systemKey !== 'all'
-              option(value=group._id)= group.path
-    form.group-membership-form(data-membership-form)
-      label
-        span= t('groups.action')
-        select.form-control(data-membership-action)
-          option(value='add')= t('groups.add')
-          option(value='remove')= t('groups.remove')
-          option(value='move')= t('groups.move')
-      label(data-membership-source-field hidden)
-        span= t('groups.source')
-        select.form-control(data-membership-source)
-          each group in data.groups
-            if group.systemKey !== 'all'
-              option(value=group._id)= group.path
-      label(data-membership-target-field)
-        span= t('groups.target')
-        select.form-control(data-membership-target)
-          each group in data.groups
-            if group.systemKey !== 'all'
-              option(value=group._id)= group.path
-      button.btn.btn-primary(type='submit' data-membership-submit disabled)= t('groups.apply')
-    p.group-selection-summary(aria-live='polite' data-group-selection)
-    .group-games-table-wrap(data-group-game-table)
-      table.table.table-hover.group-games-table
-        thead
-          tr
-            th
-              input(type='checkbox' data-group-select-all aria-label=t('catalog.selectAll'))
-            th= t('common.name')
-            th= t('common.author')
-            th= t('groups.memberships')
-        tbody
-          each puzzle in data.puzzles
-            tr(data-group-puzzle=puzzle._id)
-              td
-                input(type='checkbox' data-group-select=puzzle._id aria-label=t('catalog.selectPuzzle', { name: puzzle.name }))
-              td
-                a(href=`/jokoak/game/${puzzle._id}`)= puzzle.name
-              td= puzzle.author || '—'
-              td(data-group-memberships)
-    p.form-hint(data-group-no-results hidden)= t('groups.noResults')
+          .group-tree-node(data-group-node=group._id)
+            button.group-tree-item(type='button' data-group-id=group._id style=`--group-depth: ${group.depth}`)
+              svg.group-tree-icon(width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.7' aria-hidden='true')
+                path(d='M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z')
+              span.group-tree-label
+                span= group.name
+                if group.systemKey === 'all'
+                  small= t('groups.automatic')
+              span.group-tree-count(data-group-count=group._id) 0
+            .group-tree-actions
+              button.group-tree-action(type='button' data-group-edit=group._id title=t('groups.editNamed', { name: group.name }) aria-label=t('groups.editNamed', { name: group.name }))
+                svg(width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+                  path(d='M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z')
+              button.group-tree-action(type='button' data-group-create-child=group._id disabled=group.systemKey === 'all' title=group.systemKey === 'all' ? t('groups.noChildrenAutomatic') : t('groups.createChildNamed', { name: group.name }) aria-label=t('groups.createChildNamed', { name: group.name }))
+                svg(width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+                  path(d='M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2ZM12 11v6M9 14h6')
+    .group-workspace
+      section.group-games-panel
+        .group-editor-heading
+          h2(data-group-current-name)= t('groups.organizeGames')
+          .group-workspace-actions
+            button.btn.btn-sm.btn-outline-primary(type='button' data-group-create)= t('groups.createChild')
+            button.btn.btn-sm.btn-outline-secondary(type='button' data-group-edit-toggle)= t('groups.edit')
+        p.form-hint(data-group-root-hint hidden)= t('groups.rootHint')
+        .group-drag-controls(data-group-drag-controls)
+          fieldset.group-drag-mode
+            legend= t('groups.onDrop')
+            label
+              input(type='radio' name='group-drag-mode' value='move' checked data-group-drag-mode aria-describedby='group-drag-move-tooltip')
+              span.group-drag-label= t('groups.dragMove')
+              span#group-drag-move-tooltip.group-mode-tooltip(role='tooltip' data-group-drag-move-tooltip)
+            label
+              input(type='radio' name='group-drag-mode' value='add' data-group-drag-mode aria-describedby='group-drag-add-tooltip')
+              span.group-drag-label= t('groups.dragAdd')
+              span#group-drag-add-tooltip.group-mode-tooltip(role='tooltip')= t('groups.dragAddHint')
+        .group-inline-tools
+          details.group-membership-advanced.group-tools-panel(data-group-membership-panel)
+            summary= t('groups.withoutDragging')
+            form.group-membership-form(data-membership-form)
+              label
+                span= t('groups.action')
+                select.form-control(data-membership-action)
+                  option(value='add')= t('groups.add')
+                  option(value='remove')= t('groups.remove')
+                  option(value='move')= t('groups.move')
+              label(data-membership-source-field hidden)
+                span= t('groups.source')
+                select.form-control(data-membership-source)
+                  each group in data.groups
+                    if !group.systemKey
+                      option(value=group._id)= group.path
+              label(data-membership-target-field)
+                span= t('groups.target')
+                select.form-control(data-membership-target)
+                  each group in data.groups
+                    if !group.systemKey
+                      option(value=group._id)= group.path
+              button.btn.btn-primary(type='submit' data-membership-submit disabled)= t('groups.apply')
+          details.group-editor-panel(data-group-editor)
+            summary= t('groups.settings')
+            .group-editor-heading
+              h2(data-group-editor-title)= t('groups.edit')
+              a.btn.btn-sm.btn-outline-secondary(data-group-view)= t('groups.viewPage')
+            form.group-editor(data-group-form)
+              .form-group
+                label(for='group-name')= t('common.name')
+                input#group-name.form-control(type='text' maxlength='200' required data-group-name)
+              .form-group
+                label(for='group-description')= t('groups.description')
+                textarea#group-description.form-control(rows='7' maxlength='20000' data-group-description)
+                small.form-hint= t('groups.descriptionHint')
+              .group-editor-fields
+                .form-group
+                  label(for='group-parent')= t('groups.parent')
+                  select#group-parent.form-control(data-group-parent)
+                .form-group
+                  label(for='group-order')= t('groups.order')
+                  input#group-order.form-control(type='number' min='0' max='1000000' step='1' value='0' required data-group-order)
+              p.form-hint(data-group-system-hint hidden)= t('groups.protectedHint')
+              .group-editor-actions
+                button.btn.btn-primary(type='submit')= t('groups.save')
+                button.btn.btn-outline-secondary(type='button' data-group-cancel hidden)= t('groups.cancel')
+                button.btn.btn-outline-danger(type='button' data-group-delete)= t('groups.delete')
+        .group-game-content(data-group-game-content)
+          p.form-hint(data-group-delete-hint hidden)= t('groups.deleteEverywhereHint')
+          p.group-drag-status(role='status' aria-live='polite' data-group-drag-status hidden)
+          .catalog-controls
+            label.search-field
+              span= t('catalog.search')
+              input.form-control(type='search' data-group-game-search placeholder=t('catalog.searchPlaceholder'))
+            label.filter-field
+              span= t('groups.group')
+              select.form-control(data-group-game-filter)
+                option(value='all')= t('common.all')
+                option(value='unassigned')= t('groups.unassigned')
+                each group in data.groups
+                  if group.systemKey !== 'all'
+                    option(value=group._id)= group.path
+          .group-selection-toolbar
+            p.group-selection-summary(aria-live='polite' data-group-selection)
+            button.btn.btn-sm.btn-outline-danger(type='button' data-group-remove-selected disabled hidden)= t('groups.removeSelected')
+          .group-games-table-wrap(data-group-game-table)
+            table.table.table-hover.group-games-table
+              thead
+                tr
+                  th
+                    input(type='checkbox' data-group-select-all aria-label=t('catalog.selectAll'))
+                  th= t('common.name')
+                  th= t('common.author')
+                  th= t('groups.memberships')
+                  th(data-group-remove-column hidden)= t('catalog.actions')
+              tbody
+                each puzzle in data.puzzles
+                  tr(data-group-puzzle=puzzle._id draggable='true')
+                    td.group-game-select-cell
+                      span.group-drag-handle(data-group-drag-handle title=t('groups.dragHandle') aria-hidden='true') ⠿
+                      input(type='checkbox' data-group-select=puzzle._id aria-label=t('catalog.selectPuzzle', { name: puzzle.name }))
+                    td
+                      a(href=`/jokoak/game/${puzzle._id}` draggable='false')= puzzle.name
+                    td= puzzle.author || '—'
+                    td(data-group-memberships)
+                    td(data-group-remove-column hidden)
+                      button.group-row-remove(type='button' data-group-remove=puzzle._id)
+                        svg(width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' aria-hidden='true')
+                          circle(cx='12' cy='12' r='9')
+                          path(d='M8 12h8')
+                        span(data-group-remove-label)= t('groups.removeHere')
+          p.form-hint(data-group-no-results hidden)= t('groups.noResults')

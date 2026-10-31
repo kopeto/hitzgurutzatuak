@@ -20,6 +20,6 @@ if data.children.length
       a.group-link(href=child.url)
         span= child.name
         span(aria-hidden='true') →
-if data.puzzles.length
+if data.group.systemKey !== 'root' && data.puzzles.length
   section.catalog-games(aria-label=t('groups.games'))
     include ../includes/puzzle-list.pug
