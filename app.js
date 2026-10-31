@@ -19,15 +19,22 @@ const api = require('./routes/api');
 const master = require('./routes/master');
 const external = require('./routes/external');
 const home = require('./routes/home');
+const groups = require('./routes/groups');
 
 
 const mongoose = require('mongoose');
 const { resumePendingPuzzleUploadBatches } = require('./services/puzzle-upload-queue');
+const { ensureGameGroups } = require('./services/game-groups');
+let catalogReady = false;
 mongoose.connect(config.database);
 const db = mongoose.connection;
-db.once('open',()=>{
+db.once('open',async ()=>{
   logInfo('MongoDBra konektatuta');
-  resumePendingPuzzleUploadBatches().catch(logError);
+  try {
+    await ensureGameGroups();
+    catalogReady = true;
+    await resumePendingPuzzleUploadBatches();
+  } catch (error) { logError(error); }
 });
 db.on('error',(err)=>{logError(err); process.exit(1);});
 
@@ -90,13 +97,14 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 app.get('/ready', (req, res) => {
-  if (db.readyState === 1) {
+  if (db.readyState === 1 && catalogReady) {
     return res.status(200).json({ status: 'ready' });
   }
   return res.status(503).json({ status: 'not-ready' });
 });
 app.use('/jokoak', puzzles);
 app.use('/users', users);
+app.use('/master/groups', groups);
 app.use('/master', master);
 app.use('/api/game', api);
 // Keep the shorter API base available for compatibility.

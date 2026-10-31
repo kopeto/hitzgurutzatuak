@@ -15,6 +15,7 @@ const uploadedFileSchema = new mongoose.Schema({
 
 const puzzleUploadBatchSchema = new mongoose.Schema({
   ownerId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
+  groupIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'GameGroup' }],
   status: {
     type: String,
     enum: ['queued', 'processing', 'completed', 'completed_with_errors'],

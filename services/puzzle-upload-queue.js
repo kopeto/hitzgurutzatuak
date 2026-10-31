@@ -44,7 +44,7 @@ async function processBatch(batchId) {
         path: filePath,
         originalname: file.filename
       };
-      const puzzle = await importPuzzle(uploadedFile);
+      const puzzle = await importPuzzle(uploadedFile, { groupIds: (batch.groupIds || []).map(String) });
       file.storedFilename = path.relative(upload.uploadDirectory, uploadedFile.path);
       file.status = 'imported';
       file.puzzleId = puzzle._id;

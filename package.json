@@ -26,11 +26,12 @@
     "nodemon": "^3.1.14"
   },
   "scripts": {
-    "test": "node --test tests/foundation.test.js tests/ipuz.test.js tests/uploads.test.js",
+    "test": "node --test tests/foundation.test.js tests/ipuz.test.js tests/uploads.test.js tests/groups.test.js",
     "dev": "nodemon --quiet app.js",
     "start": "node app.js",
     "start:prod": "node app.js",
     "user:grant-master": "node scripts/grant-master.js",
+    "groups:migrate": "node scripts/migrate-game-groups.js",
     "build:spl": "node scripts/build-spl-from-svg-html.js"
   },
   "author": "",

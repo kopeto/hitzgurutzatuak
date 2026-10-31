@@ -1,3 +1,5 @@
+import { initGroups } from './groups.js?v=20261031-1';
+
 const stateNode = document.getElementById('app-state');
 const state = stateNode ? JSON.parse(stateNode.textContent || '{}') : {};
 const t = window.t || ((key) => key);
@@ -347,6 +349,8 @@ function initUpload() {
     submit.disabled = busy || !selected.length;
     submit.textContent = t(busy ? 'upload.sending' : 'upload.submit', { count: selected.length });
     input.disabled = busy;
+    const groupSelect = root.querySelector('[data-upload-groups]');
+    if (groupSelect) groupSelect.disabled = busy;
     dropzone.classList.toggle('upload-dropzone--disabled', busy);
     root.querySelector('[data-browse]').disabled = busy;
     root.querySelector('[data-clear-files]').disabled = busy;
@@ -431,6 +435,8 @@ function initUpload() {
     setError('');
     const body = new FormData();
     selected.forEach((file) => body.append('filename', file));
+    [...(root.querySelector('[data-upload-groups]')?.selectedOptions || [])]
+      .forEach(option => body.append('groupIds', option.value));
     const result = await request('/jokoak/upload/batches', { method: 'POST', body });
     if (result.error) {
       busy = false;
@@ -1196,6 +1202,7 @@ function initSpiralBuilder() {
   syncFields(); renderEditors(); renderPreview();
 }
 
+initGroups(state, t, request);
 initCatalog();
 initUpload();
 initCrossword();

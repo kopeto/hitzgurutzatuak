@@ -13,6 +13,10 @@ const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import')
 const { enqueueBatch } = require('../services/puzzle-upload-queue');
 const { createEmptyGrid } = require('../services/game-grid');
 const { renderPage, serializePuzzleSummary } = require('../services/page-view');
+const {
+  GroupError, isId, listGroups, sortGroups, flattenGroups, parseGroupIds,
+  validateAssignableGroups, withGroupWrite
+} = require('../services/game-groups');
 
 function requireMaster(req, res, next) {
   if (req.isAuthenticated() && req.user.master) return next();
@@ -41,9 +45,28 @@ function sanitizeWords(words, clues) {
   });
 }
 
-router.get('/', async (req, res) => {
+async function renderGroup(req, res) {
   try {
-    const puzzles = await CrosswordModel.find({});
+    const groups = await listGroups();
+    const group = req.params.id
+      ? groups.find(item => item._id === req.params.id.toLowerCase())
+      : groups.find(item => item.systemKey === (req.route.path === '/guztiak' ? 'all' : 'root'));
+    if (!group || (req.params.id && !isId(req.params.id))) {
+      return renderPage(res, 'notFound', { url: req.originalUrl }, { status: 404 });
+    }
+    if (req.params.id && group.systemKey) return res.redirect(group.url);
+    const children = sortGroups(groups.filter(item => item.parentId === group._id));
+    const byId = new Map(groups.map(item => [item._id, item]));
+    const breadcrumbs = [];
+    let parent = byId.get(group.parentId);
+    const seen = new Set([group._id]);
+    while (parent && !seen.has(parent._id)) {
+      seen.add(parent._id);
+      breadcrumbs.unshift(parent);
+      parent = byId.get(parent.parentId);
+    }
+    const puzzles = await CrosswordModel.find(group.systemKey === 'all' ? {} : { groupIds: group._id })
+      .select('name author width height gameType format spiral.cells createdAt groupIds').lean();
 
     // For logged-in users build a map puzzleId → session info
     let statusMap = {};
@@ -61,18 +84,27 @@ router.get('/', async (req, res) => {
       });
     }
 
-    return renderPage(res, 'puzzles', { puzzles: puzzles.map(serializePuzzleSummary), statusMap }, { title: res.locals.t('page.puzzles') });
+    return renderPage(res, 'puzzles', {
+      group, children, breadcrumbs, puzzles: puzzles.map(serializePuzzleSummary), statusMap
+    }, { title: group.name });
   } catch (err) {
     logError(err);
-    return renderPage(res, 'puzzles', { puzzles: [], statusMap: {} }, { title: res.locals.t('page.puzzles') });
+    return renderPage(res, 'message', { message: 'Ezin izan da taldea kargatu.', type: 'danger' }, { status: 500 });
   }
-});
+}
 
-router.get('/upload', checkAuth, (req, res) => {
-  return renderPage(res, 'upload', {
-    maxUploadFiles: upload.maxBatchFiles,
-    maxUploadFileSize: upload.maxFileSize
-  }, { title: res.locals.t('page.upload') });
+router.get('/', renderGroup);
+router.get('/guztiak', renderGroup);
+router.get('/taldeak/:id', renderGroup);
+
+router.get('/upload', checkAuth, async (req, res, next) => {
+  try {
+    return renderPage(res, 'upload', {
+      maxUploadFiles: upload.maxBatchFiles,
+      maxUploadFileSize: upload.maxFileSize,
+      groups: flattenGroups(await listGroups()).filter(group => group.systemKey !== 'all')
+    }, { title: res.locals.t('page.upload') });
+  } catch (error) { next(error); }
 });
 
 function serializeUploadBatch(batch) {
@@ -137,18 +169,23 @@ router.post('/upload/batches', checkAuth, upload.multiple, async (req, res) => {
   ];
 
   try {
-    const batch = await PuzzleUploadBatch.create({
-      ownerId: req.user._id,
-      status: uploadedFiles.length ? 'queued' : 'completed_with_errors',
-      files,
-      completedAt: uploadedFiles.length ? null : new Date()
+    const groupIds = parseGroupIds(req.body?.groupIds);
+    const batch = await withGroupWrite(async () => {
+      await validateAssignableGroups(groupIds);
+      return PuzzleUploadBatch.create({
+        ownerId: req.user._id,
+        groupIds,
+        status: uploadedFiles.length ? 'queued' : 'completed_with_errors',
+        files,
+        completedAt: uploadedFiles.length ? null : new Date()
+      });
     });
     if (uploadedFiles.length) enqueueBatch(batch._id);
     return res.status(202).json(serializeUploadBatch(batch));
   } catch (error) {
     await removeUploadedFiles(uploadedFiles);
-    logError(error);
-    return res.status(500).json({ error: 'Ezin izan da karga sortu.' });
+    if (!(error instanceof GroupError)) logError(error);
+    return res.status(error.statusCode || 500).json({ error: error instanceof GroupError ? error.message : 'Ezin izan da karga sortu.' });
   }
 });
 
@@ -180,11 +217,11 @@ router.post('/upload', checkAuth, upload, async (req, res) => {
   }
 
   try {
-    await importPuzzle(req.file);
+    await importPuzzle(req.file, { groupIds: req.body?.groupIds });
     req.flash('success', 'Puzlea Kargatuta');
     res.redirect('/jokoak');
   } catch (err) {
-    if (err instanceof PuzzleImportError || err.code === 11000) {
+    if (err instanceof PuzzleImportError || err instanceof GroupError || err.code === 11000) {
       req.flash('danger', err.message || 'Puzle hau dagoeneko sisteman dago.');
     } else {
       logError(err);

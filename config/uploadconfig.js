@@ -72,8 +72,8 @@ const multerUpload = multer({
   fileFilter,
   limits: {
     files: maxBatchFiles,
-    fields: 5,
-    parts: maxBatchFiles + 5,
+    fields: 100,
+    parts: maxBatchFiles + 100,
     fileSize: maxFileSize
   }
 });

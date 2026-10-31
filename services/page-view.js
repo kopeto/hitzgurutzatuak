@@ -24,6 +24,7 @@ function serializePuzzleSummary(puzzle) {
     _id: puzzle._id ? String(puzzle._id) : undefined,
     name: puzzle.name,
     author: puzzle.author,
+    groupIds: (puzzle.groupIds || []).map(String),
     width: puzzle.width,
     height: puzzle.height,
     gameType,

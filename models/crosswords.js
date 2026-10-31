@@ -23,6 +23,7 @@ let cwSchema = mongoose.Schema({
   clues: [String],
   name: String,
   author: String,
+  groupIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'GameGroup' }],
   gameType: {
     type: String,
     enum: ['crossword', 'spiral'],
@@ -38,5 +39,7 @@ let cwSchema = mongoose.Schema({
     default: null
   }
 }, { timestamps: true });
+
+cwSchema.index({ groupIds: 1 });
 
 let crossword = module.exports = mongoose.model('Crossword', cwSchema);

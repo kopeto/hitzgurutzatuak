@@ -106,7 +106,7 @@ async function archiveFile(sourcePath, destination, content) {
   }
 }
 
-async function importPuzzle(uploadedFile) {
+async function importPuzzle(uploadedFile, options = {}) {
   if (!uploadedFile || !uploadedFile.path) {
     throw new PuzzleImportError('Ez da fitxategirik jaso.');
   }
@@ -158,7 +158,11 @@ async function importPuzzle(uploadedFile) {
       await removeTemporaryFile(uploadedFile.path);
     }
 
-    await puzzle.save();
+    const { validateAssignableGroups, withGroupWrite } = require('./game-groups');
+    await withGroupWrite(async () => {
+      puzzle.groupIds = await validateAssignableGroups(options.groupIds);
+      await puzzle.save();
+    });
     if (archivedPath) {
       uploadedFile.path = archivedPath;
       uploadedFile.destination = path.dirname(archivedPath);
