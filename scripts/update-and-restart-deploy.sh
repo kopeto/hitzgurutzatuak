@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
   echo "Usage: $0 [--production|--maintenance] [-u USERNAME -p PASSWORD]"
   echo "  --production          build and launch the production stack (default)"
-  echo "  --maintenance         build and launch the maintenance page"
+  echo "  --maintenance         show maintenance publicly; allow master group management"
   echo "  -u, --username NAME   create or update the master user after deployment"
   echo "  -p, --password PASS   set the master user's password"
 }
@@ -63,28 +63,35 @@ if [[ "$username_set" != "$password_set" ]]; then
   exit 2
 fi
 
-if [[ "$mode" == maintenance && "$username_set" == true ]]; then
-  echo "Error: the master user cannot be created in maintenance mode." >&2
-  exit 2
-fi
-
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 if [[ "$mode" == production ]]; then
   echo "==> Building and starting the production stack from this checkout..."
-  docker compose -f docker-compose.production.yml up -d --build
+  APP_ENV_FILE=/etc/hitzgurutzatuak/app.env APP_MODE=production \
+    docker compose -f docker-compose.production.yml up -d --build --force-recreate app
   if [[ "$username_set" == true ]]; then
     echo "==> Creating or updating the master user..."
-    printf '%s' "$master_password" | docker compose -f docker-compose.production.yml exec -T app \
+    printf '%s' "$master_password" | APP_ENV_FILE=/etc/hitzgurutzatuak/app.env APP_MODE=production \
+      docker compose -f docker-compose.production.yml exec -T app \
       node create-master.js "$master_username" --password-stdin
     unset master_password
   fi
-  docker compose -f docker-compose.production.yml ps
+  APP_ENV_FILE=/etc/hitzgurutzatuak/app.env APP_MODE=production \
+    docker compose -f docker-compose.production.yml ps
 elif [[ "$mode" == maintenance ]]; then
-  echo "==> Building and starting the maintenance page from this checkout..."
-  docker compose -f docker-compose.maintenance.yml up -d --build --remove-orphans
-  docker compose -f docker-compose.maintenance.yml ps
+  echo "==> Building and starting the app with public maintenance mode..."
+  APP_ENV_FILE=/etc/hitzgurutzatuak/app.env APP_MODE=maintenance \
+    docker compose -f docker-compose.production.yml -f docker-compose.maintenance.yml up -d --build --force-recreate app
+  if [[ "$username_set" == true ]]; then
+    echo "==> Creating or updating the master user..."
+    printf '%s' "$master_password" | APP_ENV_FILE=/etc/hitzgurutzatuak/app.env APP_MODE=maintenance \
+      docker compose -f docker-compose.production.yml -f docker-compose.maintenance.yml exec -T app \
+      node create-master.js "$master_username" --password-stdin
+    unset master_password
+  fi
+  APP_ENV_FILE=/etc/hitzgurutzatuak/app.env APP_MODE=maintenance \
+    docker compose -f docker-compose.production.yml -f docker-compose.maintenance.yml ps
 fi
 
 echo "==> Update and restart complete!"

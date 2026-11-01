@@ -2,12 +2,13 @@ services:
   app:
     build: .
     env_file:
-      - /etc/hitzgurutzatuak/app.env
+      - ${APP_ENV_FILE:-/etc/hitzgurutzatuak/app.env}
     environment:
       NODE_ENV: production
+      APP_MODE: ${APP_MODE:-production}
       PORT: "3000"
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:${APP_HOST_PORT:-3000}:3000"
     depends_on:
       mongo:
         condition: service_healthy

@@ -40,6 +40,12 @@ db.on('error',(err)=>{logError(err); process.exit(1);});
 
 const app = express();
 const isDevelopment = process.env.NODE_ENV === 'development';
+const localHttpMode = process.env.LOCAL_HTTP_MODE === 'true';
+const appMode = process.env.APP_MODE || 'production';
+if (!['production', 'maintenance'].includes(appMode)) {
+  throw new Error('APP_MODE-k production edo maintenance izan behar du.');
+}
+const maintenanceMode = appMode === 'maintenance';
 if (process.env.TRUST_PROXY === 'true') {
   app.set('trust proxy', 1);
 } else if (/^\d+$/.test(process.env.TRUST_PROXY || '')) {
@@ -47,7 +53,7 @@ if (process.env.TRUST_PROXY === 'true') {
 }
 
 app.use(helmet({
-  strictTransportSecurity: isDevelopment ? false : undefined,
+  strictTransportSecurity: isDevelopment || localHttpMode ? false : undefined,
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -57,7 +63,7 @@ app.use(helmet({
       connectSrc: process.env.NODE_ENV === 'development'
         ? ["'self'", 'ws:', 'wss:']
         : ["'self'"],
-      upgradeInsecureRequests: isDevelopment ? null : [],
+      upgradeInsecureRequests: isDevelopment || localHttpMode ? null : [],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
@@ -90,6 +96,7 @@ app.use(passport.session());
 app.use((req, res, next) => {
   res.locals.t = translate;
   res.locals.clientMessages = clientMessages();
+  res.locals.maintenanceMode = maintenanceMode;
   next();
 });
 app.use(defaultHandler);
@@ -102,6 +109,20 @@ app.get('/ready', (req, res) => {
   }
   return res.status(503).json({ status: 'not-ready' });
 });
+
+app.use((req, res, next) => {
+  if (!maintenanceMode) return next();
+  res.set({ 'Cache-Control': 'no-store', 'Content-Language': 'eu' });
+
+  const loginPath = req.path === '/users/login' && ['GET', 'POST'].includes(req.method);
+  const logoutPath = req.path === '/users/logout' && req.method === 'GET';
+  const groupManagerPath = req.path === '/master/groups' || req.path.startsWith('/master/groups/');
+  const isMaster = req.isAuthenticated() && req.user?.master;
+  if (loginPath || logoutPath || (groupManagerPath && isMaster)) return next();
+
+  return res.status(503).render('maintenance');
+});
+
 app.use('/jokoak', puzzles);
 app.use('/users', users);
 app.use('/master/groups', groups);

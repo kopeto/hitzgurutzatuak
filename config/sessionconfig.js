@@ -1,5 +1,10 @@
 const isProduction = process.env.NODE_ENV === 'production';
 const configuredSecret = process.env.MY_SECRET;
+const configuredSecureCookie = process.env.SESSION_COOKIE_SECURE;
+
+if (configuredSecureCookie !== undefined && !['true', 'false'].includes(configuredSecureCookie.toLowerCase())) {
+  throw new Error('SESSION_COOKIE_SECURE true edo false izan behar da.');
+}
 
 if (isProduction && !configuredSecret) {
   throw new Error('MY_SECRET ingurune-aldagaia beharrezkoa da produkzioan.');
@@ -14,7 +19,7 @@ module.exports = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: isProduction,
+    secure: configuredSecureCookie === undefined ? isProduction : configuredSecureCookie.toLowerCase() === 'true',
     sameSite: 'lax',
     maxAge: Number.isFinite(maxAge) && maxAge > 0 ? maxAge : 604800000
   }

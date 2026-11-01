@@ -22,14 +22,10 @@
     "passport-local": "^1.0.0",
     "pug": "^3.0.4"
   },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
-  },
   "scripts": {
     "test": "node --test tests/foundation.test.js tests/ipuz.test.js tests/uploads.test.js tests/groups.test.js",
-    "dev": "nodemon --quiet app.js",
-    "start": "node app.js",
-    "start:prod": "node app.js",
+    "dev": "./scripts/start-local.sh",
+    "start": "./scripts/start-local.sh",
     "user:grant-master": "node scripts/grant-master.js",
     "groups:migrate": "node scripts/migrate-game-groups.js",
     "build:spl": "node scripts/build-spl-from-svg-html.js"

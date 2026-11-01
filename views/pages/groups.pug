@@ -3,9 +3,10 @@ section.page-heading
     p.eyebrow= t('nav.management')
     h1= t('groups.management')
     p= t('groups.dragIntro')
-  .page-actions
-    a.btn.btn-outline-primary(href='/master')= t('groups.backToManagement')
-    a.btn.btn-outline-secondary(href='/jokoak')= t('groups.viewCatalog')
+  if !maintenanceMode
+    .page-actions
+      a.btn.btn-outline-primary(href='/master')= t('groups.backToManagement')
+      a.btn.btn-outline-secondary(href='/jokoak')= t('groups.viewCatalog')
 section.group-manager(data-group-manager)
   .alert(role='status' aria-live='polite' data-group-message hidden)
   .group-manager-layout

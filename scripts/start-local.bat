@@ -4,61 +4,48 @@ setlocal
 for %%I in ("%~dp0..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" || exit /b 1
 
-set "NODE_ENV=development"
-set "HOST=0.0.0.0"
-set "PORT=3000"
-set "DB_CONNECTION=mongodb://127.0.0.1:27017/HG_develop"
+set "APP_MODE=production"
+if /I "%~1"=="--maintenance" set "APP_MODE=maintenance"
+if /I "%~1"=="--help" goto :usage
+if /I "%~1"=="-h" goto :usage
+if not "%~1"=="" if /I not "%~1"=="--maintenance" if /I not "%~1"=="--production" goto :usage_error
+if not "%~2"=="" goto :usage_error
 
-where node >nul 2>&1
-if errorlevel 1 (
-    echo [ERROREA] Node.js ez dago instalatuta edo ez dago PATH aldagaian.
-    popd
-    exit /b 1
-)
+set "APP_ENV_FILE=.env.local"
+set "APP_HOST_PORT=3001"
+set "LOCAL_MASTER_USERNAME=master"
+if not defined LOCAL_MASTER_PASSWORD set "LOCAL_MASTER_PASSWORD=1234"
 
-where npm >nul 2>&1
-if errorlevel 1 (
-    echo [ERROREA] npm ez dago instalatuta edo ez dago PATH aldagaian.
-    popd
-    exit /b 1
-)
-
-echo ==^> Node.js bertsioa
-node --version
-
-set "INSTALL_DEPS="
-if not exist "node_modules\.bin\nodemon.cmd" set "INSTALL_DEPS=1"
-if defined INSTALL_DEPS (
-    echo ==^> Garapeneko mendekotasunak instalatzen...
-    call npm --silent ci
+if not exist ".env.local" (
+    copy ".env.example" ".env.local" >nul
     if errorlevel 1 goto :failed
+    echo ==^> Tokiko konfigurazioa sortu da: .env.local
 )
 
-echo ==^> MongoDB lokala egiaztatzen: 127.0.0.1:27017...
-call node scripts\check-local-mongodb.js
-if errorlevel 1 (
-    echo [ERROREA] MongoDB ez dago erabilgarri 127.0.0.1:27017 helbidean.
-    echo Abiarazi MongoDB zerbitzua mongod erabiliz, eta exekutatu script hau berriro.
-    popd
-    exit /b 1
-)
-
-echo ==^> Garapeneko datu-basea: HG_develop
-echo ==^> Tokiko master erabiltzailea prestatzen...
-call node create-master.js master 1234 master@hitzgurutzatuak.local
+echo ==^> Production Docker irudia tokiko konfigurazioarekin abiarazten: %APP_MODE%...
+docker compose --project-name hitzgurutzatuak-local -f docker-compose.production.yml -f docker-compose.local.yml up -d --build --force-recreate app
 if errorlevel 1 goto :failed
 
-echo.
-echo ==^> Aplikazioa sareko interfaze guztietan entzuten: 0.0.0.0:%PORT%
-echo ==^> Beste gailuetatik, ireki http://^<ordenagailuaren-IP^>:%PORT%
-echo ==^> Garapenerako erabiltzailea: master / 1234
-echo ==^> Sakatu Ctrl+C aplikazioa gelditzeko.
-echo.
+echo ==^> Tokiko master erabiltzailea prestatzen...
+powershell -NoProfile -Command "[Console]::Write($env:LOCAL_MASTER_PASSWORD)" | docker compose --project-name hitzgurutzatuak-local -f docker-compose.production.yml -f docker-compose.local.yml exec -T app node create-master.js "%LOCAL_MASTER_USERNAME%" --password-stdin
+if errorlevel 1 goto :failed
 
-call npm --silent run dev
-set "EXIT_CODE=%ERRORLEVEL%"
+docker compose --project-name hitzgurutzatuak-local -f docker-compose.production.yml -f docker-compose.local.yml ps
+echo.
+echo ==^> Ireki http://localhost:3001 eta hasi saioa %LOCAL_MASTER_USERNAME% erabiltzailearekin.
 popd
-exit /b %EXIT_CODE%
+exit /b 0
+
+:usage
+echo Usage: start-local.bat [--production^|--maintenance]
+echo Runs the production Docker image with local settings and a separate local database.
+popd
+exit /b 0
+
+:usage_error
+echo Usage: start-local.bat [--production^|--maintenance]
+popd
+exit /b 2
 
 :failed
 popd

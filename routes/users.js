@@ -12,6 +12,8 @@ const PlaySession = require('../models/playsession');
 const CrosswordModel = require('../models/crosswords');
 const { renderPage, serializePuzzleSummary } = require('../services/page-view');
 
+const maintenanceMode = process.env.APP_MODE === 'maintenance';
+
 router.get('/register',(req,res)=>{
   return renderPage(res, 'register', {}, { title: res.locals.t('nav.createAccount') });
 });
@@ -65,6 +67,9 @@ router.post('/register',[
 
 
 router.get('/login', (req,res)=>{
+  if (maintenanceMode && req.isAuthenticated() && req.user.master) {
+    return res.redirect('/master/groups');
+  }
   return renderPage(res, 'login', {}, { title: res.locals.t('nav.signIn') });
 });
 
@@ -75,6 +80,10 @@ router.post('/login', (req,res,next)=>{
       req.flash('danger', info?.message || 'Erabiltzailea edo pasahitza okerra da.');
       return res.redirect('/users/login');
     }
+    if (maintenanceMode && !user.master) {
+      req.flash('danger', res.locals.t('groups.maintenanceMasterOnly'));
+      return res.redirect('/users/login');
+    }
 
     return req.session.regenerate(regenerateError => {
       if (regenerateError) return next(regenerateError);
@@ -82,7 +91,7 @@ router.post('/login', (req,res,next)=>{
       return req.logIn(user, loginError => {
         if (loginError) return next(loginError);
         req.flash('success', info?.message || `Ongi etorri, ${user.username}!`);
-        return res.redirect('/');
+        return res.redirect(maintenanceMode ? '/master/groups' : '/');
       });
     });
   })(req,res,next);

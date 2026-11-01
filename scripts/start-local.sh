@@ -1,48 +1,61 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd -- "$script_dir/.." && pwd)"
+usage() {
+  echo "Usage: $0 [--production|--maintenance]"
+  echo "Runs the production Docker image with local settings and a separate local database."
+}
+
+mode=production
+if (( $# > 0 )); then
+  case "$1" in
+    --production) mode=production ;;
+    --maintenance) mode=maintenance ;;
+    --help|-h) usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
+  esac
+  shift
+fi
+if (( $# > 0 )); then
+  echo "Unexpected argument: $1" >&2
+  usage >&2
+  exit 2
+fi
+
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-export NODE_ENV=development
-export HOST=0.0.0.0
-export PORT=3000
-export DB_CONNECTION=mongodb://127.0.0.1:27017/HG_develop
-
-if ! command -v node >/dev/null 2>&1; then
-  echo "[ERROREA] Node.js ez dago instalatuta edo ez dago PATH aldagaian." >&2
+if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
+  echo "[ERROREA] Docker Compose ez dago erabilgarri." >&2
   exit 1
 fi
 
-if ! command -v npm >/dev/null 2>&1; then
-  echo "[ERROREA] npm ez dago instalatuta edo ez dago PATH aldagaian." >&2
-  exit 1
+local_env_file=.env.local
+if [[ ! -f "$local_env_file" ]]; then
+  cp .env.example "$local_env_file"
+  echo "==> Tokiko konfigurazioa sortu da: $local_env_file"
 fi
 
-echo "==> Node.js bertsioa: $(node --version)"
+compose=(docker compose --project-name hitzgurutzatuak-local \
+  -f docker-compose.production.yml \
+  -f docker-compose.local.yml)
+local_port="${LOCAL_APP_PORT:-3001}"
+master_username="${LOCAL_MASTER_USERNAME:-master}"
+master_password="${LOCAL_MASTER_PASSWORD:-1234}"
 
-if [[ ! -x node_modules/.bin/nodemon ]]; then
-  echo "==> Garapeneko mendekotasunak instalatzen..."
-  npm --silent ci
-fi
+echo "==> Production Docker irudia tokiko konfigurazioarekin abiarazten ($mode)..."
+APP_ENV_FILE="$local_env_file" APP_MODE="$mode" APP_HOST_PORT="$local_port" \
+  "${compose[@]}" up -d --build --force-recreate app
 
-echo "==> MongoDB lokala egiaztatzen: 127.0.0.1:27017..."
-if ! node -e 'const mongoose = require("mongoose"); mongoose.connect(process.env.DB_CONNECTION, { serverSelectionTimeoutMS: 5000 }).then(() => mongoose.disconnect()).then(() => process.exit(0)).catch(error => { console.error(error.message); process.exit(1); });'; then
-  echo "[ERROREA] MongoDB ez dago erabilgarri 127.0.0.1:27017 helbidean." >&2
-  echo "Abiarazi MongoDB zerbitzua mongod erabiliz, eta exekutatu script hau berriro." >&2
-  exit 1
-fi
-
-echo "==> Garapeneko datu-basea: HG_develop"
 echo "==> Tokiko master erabiltzailea prestatzen..."
-node create-master.js master 1234 master@hitzgurutzatuak.local
+printf '%s' "$master_password" | APP_ENV_FILE="$local_env_file" APP_MODE="$mode" APP_HOST_PORT="$local_port" \
+  "${compose[@]}" exec -T app node create-master.js "$master_username" --password-stdin
+unset master_password
 
+APP_ENV_FILE="$local_env_file" APP_MODE="$mode" APP_HOST_PORT="$local_port" "${compose[@]}" ps
 echo
-echo "==> Aplikazioa sareko interfaze guztietan entzuten: 0.0.0.0:$PORT"
-echo "==> Beste gailuetatik, ireki http://<ordenagailuaren-IP>:$PORT"
-echo "==> Garapenerako erabiltzailea: master / 1234"
-echo "==> Sakatu Ctrl+C aplikazioa gelditzeko."
-echo
-
-npm --silent run dev
+echo "==> Ireki http://localhost:$local_port eta hasi saioa $master_username erabiltzailearekin."
+if [[ -z "${LOCAL_MASTER_PASSWORD:-}" ]]; then
+  echo "==> Tokiko pasahitz lehenetsia: 1234 (LOCAL_MASTER_PASSWORD bidez alda dezakezu)."
+fi
+echo "==> Tokiko datu-basea: HG_develop. Produkzioko MongoDBa bereizita dago."

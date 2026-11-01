@@ -31,6 +31,7 @@ section.auth-page
           label(for='password2')= t('auth.repeatPassword')
           input#password2.form-control(type='password' name='password2' autocomplete='new-password' required)
       button.btn.btn-primary.btn-block(type='submit')= register ? t('nav.createAccount') : t('auth.enter')
-    p.auth-footer
-      | #{register ? t('auth.haveAccount') : t('auth.noAccount')}
-      a(href=register ? '/users/login' : '/users/register')= register ? t('nav.signIn') : t('nav.createAccount')
+    if !maintenanceMode
+      p.auth-footer
+        | #{register ? t('auth.haveAccount') : t('auth.noAccount')}
+        a(href=register ? '/users/login' : '/users/register')= register ? t('nav.signIn') : t('nav.createAccount')

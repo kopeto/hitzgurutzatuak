@@ -1,0 +1,8 @@
+# Tokiko ezarpenak: ekoizpeneko aplikazio bera, tokiko datu-base isolatuarekin.
+services:
+  app:
+    environment:
+      DB_CONNECTION: mongodb://mongo:27017/HG_develop
+      SESSION_COOKIE_SECURE: "false"
+      LOCAL_HTTP_MODE: "true"
+      TRUST_PROXY: "false"

@@ -1,10 +1,5 @@
+# Compose override: use together with docker-compose.production.yml.
 services:
   app:
-    build: .
-    command: ["node", "maintenance.js"]
     environment:
-      NODE_ENV: production
-      PORT: "3000"
-    ports:
-      - "127.0.0.1:3000:3000"
-    restart: unless-stopped
+      APP_MODE: maintenance
