@@ -20,8 +20,8 @@
 .group-description { max-width: 52rem; margin: 0 0 2rem; }
 .group-description p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .group-links { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
-.group-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; border: 1px solid var(--line); border-radius: 0.8rem; background: var(--surface); font-weight: 750; text-decoration: none; overflow-wrap: anywhere; }
-.group-link:hover { border-color: var(--brand); background: var(--brand-pale); text-decoration: none; }
+.group-link { display: block; padding: 0.1rem 0; font-weight: 750; text-decoration: none; overflow-wrap: anywhere; }
+.group-link:hover { text-decoration: underline; }
 .group-manager [hidden] { display: none !important; }
 .group-manager-layout { display: grid; grid-template-columns: minmax(13rem, 0.8fr) minmax(0, 2fr); gap: 1.5rem; align-items: start; }
 .group-tree-panel, .group-editor-panel, .group-games-panel, .group-tools-panel { min-width: 0; padding: 1.4rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
