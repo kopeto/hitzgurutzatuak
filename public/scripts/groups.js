@@ -96,7 +96,7 @@ export function initGroups(state, t, request) {
     field('group-game-table').hidden = !hasResults;
     if (byId.has(filter.value)) source.value = filter.value;
     field('group-current-name').textContent = byId.get(filter.value)?.name
-      || t(filter.value === 'all' ? 'common.all' : 'groups.unassigned');
+      || t(filter.value === 'all' ? 'groups.allGames' : 'groups.unassigned');
     updateSelection();
     drag?.refresh();
   }

@@ -47,10 +47,10 @@ test('only populated public sections render, for every combination of text, link
   }
 });
 
-test('group tree keeps Guztiak last and preserves nested paths without mutating input', () => {
+test('group tree keeps Joko guztien zerrenda last and preserves nested paths without mutating input', () => {
   const data = [
     { _id: 'root', name: 'Jokoak', systemKey: 'root', parentId: null, sortOrder: 0 },
-    { _id: 'all', name: 'Guztiak', systemKey: 'all', parentId: 'root', sortOrder: 0 },
+    { _id: 'all', name: 'Joko guztien zerrenda', systemKey: 'all', parentId: 'root', sortOrder: 0 },
     { _id: 'a', name: 'A', parentId: 'root', sortOrder: 20 },
     { _id: 'b', name: 'B', parentId: 'root', sortOrder: 10 },
     { _id: 'child', name: 'Haurra', parentId: 'b', sortOrder: 0 }
@@ -151,7 +151,7 @@ test('persistent group management and public pages with an isolated MongoDB', {
   const fields = (group, changes) => ({ name: group.name, description: group.description, parentId: group.parentId, sortOrder: group.sortOrder, ...changes });
   let a, b, c, child, puzzle;
 
-  await suite.test('migration keeps legacy games in Guztiak without root memberships, and management stays protected', async () => {
+  await suite.test('migration keeps legacy games in the all-games group, and management stays protected', async () => {
     assert.deepEqual((await Crossword.findById(legacyId)).groupIds.map(String), []);
     for (const role of [null, 'user']) {
       for (const [url, method, body] of [
@@ -269,7 +269,7 @@ test('persistent group management and public pages with an isolated MongoDB', {
     assert.equal((await request(`/master/groups/${a._id}`, 'DELETE')).status, 200);
   });
 
-  await suite.test('permanent deletion removes games from Guztiak, all subgroups and saved progress', async () => {
+  await suite.test('permanent deletion removes games from the all-games page, all subgroups and saved progress', async () => {
     const victims = await Crossword.create([
       { name: 'Delete everywhere single', width: 2, height: 2, groupIds: [b._id, c._id] },
       { name: 'Delete everywhere bulk', width: 2, height: 2, groupIds: [b._id, c._id] }

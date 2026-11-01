@@ -6,7 +6,7 @@ async function main() {
   try {
     await mongoose.connect(process.env.DB_CONNECTION);
     await ensureGameGroups();
-    console.log('Jokoak eta Guztiak prest daude. Aurreko jokoak migratu dira.');
+    console.log('Jokoak eta Joko guztien zerrenda prest daude. Aurreko jokoak migratu dira.');
   } finally {
     await mongoose.disconnect();
   }

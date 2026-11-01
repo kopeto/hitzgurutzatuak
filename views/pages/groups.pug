@@ -107,7 +107,7 @@ section.group-manager(data-group-manager)
             label.filter-field
               span= t('groups.group')
               select.form-control(data-group-game-filter)
-                option(value='all')= t('common.all')
+                option(value='all')= t('groups.allGames')
                 option(value='unassigned')= t('groups.unassigned')
                 each group in data.groups
                   if group.systemKey !== 'all'

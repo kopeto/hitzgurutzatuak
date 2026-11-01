@@ -223,7 +223,7 @@ module.exports = async function checkGroupBrowser({ baseUrl, directory, rootId, 
     await dragTo(createdId, false);
     await evaluate(`document.querySelector('[data-group-id="${allId}"]').click(); document.querySelector('[data-group-select="${companionId}"]').click()`);
     assert.equal(await evaluate("document.querySelector('[data-group-drag-mode][value=\"move\"]').disabled"), true);
-    // Dragging an unchecked game replaces the previous selection, even from Guztiak.
+    // Dragging an unchecked game replaces the previous selection, even from the all-games page.
     await dragTo(bId);
     const savedMemberships = await evaluate(`fetch('/master/groups').then(r=>r.text()).then(html=>JSON.parse(new DOMParser().parseFromString(html,'text/html').querySelector('#app-state').textContent).data.puzzles)`);
     assert.deepEqual(savedMemberships.find(puzzle => puzzle._id === puzzleId).groupIds.sort(), [extraId, bId, cId, createdId].sort());

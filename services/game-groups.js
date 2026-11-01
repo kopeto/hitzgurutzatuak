@@ -72,7 +72,8 @@ async function ensureGameGroups() {
         $setOnInsert: { name: 'Jokoak', description: '', parentId: null, sortOrder: 0 }
       }, { upsert: true, new: true, setDefaultsOnInsert: true });
       const all = await GameGroup.findOneAndUpdate({ systemKey: 'all' }, {
-        $setOnInsert: { name: 'Guztiak', description: '', parentId: root._id, sortOrder: 0 }
+        $set: { name: 'Joko guztien zerrenda' },
+        $setOnInsert: { description: '', parentId: root._id, sortOrder: 0 }
       }, { upsert: true, new: true, setDefaultsOnInsert: true });
       // System pages never own games. Keep every ordinary membership and the game itself.
       const systemIds = [root._id, all._id];
@@ -106,7 +107,7 @@ async function validateAssignableGroups(ids) {
   await ensureGameGroups();
   const groups = await GameGroup.find({ _id: { $in: groupIds } }).lean();
   if (groups.length !== groupIds.length || groups.some(group => group.systemKey)) {
-    throw new GroupError('Jokoak azpitaldeetan bakarrik eslei daitezke. Jokoak hasierako orria da eta Guztiak automatikoa da.');
+    throw new GroupError('Jokoak azpitaldeetan bakarrik eslei daitezke. Jokoak hasierako orria da eta Joko guztien zerrenda automatikoa da.');
   }
   return groupIds;
 }
@@ -124,7 +125,7 @@ function groupFields(input, current) {
   if (current?.systemKey) {
     if (name !== current.name || idOf(input.parentId) !== idOf(current.parentId)
       || input.sortOrder !== current.sortOrder) {
-      throw new GroupError('Jokoak eta Guztiak talde babestuak dira; azalpena bakarrik alda daiteke.');
+      throw new GroupError('Jokoak eta Joko guztien zerrenda talde babestuak dira; azalpena bakarrik alda daiteke.');
     }
   } else if (!isId(input.parentId)) {
     throw new GroupError('Hautatu guraso talde bat.');

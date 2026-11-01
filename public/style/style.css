@@ -19,7 +19,7 @@
 .group-breadcrumbs { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 0 0 1.5rem; color: var(--ink-soft); font-size: 0.9rem; }
 .group-description { max-width: 52rem; margin: 0 0 2rem; }
 .group-description p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-.group-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 0.75rem; margin-bottom: 2rem; }
+.group-links { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
 .group-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; border: 1px solid var(--line); border-radius: 0.8rem; background: var(--surface); font-weight: 750; text-decoration: none; overflow-wrap: anywhere; }
 .group-link:hover { border-color: var(--brand); background: var(--brand-pale); text-decoration: none; }
 .group-manager [hidden] { display: none !important; }
