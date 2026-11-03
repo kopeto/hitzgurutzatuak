@@ -39,7 +39,7 @@ fi
 compose=(docker compose --project-name hitzgurutzatuak-local \
   -f docker-compose.production.yml \
   -f docker-compose.local.yml)
-local_port="${LOCAL_APP_PORT:-3001}"
+local_port="${LOCAL_APP_PORT:-3000}"
 master_username="${LOCAL_MASTER_USERNAME:-master}"
 master_password="${LOCAL_MASTER_PASSWORD:-1234}"
 

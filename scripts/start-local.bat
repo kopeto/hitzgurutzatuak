@@ -12,7 +12,7 @@ if not "%~1"=="" if /I not "%~1"=="--maintenance" if /I not "%~1"=="--production
 if not "%~2"=="" goto :usage_error
 
 set "APP_ENV_FILE=.env.local"
-set "APP_HOST_PORT=3001"
+set "APP_HOST_PORT=3000"
 set "LOCAL_MASTER_USERNAME=master"
 if not defined LOCAL_MASTER_PASSWORD set "LOCAL_MASTER_PASSWORD=1234"
 
@@ -32,7 +32,7 @@ if errorlevel 1 goto :failed
 
 docker compose --project-name hitzgurutzatuak-local -f docker-compose.production.yml -f docker-compose.local.yml ps
 echo.
-echo ==^> Ireki http://localhost:3001 eta hasi saioa %LOCAL_MASTER_USERNAME% erabiltzailearekin.
+echo ==^> Ireki http://localhost:%APP_HOST_PORT% eta hasi saioa %LOCAL_MASTER_USERNAME% erabiltzailearekin.
 popd
 exit /b 0
 
