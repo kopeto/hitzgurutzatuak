@@ -26,7 +26,7 @@ const hasMongo = spawnSync(mongod, ['--version'], { stdio: 'ignore' }).status ==
 
 function render(data) {
   return pug.renderFile(path.join(__dirname, '../views/pages/puzzles.pug'), {
-    data: { group: { name: 'Taldea', description: '' }, breadcrumbs: [], children: [], puzzles: [], statusMap: {}, ...data },
+    data: { group: { name: 'Multzoa', description: '' }, breadcrumbs: [], children: [], puzzles: [], statusMap: {}, ...data },
     t, user: null, puzzleListStyle: 'compact'
   });
 }
@@ -34,8 +34,8 @@ function render(data) {
 test('only populated public sections render, for every combination of text, links and games', () => {
   for (let mask = 0; mask < 8; mask++) {
     const html = render({
-      group: { name: 'Taldea', description: mask & 1 ? 'Lehen lerroa\nBigarrena <script>alert(1)</script>' : '  \n ' },
-      children: mask & 2 ? [{ name: 'Azpitaldea', url: '/jokoak/taldeak/example' }] : [],
+      group: { name: 'Multzoa', description: mask & 1 ? 'Lehen lerroa\nBigarrena <script>alert(1)</script>' : '  \n ' },
+      children: mask & 2 ? [{ name: 'Azpimultzoa', url: '/jokoak/taldeak/example' }] : [],
       puzzles: mask & 4 ? [{ _id: 'test', name: 'Jokoa', width: 2, height: 2 }] : []
     });
     assert.equal(html.includes('class="group-description"'), Boolean(mask & 1));

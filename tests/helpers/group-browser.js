@@ -296,7 +296,7 @@ module.exports = async function checkGroupBrowser({ baseUrl, directory, rootId, 
       dialogAnswer = accept;
       await evaluate(expression);
       await wait(() => dialogs.length > previousDialogs, 'permanent deletion confirmation');
-      assert.ok(dialogs.at(-1).includes('Talde guztietatik'));
+      assert.ok(dialogs.at(-1).includes('Multzo guztietatik'));
       if (accept) {
         await wait(() => deletionRequests > previousRequests, 'permanent deletion requested');
         await wait(() => evaluate("!document.querySelector('[data-group-manager]').hasAttribute('aria-busy')"), 'permanent deletion completed');

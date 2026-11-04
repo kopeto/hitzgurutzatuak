@@ -96,7 +96,7 @@ function parseGroupIds(value) {
   if (value === undefined || value === null || value === '') return [];
   const ids = Array.isArray(value) ? value : [value];
   if (ids.length > 100 || ids.some(id => !isId(id))) {
-    throw new GroupError('Taldeen zerrenda ez da baliozkoa.');
+    throw new GroupError('Multzoen zerrenda ez da baliozkoa.');
   }
   return [...new Set(ids.map(id => id.toLowerCase()))];
 }
@@ -107,7 +107,7 @@ async function validateAssignableGroups(ids) {
   await ensureGameGroups();
   const groups = await GameGroup.find({ _id: { $in: groupIds } }).lean();
   if (groups.length !== groupIds.length || groups.some(group => group.systemKey)) {
-    throw new GroupError('Jokoak azpitaldeetan bakarrik eslei daitezke. Jokoak hasierako orria da eta Joko guztien zerrenda automatikoa da.');
+    throw new GroupError('Jokoak azpimultzoetan bakarrik eslei daitezke. Jokoak hasierako orria da eta Joko guztien zerrenda automatikoa da.');
   }
   return groupIds;
 }
@@ -115,7 +115,7 @@ async function validateAssignableGroups(ids) {
 function groupFields(input, current) {
   if (!input || typeof input.name !== 'string' || typeof input.description !== 'string'
     || !Number.isInteger(input.sortOrder) || input.sortOrder < 0 || input.sortOrder > 1000000) {
-    throw new GroupError('Taldearen datuak ez dira baliozkoak.');
+    throw new GroupError('Multzoaren datuak ez dira baliozkoak.');
   }
   const name = input.name.trim();
   const description = input.description.trim();
@@ -125,10 +125,10 @@ function groupFields(input, current) {
   if (current?.systemKey) {
     if (name !== current.name || idOf(input.parentId) !== idOf(current.parentId)
       || input.sortOrder !== current.sortOrder) {
-      throw new GroupError('Jokoak eta Joko guztien zerrenda talde babestuak dira; azalpena bakarrik alda daiteke.');
+      throw new GroupError('Jokoak eta Joko guztien zerrenda multzo babestuak dira; azalpena bakarrik alda daiteke.');
     }
   } else if (!isId(input.parentId)) {
-    throw new GroupError('Hautatu guraso talde bat.');
+    throw new GroupError('Hautatu guraso multzo bat.');
   }
   return { name, description, parentId: input.parentId ? input.parentId.toLowerCase() : null, sortOrder: input.sortOrder };
 }
@@ -138,10 +138,10 @@ async function validateParent(parentId, groupId) {
   const groups = await listGroups();
   const byId = new Map(groups.map(group => [group._id, group]));
   let parent = byId.get(parentId);
-  if (!parent || parent.systemKey === 'all') throw new GroupError('Guraso taldea ez da baliozkoa.');
+  if (!parent || parent.systemKey === 'all') throw new GroupError('Guraso multzoa ez da baliozkoa.');
   const visited = new Set(groupId ? [groupId] : []);
   while (parent) {
-    if (visited.has(parent._id)) throw new GroupError('Talde bat ezin da bere ondorengo baten barruan jarri.');
+    if (visited.has(parent._id)) throw new GroupError('Multzo bat ezin da bere ondorengo baten barruan jarri.');
     visited.add(parent._id);
     parent = byId.get(parent.parentId);
   }
@@ -158,10 +158,10 @@ async function createGroup(input) {
 
 async function updateGroup(id, input) {
   return withGroupWrite(async () => {
-    if (!isId(id)) throw new GroupError('Taldea ez da aurkitu.', 404);
+    if (!isId(id)) throw new GroupError('Multzoa ez da aurkitu.', 404);
     id = id.toLowerCase();
     const current = await GameGroup.findById(id).lean();
-    if (!current) throw new GroupError('Taldea ez da aurkitu.', 404);
+    if (!current) throw new GroupError('Multzoa ez da aurkitu.', 404);
     const fields = groupFields(input, current);
     await validateParent(fields.parentId, id);
     return serializeGroup(await GameGroup.findByIdAndUpdate(id, { $set: fields }, { new: true, runValidators: true }));
@@ -170,17 +170,17 @@ async function updateGroup(id, input) {
 
 async function deleteGroup(id) {
   return withGroupWrite(async () => {
-    if (!isId(id)) throw new GroupError('Taldea ez da aurkitu.', 404);
+    if (!isId(id)) throw new GroupError('Multzoa ez da aurkitu.', 404);
     id = id.toLowerCase();
     const group = await GameGroup.findById(id).lean();
-    if (!group) throw new GroupError('Taldea ez da aurkitu.', 404);
-    if (group.systemKey) throw new GroupError('Talde babestua ezin da ezabatu.');
+    if (!group) throw new GroupError('Multzoa ez da aurkitu.', 404);
+    if (group.systemKey) throw new GroupError('Multzo babestua ezin da ezabatu.');
     const [child, puzzle, pendingUpload] = await Promise.all([
       GameGroup.exists({ parentId: id }), Crossword.exists({ groupIds: id }),
       PuzzleUploadBatch.exists({ groupIds: id, status: { $in: ['queued', 'processing'] } })
     ]);
     if (child || puzzle || pendingUpload) {
-      throw new GroupError('Mugitu lehenik azpitaldeak eta jokoak; amaitu zain dauden kargak.', 409);
+      throw new GroupError('Mugitu lehenik azpimultzoak eta jokoak; amaitu zain dauden kargak.', 409);
     }
     await GameGroup.deleteOne({ _id: id });
   });
@@ -199,13 +199,13 @@ async function changeMembership(input) {
     const needsTarget = action !== 'remove';
     if ((needsSource && !isId(sourceId)) || (needsTarget && !isId(targetId))
       || (action === 'move' && sourceId.toLowerCase() === targetId.toLowerCase())) {
-      throw new GroupError('Jatorri eta helburu taldeak ez dira baliozkoak.');
+      throw new GroupError('Jatorri eta helburu multzoak ez dira baliozkoak.');
     }
     await validateAssignableGroups([...(needsSource ? [sourceId] : []), ...(needsTarget ? [targetId] : [])]);
     const puzzles = await Crossword.find({ _id: { $in: puzzleIds } }).select('_id groupIds').lean();
     if (puzzles.length !== puzzleIds.length) throw new GroupError('Jokoren bat ez da aurkitu.', 404);
     if (needsSource && puzzles.some(puzzle => !(puzzle.groupIds || []).some(id => String(id) === sourceId.toLowerCase()))) {
-      throw new GroupError('Hautatutako joko guztiak jatorri taldean egon behar dira.');
+      throw new GroupError('Hautatutako joko guztiak jatorri multzoan egon behar dira.');
     }
     let update;
     if (action === 'add') update = { $addToSet: { groupIds: targetId } };

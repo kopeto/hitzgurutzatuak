@@ -90,7 +90,7 @@ async function renderGroup(req, res) {
     }, { title: group.name });
   } catch (err) {
     logError(err);
-    return renderPage(res, 'message', { message: 'Ezin izan da taldea kargatu.', type: 'danger' }, { status: 500 });
+    return renderPage(res, 'message', { message: 'Ezin izan da multzoa kargatu.', type: 'danger' }, { status: 500 });
   }
 }
 
