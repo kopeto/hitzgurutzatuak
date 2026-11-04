@@ -163,7 +163,7 @@ function initCatalog() {
   [search, status, type].forEach((element) => element?.addEventListener('input', update));
   [status, type].forEach((element) => element?.addEventListener('change', update));
   update();
-  if (list) sortRows('date', -1);
+  if (list) sortRows('name', 1);
   document.addEventListener('click', (event) => {
     const sortButton = event.target.closest('[data-sort-column]');
     if (sortButton) sortRows(sortButton.dataset.sortColumn);
