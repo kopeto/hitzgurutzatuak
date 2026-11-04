@@ -33,6 +33,7 @@ module.exports = async function checkGroupBrowser({ baseUrl, directory, rootId, 
     let interceptedDrag;
     let membershipRequests = 0;
     let deletionRequests = 0;
+    let reorderRequests = 0;
     let dialogAnswer = false;
     const dialogs = [];
     const errors = [];
@@ -43,6 +44,7 @@ module.exports = async function checkGroupBrowser({ baseUrl, directory, rootId, 
       if (value.method === 'Input.dragIntercepted') interceptedDrag = value.params.data;
       if (value.method === 'Network.requestWillBeSent' && value.params.request.url.endsWith('/master/groups/memberships')) membershipRequests++;
       if (value.method === 'Network.requestWillBeSent' && value.params.request.method === 'DELETE' && value.params.request.url.endsWith('/jokoak/game')) deletionRequests++;
+      if (value.method === 'Network.requestWillBeSent' && /\/master\/groups\/[^/]+\/reorder$/.test(value.params.request.url)) reorderRequests++;
       if (value.method === 'Page.javascriptDialogOpening') {
         dialogs.push(value.params.message);
         send('Page.handleJavaScriptDialog', { accept: dialogAnswer }).catch(error => errors.push(error.message));
@@ -95,7 +97,7 @@ module.exports = async function checkGroupBrowser({ baseUrl, directory, rootId, 
     await evaluate(`document.querySelector('[data-group-edit="${cId}"]').click()`);
     assert.equal(await evaluate("document.querySelector('[data-group-name]').value"), 'C');
     assert.equal(await evaluate("document.querySelector('[data-group-editor]').open"), true);
-    await evaluate("document.querySelector('[data-group-description]').value='Zuhaitzetik editatua'");
+    await evaluate("document.querySelector('[data-group-description]').value='Zuhaitzetik editatua';document.querySelector('[data-group-order]').value='0'");
     await submit("document.querySelector('[data-group-form]').requestSubmit()");
     assert.equal(await evaluate("document.querySelector('[data-group-description]').value"), 'Zuhaitzetik editatua');
     await evaluate(`document.querySelector('[data-group-create-child="${rootId}"]').click()`);
@@ -164,6 +166,86 @@ module.exports = async function checkGroupBrowser({ baseUrl, directory, rootId, 
     assert.equal(await evaluate("getComputedStyle(document.querySelector('#group-drag-move-tooltip')).visibility"), 'visible');
     await evaluate('document.activeElement.blur()');
     await send('Input.setInterceptDrags', { enabled: true });
+    const treeOrder = () => evaluate("[...document.querySelectorAll('[data-group-node]')].map(node=>node.dataset.groupNode)");
+    async function dragGroup(id, targetId, position, { allowed = true, handle = true, failure = false } = {}) {
+      interceptedDrag = undefined;
+      const points = await evaluate(`(() => {
+        const source = document.querySelector('[${handle ? 'data-group-order-handle' : 'data-group-id'}="${id}"]');
+        const target = document.querySelector('[data-group-node="${targetId}"]');
+        target.scrollIntoView({block:'nearest',behavior:'instant'});
+        source.scrollIntoView({block:'nearest',behavior:'instant'});
+        const first = source.getBoundingClientRect(), last = target.getBoundingClientRect();
+        return {first:{x:first.x+first.width/2,y:first.y+first.height/2},last:{x:last.x+30,y:last.y+last.height*${position === 'before' ? 0.2 : 0.8}}};
+      })()`);
+      const previousNavigation = navigation, previousRequests = reorderRequests;
+      await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...points.first });
+      await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...points.first, button: 'left', buttons: 1, clickCount: 1 });
+      await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: points.first.x + 12, y: points.first.y + 12, button: 'left', buttons: 1 });
+      await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...points.last, button: 'left', buttons: 1 });
+      try {
+        await wait(() => interceptedDrag, 'native group drag started');
+      } catch (error) {
+        const diagnostic = await evaluate(`({points:${JSON.stringify(points)},hit:document.elementFromPoint(${points.first.x},${points.first.y})?.outerHTML,source:document.querySelector('[data-group-order-handle="${id}"]')?.outerHTML,status:document.querySelector('[data-group-order-status]').textContent,active:document.querySelector('[data-group-manager]').className})`);
+        throw new Error(error.message + ': ' + JSON.stringify(diagnostic));
+      }
+      assert.ok(interceptedDrag.items.some(item => item.mimeType === 'application/x-xedera-group'));
+      await send('Input.dispatchDragEvent', { type: 'dragEnter', ...points.last, data: interceptedDrag });
+      await send('Input.dispatchDragEvent', { type: 'dragOver', ...points.last, data: interceptedDrag });
+      assert.equal(await evaluate("document.querySelector('.is-order-before, .is-order-after') !== null"), allowed);
+      await send('Input.dispatchDragEvent', { type: 'drop', ...points.last, data: interceptedDrag });
+      await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...points.last, button: 'left', buttons: 0, clickCount: 1 });
+      if (allowed) {
+        if (failure) await wait(() => evaluate("document.querySelector('[data-group-order-status]').classList.contains('is-error')"), 'failed ordering announced');
+        else await wait(() => reorderRequests > previousRequests, 'group order saved');
+        await wait(() => evaluate("!document.querySelector('[data-group-manager]').hasAttribute('aria-busy')"), 'group order finished');
+        assert.equal(await evaluate("document.querySelector('[data-group-order-status]').classList.contains('is-error')"), failure);
+      } else assert.equal(reorderRequests, previousRequests);
+      assert.equal(navigation, previousNavigation, 'ordering groups should not reload the page');
+      assert.equal(await evaluate("document.querySelector('.is-order-before, .is-order-after, .is-order-dragging') === null"), true);
+    }
+    assert.equal(await evaluate(`document.querySelector('[data-group-id="${rootId}"]').draggable`), false);
+    assert.equal(await evaluate(`document.querySelector('[data-group-order-handle="${automaticId}"]') === null`), true);
+    await evaluate("document.querySelector('[data-group-description]').value='Unsaved ordering draft'");
+    await dragGroup(cId, bId, 'before');
+    let orderedIds = await treeOrder();
+    assert.ok(orderedIds.indexOf(cId) < orderedIds.indexOf(bId));
+    await dragGroup(cId, bId, 'after', { handle: false });
+    orderedIds = await treeOrder();
+    assert.ok(orderedIds.indexOf(bId) < orderedIds.indexOf(createdId));
+    assert.ok(orderedIds.indexOf(createdId) < orderedIds.indexOf(cId), 'the entire B subtree travels together');
+    await dragGroup(bId, cId, 'after');
+    assert.equal(await evaluate("document.querySelector('[data-group-description]').value"), 'Unsaved ordering draft');
+    assert.equal(await evaluate("new URLSearchParams(location.search).get('group')"), bId);
+    await dragGroup(createdId, cId, 'before', { allowed: false });
+    await dragGroup(cId, rootId, 'before', { allowed: false });
+
+    const beforeFailure = await treeOrder();
+    await evaluate("window.__originalFetch=window.fetch;window.fetch=(url,options)=>{if(String(url).endsWith('/reorder')){window.fetch=window.__originalFetch;return Promise.resolve(new Response(JSON.stringify({error:'Order save failed'}),{status:500,headers:{'Content-Type':'application/json'}}));}return window.__originalFetch(url,options);}");
+    await dragGroup(cId, bId, 'after', { failure: true });
+    assert.deepEqual(await treeOrder(), beforeFailure, 'failed saves leave the visible order intact');
+
+    // The same handle provides a keyboard alternative without losing focus.
+    async function orderWithKeyboard(key) {
+      const previousRequests = reorderRequests;
+      await evaluate(`document.querySelector('[data-group-order-handle="${cId}"]').focus()`);
+      await send('Input.dispatchKeyEvent', { type: 'keyDown', key, code: key });
+      await send('Input.dispatchKeyEvent', { type: 'keyUp', key, code: key });
+      await wait(() => reorderRequests > previousRequests, 'keyboard ordering saved');
+      await wait(() => evaluate("!document.querySelector('[data-group-manager]').hasAttribute('aria-busy')"), 'keyboard ordering finished');
+      assert.equal(await evaluate('document.activeElement.dataset.groupOrderHandle'), cId);
+    }
+    await orderWithKeyboard('ArrowDown');
+    orderedIds = await treeOrder();
+    assert.ok(orderedIds.indexOf(bId) < orderedIds.indexOf(cId));
+    await orderWithKeyboard('ArrowUp');
+    const savedOrder = await treeOrder();
+    assert.equal(savedOrder.at(-1), automaticId);
+    const publicOrder = await evaluate(`fetch('/jokoak').then(r=>r.text()).then(html=>{const page=new DOMParser().parseFromString(html,'text/html');return [...page.querySelectorAll('.group-link')].map(link=>link.getAttribute('href'));})`);
+    assert.ok(publicOrder.indexOf(`/jokoak/taldeak/${cId}`) < publicOrder.indexOf(`/jokoak/taldeak/${bId}`));
+    await send('Page.navigate', { url: `${baseUrl}/master/groups?group=${bId}` });
+    await wait(ready, 'saved group order after reload');
+    assert.deepEqual(await treeOrder(), savedOrder);
+
     async function dragTo(targetId, allowed = true, overAction = false) {
       interceptedDrag = undefined;
       const points = await evaluate(`(() => {

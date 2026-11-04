@@ -2,7 +2,7 @@ const express = require('express');
 const Crossword = require('../models/crosswords');
 const { renderPage, serializePuzzleSummary } = require('../services/page-view');
 const {
-  GroupError, listGroups, flattenGroups, createGroup, updateGroup, deleteGroup, changeMembership
+  GroupError, listGroups, flattenGroups, createGroup, updateGroup, reorderGroup, deleteGroup, changeMembership
 } = require('../services/game-groups');
 const { logError } = require('../utils');
 
@@ -32,6 +32,7 @@ router.get('/', handle(async (req, res) => {
 }));
 router.post('/', handle(async (req, res) => res.status(201).json({ group: await createGroup(req.body) })));
 router.patch('/:id', handle(async (req, res) => res.json({ group: await updateGroup(req.params.id, req.body) })));
+router.post('/:id/reorder', handle(async (req, res) => res.json({ groups: await reorderGroup(req.params.id, req.body) })));
 router.delete('/:id', handle(async (req, res) => {
   await deleteGroup(req.params.id);
   return res.json({ deletedId: req.params.id });

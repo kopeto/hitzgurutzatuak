@@ -330,8 +330,8 @@
     "deleteConfirm": "“{name}” multzoa ezabatu? Hutsik dauden multzoak bakarrik ezaba daitezke.",
     "uploadTargets": "Helburu multzoak",
     "uploadHint": "Aukeratu multzo bat edo gehiago (Ctrl edo Cmd sakatuta). Aukerarik gabe, jokoak Joko guztien zerrenda multzoan bakarrik agertuko dira.",
-    "dragIntro": "Aukeratu multzo bat eta arrastatu jokoak beste multzo batera. Hainbat joko batera ere antola ditzakezu.",
-    "treeHint": "Sakatu multzo batean bere jokoak ikusteko. Arrastatu jokoak multzo baten gainera antolatzeko.",
+    "dragIntro": "Arrastatu multzoak gora edo behera Jokoak orriko ordena ezartzeko. Jokoak ere beste multzo batera arrasta ditzakezu.",
+    "treeHint": "Arrastatu multzoak guraso bereko multzoen artean ordenatzeko. Sakatu multzo batean bere jokoak ikusteko.",
     "onDrop": "Arrastatzean",
     "dragMove": "Mugitu",
     "dragAdd": "Gehitu beste multzo batera",
@@ -364,6 +364,9 @@
     "deleteEverywhereConfirm": "“{name}” jokoa behin betiko ezabatu? Multzo guztietatik kenduko da, eta gordetako partidak ere ezabatuko dira.",
     "deleteSelectedConfirm": "{count} joko behin betiko ezabatu? Multzo guztietatik kenduko dira, eta gordetako partidak ere ezabatuko dira.",
     "deleted": "{count} joko multzo guztietatik ezabatu dira.",
-    "dragMoveUnavailable": "Mugitzeko, aukeratu jatorri azpimultzo bat."
+    "dragMoveUnavailable": "Mugitzeko, aukeratu jatorri azpimultzo bat.",
+    "reorderHandle": "“{name}” multzoa ordenatu: arrastatu gora edo behera, edo erabili gora eta behera geziak.",
+    "reorderDragging": "“{name}” multzoa: askatu guraso bereko beste multzo baten aurretik edo ondoren.",
+    "reordered": "Multzoen ordena gorde da. Jokoak orrian ere ordena horretan agertuko dira."
   }
 }

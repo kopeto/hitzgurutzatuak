@@ -157,6 +157,7 @@ test('persistent group management and public pages with an isolated MongoDB', {
       for (const [url, method, body] of [
         ['/master/groups', 'GET'], ['/master/groups', 'POST', {}],
         [`/master/groups/${root._id}`, 'PATCH', {}], [`/master/groups/${root._id}`, 'DELETE'],
+        [`/master/groups/${root._id}/reorder`, 'POST', {}],
         ['/master/groups/memberships', 'POST', {}]
       ]) assert.equal((await request(url, method, body, role)).status, 403);
     }
@@ -195,6 +196,66 @@ test('persistent group management and public pages with an isolated MongoDB', {
     assert.equal((await request('/master/groups', 'POST', { name: 'Bad', parentId: all._id, description: '', sortOrder: 0 })).status, 400);
     assert.equal((await request('/master/groups', 'POST', { name: 'Bad', parentId: root._id, description: '', sortOrder: -1 })).status, 400);
     assert.equal((await request(`/master/groups/${all._id}`, 'PATCH', fields(all, { description: 'Denak hemen' }))).status, 200);
+  });
+
+  await suite.test('drag ordering persists sibling positions, keeps subtrees together and pins the all-games link last', async () => {
+    async function reorder(group, target, position) {
+      const response = await request(`/master/groups/${group._id}/reorder`, 'POST', { targetId: target._id, position });
+      assert.equal(response.status, 200, await response.clone().text());
+      return (await response.json()).groups;
+    }
+    const rootChildren = ordered => ordered.filter(group => group.parentId === root._id).map(group => group._id);
+    let ordered = await reorder(c, b, 'before');
+    assert.deepEqual(rootChildren(ordered), [c._id, b._id, a._id, all._id]);
+    assert.equal(ordered[ordered.findIndex(group => group._id === b._id) + 1]._id, child._id);
+    assert.equal(ordered.find(group => group._id === child._id).parentId, b._id);
+    let html = await (await request('/jokoak', 'GET', undefined, null)).text();
+    assert.ok(html.indexOf(`href="${c.url}"`) < html.indexOf(`href="${b.url}"`));
+    assert.ok(html.indexOf(`href="${b.url}"`) < html.indexOf(`href="${a.url}"`));
+    ordered = await reorder(b, all, 'before');
+    assert.deepEqual(rootChildren(ordered), [c._id, a._id, b._id, all._id]);
+    ordered = await reorder(c, a, 'after');
+    assert.deepEqual(rootChildren(ordered), [a._id, c._id, b._id, all._id]);
+    ordered = await reorder(b, a, 'before');
+    assert.deepEqual(rootChildren(ordered), [b._id, a._id, c._id, all._id]);
+    for (const group of [a, b, c]) Object.assign(group, ordered.find(item => item._id === group._id));
+
+    // Equal positions from existing forms must still be ordered unambiguously after a drag.
+    const first = await create('Order first', child._id, 0);
+    const second = await create('Order second', child._id, 0);
+    const third = await create('Order third', child._id, 0);
+    const leaf = await create('Order leaf', first._id, 42);
+    ordered = await reorder(third, first, 'before');
+    const nested = ordered.filter(group => group.parentId === child._id);
+    assert.deepEqual(nested.map(group => group._id), [third._id, first._id, second._id]);
+    assert.deepEqual(nested.map(group => group.sortOrder), [0, 1, 2]);
+    assert.equal(ordered[ordered.findIndex(group => group._id === first._id) + 1]._id, leaf._id);
+    assert.equal(ordered.find(group => group._id === leaf._id).sortOrder, 42);
+    html = await (await request(child.url, 'GET', undefined, null)).text();
+    assert.ok(html.indexOf(`href="${third.url}"`) < html.indexOf(`href="${first.url}"`));
+    assert.ok(html.indexOf(`href="${first.url}"`) < html.indexOf(`href="${second.url}"`));
+    for (const group of [leaf, first, second, third]) {
+      assert.equal((await request(`/master/groups/${group._id}`, 'DELETE')).status, 200);
+    }
+  });
+
+  await suite.test('invalid, cross-parent and protected drag ordering leaves the tree unchanged', async () => {
+    const before = await groups.listGroups();
+    for (const [id, body, status = 400] of [
+      [b._id, undefined], [b._id, {}], [b._id, { targetId: c._id, position: 'inside' }],
+      [b._id, { targetId: { $ne: null }, position: 'before' }],
+      ['invalid', { targetId: c._id, position: 'before' }],
+      [String(new mongoose.Types.ObjectId()), { targetId: c._id, position: 'before' }, 404],
+      [b._id, { targetId: String(new mongoose.Types.ObjectId()), position: 'before' }, 404],
+      [b._id, { targetId: b._id, position: 'before' }],
+      [b._id, { targetId: child._id, position: 'after' }],
+      [child._id, { targetId: c._id, position: 'before' }],
+      [b._id, { targetId: root._id, position: 'before' }],
+      [b._id, { targetId: all._id, position: 'after' }],
+      [root._id, { targetId: b._id, position: 'before' }],
+      [all._id, { targetId: b._id, position: 'before' }]
+    ]) assert.equal((await request(`/master/groups/${id}/reorder`, 'POST', body)).status, status);
+    assert.deepEqual(await groups.listGroups(), before);
   });
 
   await suite.test('Jokoak is a landing page; assignment and uploads reject it, and migration removes old root memberships', async () => {

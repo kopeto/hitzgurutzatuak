@@ -168,6 +168,32 @@ async function updateGroup(id, input) {
   });
 }
 
+async function reorderGroup(id, input) {
+  return withGroupWrite(async () => {
+    if (!isId(id) || !isId(input?.targetId) || !['before', 'after'].includes(input?.position)) {
+      throw new GroupError('Multzoen ordena ez da baliozkoa.');
+    }
+    const groups = await listGroups();
+    const current = groups.find(group => group._id === id.toLowerCase());
+    const target = groups.find(group => group._id === input.targetId.toLowerCase());
+    if (!current || !target) throw new GroupError('Multzoa ez da aurkitu.', 404);
+    if (current.systemKey || current._id === target._id || current.parentId !== target.parentId
+      || (target.systemKey && (target.systemKey !== 'all' || input.position !== 'before'))) {
+      throw new GroupError('Guraso bereko multzo arruntak bakarrik ordena daitezke.');
+    }
+    const siblings = sortGroups(groups.filter(group => group.parentId === current.parentId && group._id !== current._id));
+    const index = siblings.findIndex(group => group._id === target._id);
+    siblings.splice(index + Number(input.position === 'after'), 0, current);
+    const updates = siblings.filter(group => !group.systemKey).flatMap((group, sortOrder) => (
+      group.sortOrder === sortOrder ? [] : [{
+        updateOne: { filter: { _id: group._id }, update: { $set: { sortOrder } } }
+      }]
+    ));
+    if (updates.length) await GameGroup.bulkWrite(updates);
+    return flattenGroups(await listGroups());
+  });
+}
+
 async function deleteGroup(id) {
   return withGroupWrite(async () => {
     if (!isId(id)) throw new GroupError('Multzoa ez da aurkitu.', 404);
@@ -225,5 +251,5 @@ async function changeMembership(input) {
 module.exports = {
   GroupError, isId, withGroupWrite, ensureGameGroups, listGroups, sortGroups, flattenGroups,
   groupUrl, serializeGroup, parseGroupIds, validateAssignableGroups,
-  createGroup, updateGroup, deleteGroup, changeMembership
+  createGroup, updateGroup, reorderGroup, deleteGroup, changeMembership
 };

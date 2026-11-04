@@ -1,4 +1,4 @@
-import { initGroups } from './groups.js?v=20261101-1';
+import { initGroups } from './groups.js?v=20261103-1';
 
 const stateNode = document.getElementById('app-state');
 const state = stateNode ? JSON.parse(stateNode.textContent || '{}') : {};

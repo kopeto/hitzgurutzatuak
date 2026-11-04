@@ -13,10 +13,11 @@ section.group-manager(data-group-manager)
     aside.group-tree-panel
       h2= t('groups.structure')
       p.form-hint= t('groups.treeHint')
+      p.group-order-status(role='status' aria-live='polite' data-group-order-status hidden)
       nav.group-tree(aria-label=t('groups.structure'))
         each group in data.groups
           .group-tree-node(data-group-node=group._id)
-            button.group-tree-item(type='button' data-group-id=group._id style=`--group-depth: ${group.depth}`)
+            button.group-tree-item(type='button' data-group-id=group._id draggable=!group.systemKey style=`--group-depth: ${group.depth}`)
               svg.group-tree-icon(width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.7' aria-hidden='true')
                 path(d='M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z')
               span.group-tree-label
@@ -25,6 +26,15 @@ section.group-manager(data-group-manager)
                   small= t('groups.automatic')
               span.group-tree-count(data-group-count=group._id) 0
             .group-tree-actions
+              if !group.systemKey
+                button.group-tree-action.group-tree-drag-handle(type='button' draggable='true' data-group-order-handle=group._id title=t('groups.reorderHandle', { name: group.name }) aria-label=t('groups.reorderHandle', { name: group.name }))
+                  svg(width='16' height='16' viewBox='0 0 24 24' fill='currentColor' aria-hidden='true')
+                    circle(cx='9' cy='5' r='1.6')
+                    circle(cx='15' cy='5' r='1.6')
+                    circle(cx='9' cy='12' r='1.6')
+                    circle(cx='15' cy='12' r='1.6')
+                    circle(cx='9' cy='19' r='1.6')
+                    circle(cx='15' cy='19' r='1.6')
               button.group-tree-action(type='button' data-group-edit=group._id title=t('groups.editNamed', { name: group.name }) aria-label=t('groups.editNamed', { name: group.name }))
                 svg(width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
                   path(d='M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z')

@@ -1,4 +1,5 @@
 import { initGroupDrag } from './group-drag.js?v=20261031-8';
+import { initGroupOrder } from './group-order.js?v=20261103-1';
 
 export function initGroups(state, t, request) {
   const root = document.querySelector('[data-group-manager]');
@@ -27,6 +28,7 @@ export function initGroups(state, t, request) {
   const selectAll = field('group-select-all');
   const checked = () => [...root.querySelectorAll('[data-group-select]:checked')];
   let drag;
+  let groupOrder;
 
   function showMessage(text, error = false) {
     message.textContent = text;
@@ -169,6 +171,53 @@ export function initGroups(state, t, request) {
   }
   renderMemberships();
 
+  async function applyGroupOrder(id, payload) {
+    if (busy) return;
+    const focused = document.activeElement;
+    busy = true;
+    root.setAttribute('aria-busy', 'true');
+    const controls = [...root.querySelectorAll('input, select, textarea, button')];
+    const disabled = controls.map(control => control.disabled);
+    controls.forEach(control => { control.disabled = true; });
+    drag.refresh();
+    groupOrder.refresh();
+    groupOrder.announce(t('groups.dragSaving'));
+    let error;
+    try {
+      const result = await request(`/master/groups/${id}/reorder`, {
+        method: 'POST', body: JSON.stringify(payload)
+      });
+      if (result.error) throw new Error(result.message || t('groups.failed'));
+      const ranks = new Map(result.groups.map((group, index) => [group._id, index]));
+      result.groups.forEach(group => {
+        const current = byId.get(group._id);
+        if (current) Object.assign(current, group);
+      });
+      groups.sort((a, b) => ranks.get(a._id) - ranks.get(b._id));
+      const tree = root.querySelector('.group-tree');
+      const nodes = new Map([...tree.children].map(node => [node.dataset.groupNode, node]));
+      groups.forEach(group => { if (nodes.has(group._id)) tree.append(nodes.get(group._id)); });
+      [parent, source, target, filter].forEach(select => {
+        const value = select.value;
+        const options = new Map([...select.options].map(option => [option.value, option]));
+        groups.forEach(group => { if (options.has(group._id)) select.append(options.get(group._id)); });
+        select.value = value;
+      });
+      if (!creating) order.value = selected.sortOrder;
+    } catch (failure) {
+      error = failure;
+    } finally {
+      busy = false;
+      root.removeAttribute('aria-busy');
+      controls.forEach((control, index) => { control.disabled = disabled[index]; });
+      drag.refresh();
+      groupOrder.refresh();
+      updateSelection();
+      focused?.focus({ preventScroll: true });
+    }
+    groupOrder.announce(error ? error.message : t('groups.reordered'), Boolean(error));
+  }
+
   async function applyGameChange(payload) {
     if (busy) return;
     busy = true;
@@ -177,6 +226,7 @@ export function initGroups(state, t, request) {
     const disabled = controls.map(control => control.disabled);
     controls.forEach(control => { control.disabled = true; });
     drag.refresh();
+    groupOrder.refresh();
     drag.announce(t('groups.dragSaving'));
     try {
       const deleting = payload.action === 'delete';
@@ -207,6 +257,7 @@ export function initGroups(state, t, request) {
       root.removeAttribute('aria-busy');
       controls.forEach((control, index) => { control.disabled = disabled[index]; });
       drag.refresh();
+      groupOrder.refresh();
       updateSelection();
     }
   }
@@ -303,6 +354,7 @@ export function initGroups(state, t, request) {
     root, groups, puzzleById, t, checked, scope: () => filter.value,
     isBusy: () => busy, updateSelection, onDrop: applyGameChange
   });
+  groupOrder = initGroupOrder({ root, groups, t, isBusy: () => busy, onReorder: applyGroupOrder });
   renderEditor();
   filterGames();
   updateAction();
