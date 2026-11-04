@@ -128,7 +128,7 @@ test('persistent group management and public pages with an isolated MongoDB', {
   app.use(express.json());
   app.use((req, res, next) => {
     const role = req.get('x-test-role');
-    req.user = role ? { _id: userId, username: 'Tester', master: role === 'master' } : null;
+    req.user = role ? { _id: req.get('x-test-user-id') || userId, username: 'Tester', master: role === 'master' } : null;
     req.isAuthenticated = () => Boolean(req.user);
     req.flash = () => [];
     req.session = {};
@@ -416,6 +416,103 @@ test('persistent group management and public pages with an isolated MongoDB', {
     assert.deepEqual((await Crossword.findById(many.files[0].puzzleId)).groupIds.map(String).sort(), destinations.map(group => group._id).sort());
   });
 
+  async function waitForBatch(id, status) {
+    for (let attempt = 0; attempt < 150; attempt++) {
+      const batch = await PuzzleUploadBatch.findById(id);
+      batch.files.forEach(file => {
+        if (file.storedFilename) uploadedFiles.add(path.join(upload.uploadDirectory, file.storedFilename));
+      });
+      if (batch.status === status) return batch;
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    throw new Error(`Batch ${id} did not reach ${status}`);
+  }
+
+  await suite.test('incomplete uploads wait for an owner decision, survive reload and cannot be imported twice', async () => {
+    const incomplete = title => {
+      const data = JSON.parse(ipuz(title));
+      data.clues.Down[1][1] = '';
+      return JSON.stringify(data);
+    };
+    const body = new FormData();
+    body.append('filename', new Blob([incomplete('Review accept')]), 'review-accept.ipuz');
+    body.append('filename', new Blob([ipuz('Complete alongside reviews')]), 'review-complete.ipuz');
+    body.append('filename', new Blob([incomplete('Review skip')]), 'review-skip.ipuz');
+    body.append('groupIds', c._id);
+    body.append('allowIncomplete', 'true'); // Initial uploads always require an explicit review decision.
+    const response = await fetch(baseUrl + '/jokoak/upload/batches', {
+      method: 'POST', headers: { 'x-test-role': 'master' }, body
+    });
+    assert.equal(response.status, 202);
+    const id = (await response.json()).id;
+    let batch = await waitForBatch(id, 'awaiting_review');
+    assert.deepEqual(batch.files.map(file => file.status), ['awaiting_review', 'imported', 'awaiting_review']);
+    assert.equal(await Crossword.countDocuments({ name: { $in: ['Review accept', 'Review skip'] } }), 0);
+    assert.equal(await Crossword.countDocuments({ name: 'Complete alongside reviews' }), 1);
+    const keep = batch.files[0], skip = batch.files[2];
+    const skipPath = path.join(upload.uploadDirectory, skip.storedFilename);
+    const keepPath = path.join(upload.uploadDirectory, keep.storedFilename);
+    const decision = file => `/jokoak/upload/batches/${id}/files/${file._id}/decision`;
+    const status = await (await request(`/jokoak/upload/batches/${id}`)).json();
+    assert.equal(status.review, 2);
+    assert.equal(status.processed, 3);
+    assert.deepEqual(status.files[0].missingClues, [{ number: 2, dir: 'down', x: 0, y: 1, length: 2 }]);
+    const otherMaster = { 'Content-Type': 'application/json', 'x-test-role': 'master', 'x-test-user-id': String(new mongoose.Types.ObjectId()) };
+    assert.equal((await fetch(baseUrl + decision(keep), { method: 'POST', headers: otherMaster, body: JSON.stringify({ action: 'import' }) })).status, 404);
+    assert.equal((await fetch(`${baseUrl}/jokoak/upload/batches/${id}`, { headers: otherMaster })).status, 404);
+    assert.equal((await request(decision(keep), 'POST', { action: 'invalid' })).status, 400);
+    assert.equal((await request(decision(batch.files[1]), 'POST', { action: 'skip' })).status, 409);
+    await resumePendingPuzzleUploadBatches();
+    await fs.access(keepPath);
+    const restored = await (await request(`/jokoak/upload?batch=${id}`)).text();
+    assert.ok(restored.includes('"status":"awaiting_review"'));
+    assert.ok(restored.includes('review-accept.ipuz'));
+    assert.equal((await request(decision(skip), 'POST', { action: 'skip' })).status, 202);
+    await assert.rejects(fs.access(skipPath), { code: 'ENOENT' });
+    assert.equal(await Crossword.countDocuments({ name: 'Review skip' }), 0);
+    const accepted = await Promise.all([
+      request(decision(keep), 'POST', { action: 'import' }),
+      request(decision(keep), 'POST', { action: 'import' })
+    ]);
+    assert.deepEqual(accepted.map(result => result.status).sort(), [202, 409]);
+    batch = await waitForBatch(id, 'completed');
+    assert.deepEqual(batch.files.map(file => file.status), ['imported', 'imported', 'skipped']);
+    const game = await Crossword.findOne({ name: 'Review accept' });
+    assert.equal(await Crossword.countDocuments({ name: 'Review accept' }), 1);
+    assert.equal(game.isComplete, false);
+    assert.equal(game.missingClueCount, 1);
+    assert.deepEqual(game.groupIds.map(String), [c._id]);
+    assert.equal(game.words.find(word => word.dir === 'down' && word.y === 1).clue, '');
+    for (const role of [null, 'user', 'master']) {
+      const catalog = await (await request('/jokoak/guztiak', 'GET', undefined, role)).text();
+      assert.equal(catalog.includes('class="upload-incomplete-label"'), role === 'master');
+      assert.ok(catalog.includes('Review accept'));
+      assert.equal(catalog.includes('Review skip'), false);
+      const gamePage = await (await request(`/jokoak/game/${game._id}`, 'GET', undefined, role)).text();
+      assert.equal(gamePage.includes('alert-warning'), role === 'master');
+    }
+  });
+
+  await suite.test('legacy single uploads use the review screen and awaiting reviews keep their target group', async () => {
+    const group = await create('Pending review destination');
+    const data = JSON.parse(ipuz('Legacy review'));
+    data.clues = {};
+    const body = new FormData();
+    body.append('filename', new Blob([JSON.stringify(data)]), 'legacy-review.ipuz');
+    body.append('groupIds', group._id);
+    const response = await fetch(baseUrl + '/jokoak/upload', {
+      method: 'POST', redirect: 'manual', headers: { 'x-test-role': 'master' }, body
+    });
+    assert.equal(response.status, 302);
+    const location = new URL(response.headers.get('location'), baseUrl);
+    assert.equal(location.pathname, '/jokoak/upload');
+    const batch = await waitForBatch(location.searchParams.get('batch'), 'awaiting_review');
+    assert.equal((await request(`/master/groups/${group._id}`, 'DELETE')).status, 409);
+    assert.equal((await request(`/jokoak/upload/batches/${batch._id}/files/${batch.files[0]._id}/decision`, 'POST', { action: 'skip' })).status, 202);
+    assert.equal((await request(`/master/groups/${group._id}`, 'DELETE')).status, 200);
+    assert.equal(await Crossword.countDocuments({ name: 'Legacy review' }), 0);
+  });
+
   await suite.test('reconnection and a fresh migration process preserve saved data and removed memberships', async () => {
     await mongoose.disconnect();
     await mongoose.connect(uri);
@@ -433,7 +530,7 @@ test('persistent group management and public pages with an isolated MongoDB', {
   });
 
   if (process.env.GROUPS_BROWSER_TEST === '1') {
-    await suite.test('Chrome: management forms, native drag and drop, multiple games, live counts and persistence', async () => {
+    await suite.test('Chrome: group organization, native drag and drop and incomplete upload decisions', async () => {
       const companion = await Crossword.create({ name: 'Drag companion', groupIds: [b._id, c._id], width: 2, height: 2 });
       const result = await require('./helpers/group-browser')({
         baseUrl, directory, rootId: root._id, bId: b._id, cId: c._id,
@@ -442,6 +539,14 @@ test('persistent group management and public pages with an isolated MongoDB', {
       assert.equal(await Crossword.countDocuments({ _id: { $in: result.deletedIds } }), 0);
       assert.equal(await PlaySession.countDocuments({ puzzleId: { $in: result.deletedIds } }), 0);
       assert.equal(await GameState.countDocuments({ puzzleId: { $in: result.deletedIds } }), 0);
+      const reviewed = await Crossword.findOne({ name: 'Browser incomplete accepted' });
+      assert.equal(reviewed.isComplete, false);
+      assert.equal(reviewed.missingClueCount, 1);
+      assert.equal(await Crossword.countDocuments({ name: 'Browser incomplete skipped' }), 0);
+      const browserBatch = await PuzzleUploadBatch.findOne({ 'files.filename': 'browser-review-accept.ipuz' });
+      browserBatch.files.forEach(file => {
+        if (file.storedFilename) uploadedFiles.add(path.join(upload.uploadDirectory, file.storedFilename));
+      });
     });
   }
 });

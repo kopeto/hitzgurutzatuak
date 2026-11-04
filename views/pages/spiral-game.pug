@@ -4,6 +4,8 @@ section(data-spiral-game)
   .game-topbar
     a(href='/jokoak'): button.btn.btn-sm.btn-outline-secondary(type='button')= t('common.back')
     h2.game-title= puzzle.name
+  if user && user.master && puzzle.isComplete === false
+    p.alert.alert-warning(role='status')= t('upload.missingDefinitions')
   .game-wrapper
     .spiral-layout
       .spiral-board-card

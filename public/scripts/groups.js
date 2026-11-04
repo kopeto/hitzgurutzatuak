@@ -76,7 +76,7 @@ export function initGroups(state, t, request) {
     field('group-membership-panel').hidden = isRoot;
     field('group-root-hint').hidden = !isRoot;
     field('group-delete-hint').hidden = !isAll;
-    root.querySelectorAll('[data-group-remove-column]').forEach(column => { column.hidden = !canRemove; });
+    rows.forEach(row => { row.querySelector('[data-group-remove-column]').hidden = !canRemove; });
     field('group-remove-selected').hidden = !canRemove;
     field('group-remove-selected').textContent = t(isAll ? 'groups.deleteSelected' : 'groups.removeSelected');
     rows.forEach(row => {
@@ -170,6 +170,63 @@ export function initGroups(state, t, request) {
     });
   }
   renderMemberships();
+
+  function setGameEditMode(row, editing) {
+    const puzzle = puzzleById.get(row.dataset.groupPuzzle);
+    row.classList.toggle('is-editing', editing);
+    row.querySelector('[data-group-game-display]').hidden = editing;
+    row.querySelector('[data-group-game-edit-fields]').hidden = !editing;
+    row.querySelector('[data-group-game-author]').hidden = editing;
+    row.querySelector('[data-group-game-name-input]').value = puzzle.name;
+    row.querySelector('[data-group-game-author-input]').value = puzzle.author || '';
+    row.querySelector('[data-edit-game]').hidden = editing;
+    row.querySelector('[data-save-game]').hidden = !editing;
+    row.querySelector('[data-cancel-game]').hidden = !editing;
+    if (editing) row.querySelector('[data-group-game-name-input]').focus();
+  }
+
+  async function savePuzzleMetadata(row) {
+    if (busy) return;
+    const nameInput = row.querySelector('[data-group-game-name-input]');
+    const authorInput = row.querySelector('[data-group-game-author-input]');
+    const name = nameInput.value.trim();
+    const author = authorInput.value.trim();
+    if (!name) {
+      nameInput.reportValidity();
+      nameInput.focus();
+      return;
+    }
+    const puzzleId = row.dataset.groupPuzzle;
+    const controls = [...row.querySelectorAll('button, input[type="text"]')];
+    const disabled = controls.map(control => control.disabled);
+    controls.forEach(control => { control.disabled = true; });
+    busy = true;
+    root.setAttribute('aria-busy', 'true');
+    drag.refresh();
+    groupOrder.refresh();
+    try {
+      const updated = await request(`/jokoak/game/${encodeURIComponent(puzzleId)}`, {
+        method: 'PATCH', body: JSON.stringify({ name, author })
+      });
+      if (updated.error) throw new Error(updated.message || t('client.editFailed'));
+      Object.assign(puzzleById.get(puzzleId), { name: updated.name, author: updated.author });
+      row.querySelector('[data-group-game-name]').textContent = updated.name;
+      row.querySelector('[data-group-game-author]').textContent = updated.author || '—';
+      row.querySelector('[data-group-select]').setAttribute('aria-label', t('catalog.selectPuzzle', { name: updated.name }));
+      setGameEditMode(row, false);
+      filterGames();
+      drag.announce(t('groups.gameSaved'));
+    } catch (error) {
+      drag.announce(error.message || t('client.editFailed'), true);
+    } finally {
+      busy = false;
+      root.removeAttribute('aria-busy');
+      controls.forEach((control, index) => { control.disabled = disabled[index]; });
+      drag.refresh();
+      groupOrder.refresh();
+      updateSelection();
+    }
+  }
 
   async function applyGroupOrder(id, payload) {
     if (busy) return;
@@ -280,8 +337,31 @@ export function initGroups(state, t, request) {
     } else if (group) applyGameChange({ action: 'remove', sourceId: group._id, puzzleIds });
   }
   root.addEventListener('click', event => {
+    const editButton = event.target.closest('[data-edit-game]');
+    if (editButton) {
+      if (!busy) setGameEditMode(editButton.closest('[data-group-puzzle]'), true);
+      return;
+    }
+    const cancelButton = event.target.closest('[data-cancel-game]');
+    if (cancelButton) {
+      if (!busy) setGameEditMode(cancelButton.closest('[data-group-puzzle]'), false);
+      return;
+    }
+    const saveButton = event.target.closest('[data-save-game]');
+    if (saveButton) {
+      savePuzzleMetadata(saveButton.closest('[data-group-puzzle]'));
+      return;
+    }
     const button = event.target.closest('[data-group-remove]');
     if (button) removeFromCurrentGroup([button.dataset.groupRemove]);
+  });
+  root.addEventListener('keydown', event => {
+    if (!event.target.matches('[data-group-game-name-input], [data-group-game-author-input]')) return;
+    const row = event.target.closest('[data-group-puzzle]');
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      row.querySelector('[data-save-game]').click();
+    } else if (event.key === 'Escape') row.querySelector('[data-cancel-game]').click();
   });
   field('group-remove-selected').addEventListener('click', () => {
     removeFromCurrentGroup(checked().map(input => input.dataset.groupSelect));

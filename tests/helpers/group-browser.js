@@ -406,6 +406,46 @@ module.exports = async function checkGroupBrowser({ baseUrl, directory, rootId, 
       const screenshot = await send('Page.captureScreenshot', { captureBeyondViewport: true });
       await fs.writeFile(path.join(process.env.GROUPS_SCREENSHOT_DIR, 'groups-global-delete.png'), Buffer.from(screenshot.data, 'base64'));
     }
+    assert.equal(await evaluate("document.querySelector('[data-group-upload]').getAttribute('href')"), '/jokoak/upload');
+    await evaluate("document.querySelector('[data-group-upload]').click()");
+    await wait(() => evaluate("document.readyState === 'complete' && document.querySelector('[data-upload-files]') && !document.querySelector('[data-upload-files]').disabled"), 'upload screen');
+    const reviewPuzzle = title => JSON.stringify({
+      kind: ['http://ipuz.org/crossword#1'], title,
+      dimensions: { width: 2, height: 2 }, puzzle: [[1, 2], [3, 0]], solution: [['A', 'B'], ['C', 'D']],
+      clues: { Across: [[1, 'First definition'], [3, 'Last definition']], Down: [[1, 'Other direction'], [2, '']] }
+    });
+    await evaluate(`(() => {
+      const files=new DataTransfer();
+      files.items.add(new File([${JSON.stringify(reviewPuzzle('Browser incomplete accepted'))}], 'browser-review-accept.ipuz', {type:'application/json'}));
+      files.items.add(new File([${JSON.stringify(reviewPuzzle('Browser incomplete skipped'))}], 'browser-review-skip.ipuz', {type:'application/json'}));
+      const input=document.querySelector('[data-upload-files]'); input.files=files.files; input.dispatchEvent(new Event('change'));
+      document.querySelector('[data-upload-form]').requestSubmit();
+    })()`);
+    const reviewsReady = () => evaluate("document.querySelectorAll('[data-upload-decision=\"import\"]:not(:disabled)').length === 2");
+    await wait(reviewsReady, 'two incomplete games awaiting a decision');
+    assert.equal(await evaluate("document.querySelectorAll('.upload-incomplete-label').length"), 2);
+    assert.equal(await evaluate("fetch('/jokoak/guztiak').then(r=>r.text()).then(html=>html.includes('Browser incomplete accepted')||html.includes('Browser incomplete skipped'))"), false);
+    assert.deepEqual(await evaluate("[...document.querySelectorAll('[data-batch-files] .upload-incomplete-label')].map(label=>label.textContent)"), ['⚠ Definizioak falta dira.', '⚠ Definizioak falta dira.']);
+    assert.equal(await evaluate("document.querySelector('[data-batch-files] details, [data-batch-files] .upload-file-warning') === null"), true);
+    await send('Page.reload');
+    await wait(reviewsReady, 'reviews restored after reload');
+    await evaluate("window.__originalFetch=window.fetch;window.fetch=(url,options)=>{if(String(url).endsWith('/decision')){window.fetch=window.__originalFetch;return Promise.resolve(new Response(JSON.stringify({error:'Decision could not be saved'}),{status:500,headers:{'Content-Type':'application/json'}}));}return window.__originalFetch(url,options);}");
+    await evaluate("document.querySelector('[data-upload-decision=\"skip\"]').click()");
+    await wait(() => evaluate("!document.querySelector('[data-upload-error]').hidden && document.querySelectorAll('[data-upload-decision=\"import\"]:not(:disabled)').length === 2"), 'failed decision can be retried');
+    assert.equal(await evaluate("document.querySelectorAll('.upload-status--skipped, .upload-status--imported').length"), 0);
+    await evaluate("[...document.querySelectorAll('[data-batch-files] .upload-file-row')].find(row=>row.textContent.includes('browser-review-skip.ipuz')).querySelector('[data-upload-decision=\"skip\"]').click()");
+    await wait(() => evaluate("document.querySelectorAll('.upload-status--skipped').length === 1"), 'do not upload decision saved');
+    await evaluate("document.querySelector('[data-upload-decision=\"import\"]').click()");
+    await wait(() => evaluate("document.querySelectorAll('.upload-status--imported').length === 1 && !document.querySelector('[data-upload-files]').disabled"), 'upload anyway decision saved');
+    assert.equal(await evaluate("document.querySelectorAll('.upload-incomplete-label').length"), 1);
+    assert.equal(await evaluate("document.querySelectorAll('[data-upload-decision]').length"), 0);
+    assert.equal(await evaluate("document.querySelector('[data-upload-error]').hidden"), true);
+    const publicReview = await evaluate("fetch('/jokoak/guztiak').then(r=>r.text()).then(html=>({accepted:html.includes('Browser incomplete accepted'),skipped:html.includes('Browser incomplete skipped'),warning:html.includes('Definizioak falta dira.')}))");
+    assert.deepEqual(publicReview, { accepted: true, skipped: false, warning: true });
+    if (process.env.GROUPS_SCREENSHOT_DIR) {
+      const screenshot = await send('Page.captureScreenshot', { captureBeyondViewport: true });
+      await fs.writeFile(path.join(process.env.GROUPS_SCREENSHOT_DIR, 'upload-incomplete-decisions.png'), Buffer.from(screenshot.data, 'base64'));
+    }
     assert.deepEqual(errors, []);
     return { deletedIds: [puzzleId, companionId, multiGroupId] };
   } finally {

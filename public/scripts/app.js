@@ -1,4 +1,4 @@
-import { initGroups } from './groups.js?v=20261103-1';
+import { initGroups } from './groups.js?v=20261104-1';
 
 const stateNode = document.getElementById('app-state');
 const state = stateNode ? JSON.parse(stateNode.textContent || '{}') : {};
@@ -112,13 +112,9 @@ function initCatalog() {
   const status = document.querySelector('[data-puzzle-status]');
   const type = document.querySelector('[data-puzzle-type]');
   const count = document.querySelector('[data-catalog-count]');
-  const selectAll = document.querySelector('[data-select-all]');
-  const selectionCount = document.querySelector('[data-selection-count]');
-  const deleteSelected = document.querySelector('[data-delete-selected]');
   const list = document.querySelector('.puzzle-list');
   const sortButtons = [...document.querySelectorAll('[data-sort-column]')];
   const cards = () => [...document.querySelectorAll('[data-puzzle-card]')];
-  const selectedCards = () => cards().filter((card) => card.querySelector('[data-select-puzzle]')?.checked);
   let sortColumn = '';
   let sortDirection = 1;
   const sortRows = (column, initialDirection) => {
@@ -152,35 +148,6 @@ function initCatalog() {
       if (indicator) indicator.textContent = active ? (sortDirection === 1 ? '▲' : '▼') : '↕';
     });
   };
-  const setEditMode = (card, editing) => {
-    card.classList.toggle('is-editing', editing);
-    card.querySelector('[data-puzzle-display]').hidden = editing;
-    card.querySelector('[data-puzzle-edit]').hidden = !editing;
-    card.querySelector('[data-edit-puzzle]').hidden = editing;
-    card.querySelector('[data-save-puzzle]').hidden = !editing;
-    card.querySelector('[data-cancel-edit]').hidden = !editing;
-    if (editing) {
-      card.querySelector('[data-edit-name]').value = card.dataset.puzzleName;
-      card.querySelector('[data-edit-author]').value = card.dataset.puzzleAuthor;
-      card.querySelector('[data-edit-name]').focus();
-    } else {
-      card.querySelector('[data-edit-name]').value = card.dataset.puzzleName;
-      card.querySelector('[data-edit-author]').value = card.dataset.puzzleAuthor;
-    }
-  };
-  const updateSelection = () => {
-    const allCards = cards();
-    const visibleCards = allCards.filter((card) => !card.hidden && card.querySelector('[data-select-puzzle]'));
-    const selected = selectedCards();
-    const visibleSelected = visibleCards.filter((card) => card.querySelector('[data-select-puzzle]').checked).length;
-    allCards.forEach((card) => card.classList.toggle('is-selected', Boolean(card.querySelector('[data-select-puzzle]')?.checked)));
-    if (selectionCount) selectionCount.textContent = selected.length ? t('client.selectedCount', { count: selected.length }) : '';
-    if (deleteSelected) deleteSelected.disabled = selected.length === 0;
-    if (selectAll) {
-      selectAll.checked = visibleCards.length > 0 && visibleSelected === visibleCards.length;
-      selectAll.indeterminate = visibleSelected > 0 && visibleSelected < visibleCards.length;
-    }
-  };
   const update = () => {
     const query = (search?.value || '').trim().toLocaleLowerCase('eu');
     let visible = 0;
@@ -192,125 +159,14 @@ function initCatalog() {
       if (match) visible += 1;
     });
     if (count) count.textContent = t('client.puzzleCount', { count: visible });
-    updateSelection();
   };
   [search, status, type].forEach((element) => element?.addEventListener('input', update));
   [status, type].forEach((element) => element?.addEventListener('change', update));
   update();
   if (list) sortRows('date', -1);
-  document.addEventListener('change', (event) => {
-    if (event.target.matches('[data-select-all]')) {
-      cards().filter((card) => !card.hidden).forEach((card) => {
-        const checkbox = card.querySelector('[data-select-puzzle]');
-        if (checkbox) checkbox.checked = event.target.checked;
-      });
-      updateSelection();
-    } else if (event.target.matches('[data-select-puzzle]')) updateSelection();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (!event.target.matches('[data-edit-name], [data-edit-author]')) return;
-    const card = event.target.closest('[data-puzzle-card]');
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      card.querySelector('[data-save-puzzle]').click();
-    } else if (event.key === 'Escape') card.querySelector('[data-cancel-edit]').click();
-  });
-  document.addEventListener('click', async (event) => {
+  document.addEventListener('click', (event) => {
     const sortButton = event.target.closest('[data-sort-column]');
-    if (sortButton) {
-      sortRows(sortButton.dataset.sortColumn);
-      return;
-    }
-
-    const editButton = event.target.closest('[data-edit-puzzle]');
-    if (editButton) {
-      setEditMode(editButton.closest('[data-puzzle-card]'), true);
-      return;
-    }
-
-    const cancelButton = event.target.closest('[data-cancel-edit]');
-    if (cancelButton) {
-      setEditMode(cancelButton.closest('[data-puzzle-card]'), false);
-      return;
-    }
-
-    const saveButton = event.target.closest('[data-save-puzzle]');
-    if (saveButton) {
-      const card = saveButton.closest('[data-puzzle-card]');
-      const nameInput = card.querySelector('[data-edit-name]');
-      const authorInput = card.querySelector('[data-edit-author]');
-      const name = nameInput.value.trim();
-      const author = authorInput.value.trim();
-      if (!name) {
-        nameInput.reportValidity();
-        nameInput.focus();
-        return;
-      }
-      saveButton.disabled = true;
-      card.querySelector('[data-cancel-edit]').disabled = true;
-      try {
-        const response = await fetch(`/jokoak/game/${encodeURIComponent(card.querySelector('[data-delete-puzzle]').dataset.deletePuzzle)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, author })
-        });
-        if (!response.ok) throw new Error('puzzle update failed');
-        const updated = await response.json();
-        card.dataset.puzzleName = updated.name;
-        card.dataset.puzzleAuthor = updated.author;
-        card.dataset.sortName = updated.name;
-        card.dataset.search = [updated.name, updated.author].filter(Boolean).join(' ');
-        card.querySelector('[data-puzzle-name-display]').textContent = updated.name;
-        card.querySelector('[data-puzzle-author-display]').textContent = updated.author || t('common.unknownAuthor');
-        card.querySelector('[data-delete-puzzle]').dataset.name = updated.name;
-        card.querySelector('[data-select-puzzle]')?.setAttribute('aria-label', t('catalog.selectPuzzle', { name: updated.name }));
-        setEditMode(card, false);
-        update();
-        if (sortColumn === 'name') sortRows('name', sortDirection);
-      } catch {
-        window.alert(t('client.editFailed'));
-      } finally {
-        saveButton.disabled = false;
-        card.querySelector('[data-cancel-edit]').disabled = false;
-      }
-      return;
-    }
-
-    const singleButton = event.target.closest('[data-delete-puzzle]');
-    if (singleButton) {
-      const id = singleButton.dataset.deletePuzzle;
-      const name = singleButton.dataset.name || 'puzle hau';
-      if (!window.confirm(t('client.deleteConfirm', { name }))) return;
-      singleButton.disabled = true;
-      try {
-        const response = await fetch(`/jokoak/game/${encodeURIComponent(id)}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('delete failed');
-        singleButton.closest('[data-puzzle-card]')?.remove();
-      } catch {
-        singleButton.disabled = false;
-        window.alert(t('client.deleteFailed'));
-      }
-      update();
-      return;
-    }
-
-    const bulkButton = event.target.closest('[data-delete-selected]');
-    if (!bulkButton) return;
-    const selected = selectedCards();
-    if (!selected.length || !window.confirm(t('client.deleteSelectedConfirm', { count: selected.length }))) return;
-    bulkButton.disabled = true;
-    try {
-      const response = await fetch('/jokoak/game', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: selected.map((card) => card.querySelector('[data-select-puzzle]').value) })
-      });
-      if (!response.ok) throw new Error('bulk delete failed');
-      selected.forEach((card) => card.remove());
-    } catch {
-      window.alert(t('client.deleteFailed'));
-    }
-    update();
+    if (sortButton) sortRows(sortButton.dataset.sortColumn);
   });
 }
 
@@ -329,6 +185,8 @@ function initUpload() {
   let selected = [];
   let batch = null;
   let busy = false;
+  let deciding = false;
+  const retry = root.querySelector('[data-upload-retry]');
 
   const statusLabel = (status) => t(`upload.status.${status}`);
   const setError = (message) => {
@@ -347,7 +205,7 @@ function initUpload() {
     selection.hidden = !selected.length;
     selection.querySelector('[data-selected-count]').textContent = t('upload.selectedFiles', { count: selected.length });
     submit.disabled = busy || !selected.length;
-    submit.textContent = t(busy ? 'upload.sending' : 'upload.submit', { count: selected.length });
+    submit.textContent = t(batch?.status === 'awaiting_review' ? 'upload.status.awaiting_review' : busy ? 'upload.sending' : 'upload.submit', { count: selected.length });
     input.disabled = busy;
     const groupSelect = root.querySelector('[data-upload-groups]');
     if (groupSelect) groupSelect.disabled = busy;
@@ -356,6 +214,7 @@ function initUpload() {
     root.querySelector('[data-clear-files]').disabled = busy;
   };
   const addFiles = (files) => {
+    if (busy) return;
     const incoming = [...files];
     if (selected.length + incoming.length > maxFiles) {
       setError(t('upload.tooManyFiles', { count: maxFiles }));
@@ -403,14 +262,19 @@ function initUpload() {
     bar.value = value.total ? Math.round((value.processed / value.total) * 100) : 0;
     const summary = root.querySelector('[data-batch-summary]');
     const done = ['completed', 'completed_with_errors'].includes(value.status);
+    const hasWarnings = value.files.some(file => file.missingClues?.length && file.status !== 'skipped');
     summary.hidden = !done;
-    summary.textContent = value.failed ? t('upload.finishedWithErrors') : t('upload.finished');
-    summary.className = `upload-summary${value.failed ? ' upload-summary--warning' : ''}`;
+    summary.textContent = t(value.failed ? 'upload.finishedWithErrors'
+      : value.skipped ? 'upload.finishedWithSkipped' : hasWarnings ? 'upload.finishedWithWarnings' : 'upload.finished');
+    summary.className = `upload-summary${value.failed || value.review || hasWarnings ? ' upload-summary--warning' : ''}`;
     const list = root.querySelector('[data-batch-files]');
     list.replaceChildren(...value.files.map((file) => {
       const item = document.createElement('li');
       item.className = 'upload-file-row';
-      item.innerHTML = `<span class="upload-file-type">${escapeHtml(file.filename.split('.').pop().slice(0, 5).toUpperCase())}</span><span class="upload-file-name">${escapeHtml(file.filename)}${file.puzzleName ? `<small>${escapeHtml(file.puzzleName)}</small>` : ''}${file.message ? `<small class="upload-file-error">${escapeHtml(file.message)}</small>` : ''}</span><span class="upload-status upload-status--${escapeHtml(file.status)}">${escapeHtml(statusLabel(file.status))}</span>`;
+      const missing = file.missingClues || [];
+      item.classList.toggle('upload-file-row--incomplete', missing.length > 0 && file.status !== 'skipped');
+      const actions = file.status === 'awaiting_review' ? `<div class="upload-review-actions"><button class="btn btn-sm btn-primary" type="button" data-upload-decision="import" data-upload-review-file="${escapeHtml(file.id)}"${deciding || value.status !== 'awaiting_review' ? ' disabled' : ''}>${escapeHtml(t('upload.importAnyway'))}</button><button class="btn btn-sm btn-outline-secondary" type="button" data-upload-decision="skip" data-upload-review-file="${escapeHtml(file.id)}"${deciding || value.status !== 'awaiting_review' ? ' disabled' : ''}>${escapeHtml(t('upload.skip'))}</button></div>` : '';
+      item.innerHTML = `<span class="upload-file-type">${escapeHtml(file.filename.split('.').pop().slice(0, 5).toUpperCase())}</span><div class="upload-file-name">${escapeHtml(file.filename)}${file.puzzleName ? `<small>${escapeHtml(file.puzzleName)}</small>` : ''}${missing.length && file.status !== 'skipped' ? `<strong class="upload-incomplete-label">⚠ ${escapeHtml(t('upload.missingDefinitions'))}</strong>` : ''}${file.status === 'failed' && file.message ? `<small class="upload-file-error">${escapeHtml(file.message)}</small>` : ''}${actions}</div><span class="upload-status upload-status--${escapeHtml(file.status)}">${escapeHtml(statusLabel(file.status))}</span>`;
       return item;
     }));
   };
@@ -420,13 +284,39 @@ function initUpload() {
       const next = await request(`/jokoak/upload/batches/${encodeURIComponent(batch.id)}`);
       if (next.error) {
         setError(next.message || t('upload.statusError'));
-        break;
+        retry.hidden = false;
+        return;
       }
       renderBatch(next);
     }
-    busy = false;
+    busy = Boolean(batch && !['completed', 'completed_with_errors'].includes(batch.status));
     updateFiles();
   };
+  root.querySelector('[data-batch-files]').addEventListener('click', async event => {
+    const button = event.target.closest('[data-upload-decision]');
+    if (!button || deciding || batch?.status !== 'awaiting_review') return;
+    deciding = true;
+    renderBatch(batch);
+    setError('');
+    const result = await request(`/jokoak/upload/batches/${encodeURIComponent(batch.id)}/files/${encodeURIComponent(button.dataset.uploadReviewFile)}/decision`, {
+      method: 'POST', body: JSON.stringify({ action: button.dataset.uploadDecision })
+    });
+    deciding = false;
+    if (result.error) {
+      setError(result.message || t('upload.decisionError'));
+      const current = await request(`/jokoak/upload/batches/${encodeURIComponent(batch.id)}`);
+      renderBatch(current.error ? batch : current);
+      await poll();
+      return;
+    }
+    renderBatch(result);
+    await poll();
+  });
+  retry.addEventListener('click', async () => {
+    retry.hidden = true;
+    setError('');
+    await poll();
+  });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!selected.length || busy) return;
@@ -447,9 +337,17 @@ function initUpload() {
     selected = [];
     input.value = '';
     renderBatch(result);
+    history.replaceState(null, '', `/jokoak/upload?batch=${encodeURIComponent(result.id)}`);
     updateFiles();
     await poll();
   });
+  if (state.data.batch) {
+    busy = true;
+    renderBatch(state.data.batch);
+    updateFiles();
+    history.replaceState(null, '', `/jokoak/upload?batch=${encodeURIComponent(batch.id)}`);
+    poll();
+  }
 }
 
 function emptyGrid(voidGrid) {

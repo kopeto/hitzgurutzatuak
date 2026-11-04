@@ -167,7 +167,7 @@
     "dropActive": "Askatu fitxategiak igotzeko",
     "dropHint": "edo hautatu zure ordenagailutik · {count} fitxategi gehienez, {size} MB bakoitza",
     "browseFiles": "Fitxategiak aukeratu",
-    "hint": "Formatuak: .ipuz, .puz eta .spl. Igo aurretik fitxategi bakoitzaren edukia balioztatuko da.",
+    "hint": "Formatuak: .ipuz, .puz eta .spl. Definizioak falta badira, zuk erabakiko duzu jokoa igo ala ez.",
     "submit": "Fitxategiak igo",
     "sending": "Bidaltzen…",
     "selectedFiles": "{count} fitxategi hautatuta",
@@ -178,7 +178,7 @@
     "submitError": "Ezin izan dira fitxategiak bidali.",
     "statusError": "Ezin izan da kargaren egoera irakurri.",
     "progressTitle": "Kargaren aurrerapena",
-    "progressCount": "Aztertuta: {processed}/{total} · onartuak: {succeeded} · akatsak: {failed}",
+    "progressCount": "Aztertuta: {processed}/{total} · igoak: {succeeded} · berrikusteko: {review} · igo gabe: {skipped} · akatsak: {failed}",
     "finished": "Fitxategi guztiak aztertu eta igo dira.",
     "finishedWithErrors": "Karga amaitu da; begiratu huts egin duten fitxategiak.",
     "status": {
@@ -187,8 +187,17 @@
       "imported": "Igo da",
       "failed": "Huts egin du",
       "completed": "Amaituta",
-      "completed_with_errors": "Akats batzuekin amaituta"
-    }
+      "completed_with_errors": "Akats batzuekin amaituta",
+      "awaiting_review": "Erabakiaren zain",
+      "skipped": "Igo gabe"
+    },
+    "missingDefinitions": "Definizioak falta dira.",
+    "importAnyway": "Igo hala ere",
+    "skip": "Ez igo",
+    "finishedWithSkipped": "Karga amaitu da. Aukeratutako fitxategiak igo gabe utzi dira.",
+    "finishedWithWarnings": "Karga amaitu da. Joko osatugabeak zure baimenarekin igo dira.",
+    "decisionError": "Ezin izan da erabakia gorde. Saiatu berriro.",
+    "retry": "Berriro saiatu"
   },
   "spiralBuilder": {
     "eyebrow": "KUDEAKETA / ESPIRALA",
@@ -252,7 +261,7 @@
     "puzzleCount": "joko guztira",
     "userCount": "Erabiltzaile",
     "completionCount": "Osatze guztira",
-    "upload": "⬆ joko berria igo",
+    "upload": "Joko berriak igo",
     "externalApi": "🔑 Kanpoko APIa",
     "apiDescription": "Kanpoko aplikazioek API gakoa behar dute jokoak kargatzeko.",
     "apiSecret": "Gakoa zerbitzariaren ingurune-aldagaietan bakarrik kudeatzen da eta ez da pantaila honetan erakusten.",
@@ -346,6 +355,7 @@
     "dragSaving": "Aldaketak gordetzen…",
     "dragMoved": "{count} joko “{group}” multzora mugitu dira.",
     "dragAdded": "{count} joko “{group}” multzoan gehitu dira.",
+    "gameSaved": "Jokoaren datuak gorde dira.",
     "dragLimit": "Hautatu gehienez 500 joko aldi bakoitzean.",
     "withoutDragging": "Jokoak botoien bidez antolatu",
     "settings": "Multzoaren ezarpenak eta azalpena",

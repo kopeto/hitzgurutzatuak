@@ -8,9 +8,6 @@ section.page-heading
   .page-heading-copy
     p.eyebrow= t('catalog.eyebrow')
     h1= data.group.name
-  if user && user.master
-    .page-actions
-      a.btn.btn-outline-primary(href=`/master/groups?group=${data.group._id}`)= t('groups.manage')
 if data.group.description.trim()
   section.group-description(aria-label=t('groups.description'))
     p= data.group.description

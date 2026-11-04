@@ -7,6 +7,8 @@ section(data-crossword-game data-default-layout='xedera')
     h2.game-title= puzzle.name
     if user
       span.game-timer(data-game-timer) 00:00
+  if user && user.master && puzzle.isComplete === false
+    p.alert.alert-warning(role='status')= t('upload.missingDefinitions')
   .game-wrapper
     .puzzle
       .grid-block.clue-layout-xedera(data-grid-block style=`--grid-cols:${puzzle.width};--grid-rows:${puzzle.height}`)

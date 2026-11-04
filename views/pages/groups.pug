@@ -5,6 +5,7 @@ section.page-heading
     p= t('groups.dragIntro')
   if !maintenanceMode
     .page-actions
+      a.btn.btn-primary(href='/jokoak/upload' data-group-upload)= t('master.upload')
       a.btn.btn-outline-primary(href='/master')= t('groups.backToManagement')
       a.btn.btn-outline-secondary(href='/jokoak')= t('groups.viewCatalog')
 section.group-manager(data-group-manager)
@@ -135,7 +136,7 @@ section.group-manager(data-group-manager)
                   th= t('common.name')
                   th= t('common.author')
                   th= t('groups.memberships')
-                  th(data-group-remove-column hidden)= t('catalog.actions')
+                  th= t('catalog.actions')
               tbody
                 each puzzle in data.puzzles
                   tr(data-group-puzzle=puzzle._id draggable='true')
@@ -143,11 +144,28 @@ section.group-manager(data-group-manager)
                       span.group-drag-handle(data-group-drag-handle title=t('groups.dragHandle') aria-hidden='true') ⠿
                       input(type='checkbox' data-group-select=puzzle._id aria-label=t('catalog.selectPuzzle', { name: puzzle.name }))
                     td
-                      a(href=`/jokoak/game/${puzzle._id}` draggable='false')= puzzle.name
-                    td= puzzle.author || '—'
+                      .group-game-name-display(data-group-game-display)
+                        a(href=`/jokoak/game/${puzzle._id}` draggable='false' data-group-game-name)= puzzle.name
+                        if user && user.master && puzzle.isComplete === false
+                          small.upload-incomplete-label= ` ⚠ ${t('upload.missingDefinitions')}`
+                      .group-game-edit-fields(data-group-game-edit-fields hidden)
+                        input.form-control(type='text' maxlength='200' required data-group-game-name-input value=puzzle.name aria-label=t('common.name'))
+                    td
+                      span(data-group-game-author)= puzzle.author || '—'
+                      input.form-control(type='text' maxlength='200' data-group-game-author-input value=puzzle.author || '' aria-label=t('common.author') hidden)
                     td(data-group-memberships)
-                    td(data-group-remove-column hidden)
-                      button.group-row-remove(type='button' data-group-remove=puzzle._id)
+                    td.group-game-actions
+                      button.group-game-action(type='button' data-edit-game aria-label=t('client.editPuzzle') title=t('client.editPuzzle'))
+                        svg(width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true' focusable='false')
+                          path(d='M12 20h9')
+                          path(d='M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z')
+                      button.group-game-action(type='button' data-save-game aria-label=t('client.savePuzzle') title=t('client.savePuzzle') hidden)
+                        svg(width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true' focusable='false')
+                          path(d='m5 12 4 4L19 6')
+                      button.group-game-action(type='button' data-cancel-game aria-label=t('client.cancelEdit') title=t('client.cancelEdit') hidden)
+                        svg(width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true' focusable='false')
+                          path(d='m6 6 12 12M18 6 6 18')
+                      button.group-row-remove(type='button' data-group-remove=puzzle._id data-group-remove-column hidden)
                         svg(width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' aria-hidden='true')
                           circle(cx='12' cy='12' r='9')
                           path(d='M8 12h8')

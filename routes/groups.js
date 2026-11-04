@@ -25,7 +25,7 @@ function handle(work) {
 
 router.get('/', handle(async (req, res) => {
   const groups = flattenGroups(await listGroups());
-  const puzzles = await Crossword.find({}).select('name author width height gameType format spiral.cells createdAt groupIds').lean();
+  const puzzles = await Crossword.find({}).select('name author width height gameType format spiral.cells createdAt groupIds isComplete missingClueCount').lean();
   return renderPage(res, 'groups', { groups, puzzles: puzzles.map(serializePuzzleSummary) }, {
     title: res.locals.t('groups.management')
   });
