@@ -203,7 +203,7 @@ async function deleteGroup(id) {
     if (group.systemKey) throw new GroupError('Multzo babestua ezin da ezabatu.');
     const [child, puzzle, pendingUpload] = await Promise.all([
       GameGroup.exists({ parentId: id }), Crossword.exists({ groupIds: id }),
-      PuzzleUploadBatch.exists({ groupIds: id, status: { $in: ['queued', 'processing'] } })
+      PuzzleUploadBatch.exists({ groupIds: id, status: { $in: ['queued', 'processing', 'awaiting_review'] } })
     ]);
     if (child || puzzle || pendingUpload) {
       throw new GroupError('Mugitu lehenik azpimultzoak eta jokoak; amaitu zain dauden kargak.', 409);

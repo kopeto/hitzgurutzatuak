@@ -10,6 +10,10 @@ For iPuz, numbered clues match the labels in the source grid. Unnumbered clues a
 
 The importer chooses the source format from the filename and calls `new Crossword(path, format)`. Spirals continue to use `SpiralPuzzle`.
 
+Parsers expose `isComplete` and `missingClues`. Empty or absent definitions, `-` and the legacy `Ninguna pista` placeholder require review before import. Missing entries include the word number, direction and coordinates, without the answer. iPuz object, `[number, text]` and plain-text clue entries are supported; empty entries keep their position so subsequent definitions stay attached to the correct word. PUZ reads the declared clue count, preserves empty strings and excludes trailing notes and extension data. SPL checks empty definition texts and missing clue lists.
+
+The importer raises `PuzzleReviewRequired` before archiving or saving an incomplete game. The upload queue retains its temporary file until the owner chooses to import it with `allowIncomplete: true` or discard it. Confirmed games retain `isComplete: false` and `missingClueCount`; these describe the source definitions independently of a player's progress.
+
 ## Clue display modes
 
 The crossword game offers two layouts:

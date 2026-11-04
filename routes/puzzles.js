@@ -9,8 +9,8 @@ const PuzzleUploadBatch = require('../models/puzzleuploadbatch');
 const PlaySession = require('../models/playsession');
 const GameStateModel = require('../models/gamestate');
 const upload = require('../config/uploadconfig');
-const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import');
-const { enqueueBatch } = require('../services/puzzle-upload-queue');
+const { PuzzleImportError } = require('../services/puzzle-import');
+const { enqueueBatch, resolveUploadReview } = require('../services/puzzle-upload-queue');
 const { createEmptyGrid } = require('../services/game-grid');
 const { renderPage, serializePuzzleSummary } = require('../services/page-view');
 const { deletePuzzleRecords } = require('../services/puzzle-deletion');
@@ -67,7 +67,7 @@ async function renderGroup(req, res) {
       parent = byId.get(parent.parentId);
     }
     const puzzles = group.systemKey === 'root' ? [] : await CrosswordModel.find(group.systemKey === 'all' ? {} : { groupIds: group._id })
-      .select('name author width height gameType format spiral.cells createdAt groupIds').lean();
+      .select('name author width height gameType format spiral.cells createdAt groupIds isComplete missingClueCount').lean();
 
     // For logged-in users build a map puzzleId → session info
     let statusMap = {};
@@ -100,10 +100,15 @@ router.get('/taldeak/:id', renderGroup);
 
 router.get('/upload', checkAuth, async (req, res, next) => {
   try {
+    const pendingBatch = await PuzzleUploadBatch.findOne({
+      ownerId: req.user._id,
+      ...(isId(req.query.batch) ? { _id: req.query.batch } : { status: { $in: ['queued', 'processing', 'awaiting_review'] } })
+    }).sort({ createdAt: -1 });
     return renderPage(res, 'upload', {
       maxUploadFiles: upload.maxBatchFiles,
       maxUploadFileSize: upload.maxFileSize,
-      groups: flattenGroups(await listGroups()).filter(group => !group.systemKey)
+      groups: flattenGroups(await listGroups()).filter(group => !group.systemKey),
+      batch: pendingBatch ? serializeUploadBatch(pendingBatch) : null
     }, { title: res.locals.t('page.upload') });
   } catch (error) { next(error); }
 });
@@ -114,19 +119,26 @@ function serializeUploadBatch(batch) {
     filename: file.filename,
     status: file.status,
     message: file.message,
+    missingClues: (file.missingClues || []).map(clue => ({
+      number: clue.number, dir: clue.dir, x: clue.x, y: clue.y, length: clue.length
+    })),
     puzzleId: file.puzzleId ? String(file.puzzleId) : null,
     puzzleName: file.puzzleName
   }));
   const succeeded = files.filter(file => file.status === 'imported').length;
   const failed = files.filter(file => file.status === 'failed').length;
+  const review = files.filter(file => file.status === 'awaiting_review').length;
+  const skipped = files.filter(file => file.status === 'skipped').length;
 
   return {
     id: String(batch._id),
     status: batch.status,
     total: files.length,
-    processed: succeeded + failed,
+    processed: succeeded + failed + review + skipped,
     succeeded,
     failed,
+    review,
+    skipped,
     files
   };
 }
@@ -140,6 +152,29 @@ async function removeUploadedFiles(files = []) {
       if (error.code !== 'ENOENT') logError(error);
     }
   }));
+}
+
+async function registerUploadBatch(req, uploadedFiles, rejectedFiles = []) {
+  const files = [
+    ...uploadedFiles.map(file => ({
+      filename: file.originalname,
+      storedFilename: path.relative(upload.uploadDirectory, file.path), status: 'queued'
+    })),
+    ...rejectedFiles.map(file => ({
+      filename: file.filename || 'Fitxategi ezezaguna', status: 'failed', message: file.message
+    }))
+  ];
+  const groupIds = parseGroupIds(req.body?.groupIds);
+  const batch = await withGroupWrite(async () => {
+    await validateAssignableGroups(groupIds);
+    return PuzzleUploadBatch.create({
+      ownerId: req.user._id, groupIds, files,
+      status: uploadedFiles.length ? 'queued' : 'completed_with_errors',
+      completedAt: uploadedFiles.length ? null : new Date()
+    });
+  });
+  if (uploadedFiles.length) enqueueBatch(batch._id);
+  return batch;
 }
 
 router.post('/upload/batches', checkAuth, upload.multiple, async (req, res) => {
@@ -156,32 +191,8 @@ router.post('/upload/batches', checkAuth, upload.multiple, async (req, res) => {
     return res.status(400).json({ error: 'Hautatu gutxienez fitxategi bat.' });
   }
 
-  const files = [
-    ...uploadedFiles.map(file => ({
-      filename: file.originalname,
-      storedFilename: path.relative(upload.uploadDirectory, file.path),
-      status: 'queued'
-    })),
-    ...rejectedFiles.map(file => ({
-      filename: file.filename || 'Fitxategi ezezaguna',
-      status: 'failed',
-      message: file.message
-    }))
-  ];
-
   try {
-    const groupIds = parseGroupIds(req.body?.groupIds);
-    const batch = await withGroupWrite(async () => {
-      await validateAssignableGroups(groupIds);
-      return PuzzleUploadBatch.create({
-        ownerId: req.user._id,
-        groupIds,
-        status: uploadedFiles.length ? 'queued' : 'completed_with_errors',
-        files,
-        completedAt: uploadedFiles.length ? null : new Date()
-      });
-    });
-    if (uploadedFiles.length) enqueueBatch(batch._id);
+    const batch = await registerUploadBatch(req, uploadedFiles, rejectedFiles);
     return res.status(202).json(serializeUploadBatch(batch));
   } catch (error) {
     await removeUploadedFiles(uploadedFiles);
@@ -205,30 +216,36 @@ router.get('/upload/batches/:id', checkAuth, async (req, res) => {
   }
 });
 
+router.post('/upload/batches/:id/files/:fileId/decision', checkAuth, async (req, res) => {
+  try {
+    const batch = await resolveUploadReview(req.params.id, req.params.fileId, req.user._id, req.body?.action);
+    return res.status(202).json(serializeUploadBatch(batch));
+  } catch (error) {
+    if (!(error instanceof PuzzleImportError)) logError(error);
+    return res.status(error.statusCode || 500).json({ error: error instanceof PuzzleImportError
+      ? error.message : 'Ezin izan da erabakia gorde. Saiatu berriro.' });
+  }
+});
+
 router.get('/spiral-builder', checkAuth, requireMaster, (req, res) => {
   return renderPage(res, 'spiralBuilder', {}, { title: res.locals.t('page.spiralBuilder') });
 });
 
 router.post('/upload', checkAuth, upload, async (req, res) => {
-  if (req.uploadErrors !== undefined) {
-    req.uploadErrors.forEach((err) => {
-      req.flash('danger', '\'' + err.filename + '\' ' + err.message);
-    });
-    return res.redirect('/jokoak');
-  }
-
   try {
-    await importPuzzle(req.file, { groupIds: req.body?.groupIds });
-    req.flash('success', 'Puzlea Kargatuta');
-    res.redirect('/jokoak');
+    if (req.uploadFatal) throw new PuzzleImportError((req.uploadErrors || []).map(error => error.message).join(' '));
+    if (!req.file && !req.uploadErrors?.length) throw new PuzzleImportError('Ez da fitxategirik jaso.');
+    const batch = await registerUploadBatch(req, req.file ? [req.file] : [], req.uploadErrors);
+    return res.redirect(`/jokoak/upload?batch=${batch._id}`);
   } catch (err) {
+    await removeUploadedFiles(req.file ? [req.file] : []);
     if (err instanceof PuzzleImportError || err instanceof GroupError || err.code === 11000) {
       req.flash('danger', err.message || 'Puzle hau dagoeneko sisteman dago.');
     } else {
       logError(err);
       req.flash('danger', 'Ezin izan da puzlea kargatu.');
     }
-    res.redirect('/jokoak');
+    res.redirect('/jokoak/upload');
   }
 });
 
@@ -289,6 +306,8 @@ router.get('/game/:id', async (req, res) => {
       id:             puzzle._id.toString(),
       name:           puzzle.name,
       author:         puzzle.author,
+      isComplete:     puzzle.isComplete !== false,
+      missingClueCount: puzzle.missingClueCount || 0,
       width:          puzzle.width,
       height:         puzzle.height,
       void_grid:      puzzle.void_grid,

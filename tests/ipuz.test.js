@@ -98,3 +98,36 @@ test('iPuz mixed clues reserve numbered entries and assign the rest in row order
     assert.equal(word.clue, `${word.dir === 'right' ? 'Across' : 'Down'} ${word.word}`);
   }
 });
+
+test('missing iPuz definitions preserve their slot and mark the parsed game incomplete', t => {
+  for (const across of [
+    ['Across ABC', '', 'Across FG'],
+    [{ clue: 'Across ABC' }, { clue: '  ' }, { clue: 'Across FG' }],
+    [[1, 'Across ABC'], [4, ''], [5, 'Across FG']],
+    [{ number: 1, clue: 'Across ABC /// /// Across FG' }]
+  ]) {
+    // The grouped entry shares one source label for all Across starts.
+    const grouped = across.length === 1;
+    const puzzle = readPuzzle(t, {
+      puzzle: grouped ? [[1, 2, 3], ['#', 1, 0], [1, 0, '#']] : [[1, 2, 3], ['#', 4, 0], [5, 0, '#']],
+      clues: { Across: across, Down: ['Down A', 'Down BDG', 'Down CE', 'Down F'] }
+    });
+    assert.deepEqual(wordClues(puzzle, 'right').map(word => word.clue), ['Across ABC', '', 'Across FG']);
+    assert.equal(puzzle.isComplete, false);
+    assert.deepEqual(puzzle.missingClues.map(({ dir, x, y }) => ({ dir, x, y })), [{ dir: 'right', x: 1, y: 1 }]);
+    assert.ok(puzzle.missingClues.every(clue => !('word' in clue)));
+  }
+});
+
+test('empty, absent and placeholder iPuz definitions are incomplete', t => {
+  const missing = readPuzzle(t);
+  assert.equal(missing.isComplete, false);
+  assert.equal(missing.missingClues.length, missing.words.length);
+  const placeholders = readPuzzle(t, {
+    clues: { Across: ['-', 'Ninguna pista.', '   '], Down: ['A', 'BDG', 'CE', 'F'] }
+  });
+  assert.equal(placeholders.missingClues.length, 3);
+  assert.equal(readPuzzle(t, {
+    clues: { Across: ['ABC', 'DE', 'FG'], Down: ['A', 'BDG', 'CE', 'F'] }
+  }).isComplete, true);
+});

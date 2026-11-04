@@ -5,10 +5,12 @@ const uploadedFileSchema = new mongoose.Schema({
   storedFilename: { type: String, default: null },
   status: {
     type: String,
-    enum: ['queued', 'processing', 'imported', 'failed'],
+    enum: ['queued', 'processing', 'awaiting_review', 'imported', 'failed', 'skipped'],
     default: 'queued'
   },
   message: { type: String, default: '' },
+  allowIncomplete: { type: Boolean, default: false },
+  missingClues: [{ number: Number, dir: String, x: Number, y: Number, length: Number, _id: false }],
   puzzleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Crossword', default: null },
   puzzleName: { type: String, default: '' }
 }, { _id: true });
@@ -18,7 +20,7 @@ const puzzleUploadBatchSchema = new mongoose.Schema({
   groupIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'GameGroup' }],
   status: {
     type: String,
-    enum: ['queued', 'processing', 'completed', 'completed_with_errors'],
+    enum: ['queued', 'processing', 'awaiting_review', 'completed', 'completed_with_errors'],
     default: 'queued',
     index: true
   },

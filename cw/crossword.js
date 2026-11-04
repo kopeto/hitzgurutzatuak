@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const IPuzReader = require('./ipuz-reader');
+const { assessPuzzle } = require('./puzzle-quality');
 
 function readNullTerminatedString(buffer, offset) {
   const end = buffer.indexOf(0, offset);
@@ -74,6 +75,7 @@ class Crossword {
 
     this.gameType = 'crossword';
     this._normalizeStructure();
+    assessPuzzle(this);
   }
 
   _detectFormat(filepath) {
@@ -108,9 +110,11 @@ class Crossword {
 
     const clues = [];
     let offset = copyright.nextOffset;
-    while (offset < buffer.length) {
+    const clueCount = buffer.readUInt16LE(0x2e);
+    for (let index = 0; index < clueCount; index++) {
+      if (offset >= buffer.length) { clues.push(''); continue; }
       const clue = readNullTerminatedString(buffer, offset);
-      if (clue.value) clues.push(clue.value);
+      clues.push(clue.value);
       offset = clue.nextOffset;
     }
 

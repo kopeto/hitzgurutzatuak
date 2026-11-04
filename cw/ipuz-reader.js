@@ -225,13 +225,12 @@ class IPuzReader {
 
   _splitGroupedClueText(text) {
     const normalized = String(text || '').replace(/\r/g, '').trim();
-    if (!normalized) return [];
+    if (!normalized) return [''];
 
     // iPuz clue exports can group multiple definitions with "///" or paragraph breaks.
     return normalized
       .split(/\s*\/\/\/\s*|\n+/)
-      .map(part => this._normalizeClueText(part))
-      .filter(Boolean);
+      .map(part => this._normalizeClueText(part));
   }
 
   /**
@@ -249,8 +248,8 @@ class IPuzReader {
         && new RegExp(`^${direction}(?:\\s*:|$)`, 'i').test(String(groupName).trim())
       ))
       .flatMap(([, entries]) => entries.map(c => ({
-        number: this._parseStartNumber(c && c.number),
-        clue: this._normalizeClueText(c && c.clue)
+        number: this._parseStartNumber(Array.isArray(c) ? c[0] : c?.number),
+        clue: Array.isArray(c) ? c[1] : typeof c === 'string' ? c : c?.clue
       })));
 
     const acrossEntries = entriesForDirection('Across');

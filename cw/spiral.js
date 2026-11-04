@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { assessPuzzle } = require('./puzzle-quality');
 
 class SpiralPuzzle {
   constructor(filepath) {
@@ -41,7 +42,7 @@ class SpiralPuzzle {
     }
 
     const clues = Array.isArray(data.clues)
-      ? data.clues.map(c => String(c || '').trim()).filter(Boolean)
+      ? data.clues.map(c => String(c || '').trim())
       : [];
 
     this.filename = filepath;
@@ -64,7 +65,7 @@ class SpiralPuzzle {
       y: 0,
       length: letters.length,
       number: 1,
-      clue: clues[0] || 'Espiral erantzuna'
+      clue: clues[0] || ''
     }];
 
     this.clues = [this.words[0].clue];
@@ -75,6 +76,7 @@ class SpiralPuzzle {
       clues,
       answerLength: letters.length
     };
+    assessPuzzle(this);
   }
 }
 

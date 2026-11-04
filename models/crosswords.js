@@ -23,6 +23,8 @@ let cwSchema = mongoose.Schema({
   clues: [String],
   name: String,
   author: String,
+  isComplete: { type: Boolean, default: true },
+  missingClueCount: { type: Number, default: 0, min: 0 },
   groupIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'GameGroup' }],
   gameType: {
     type: String,

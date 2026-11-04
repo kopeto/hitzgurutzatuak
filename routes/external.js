@@ -22,7 +22,7 @@ const rateLimit = require('express-rate-limit');
 const requireApiKey = require('../auth/apikey');
 const upload = require('../config/uploadconfig');
 const CrosswordModel = require('../models/crosswords');
-const { PuzzleImportError, importPuzzle } = require('../services/puzzle-import');
+const { PuzzleImportError, PuzzleReviewRequired, importPuzzle } = require('../services/puzzle-import');
 const { deletePuzzleRecords } = require('../services/puzzle-deletion');
 const { isId } = require('../services/game-groups');
 const { logError, logInfo } = require('../utils');
@@ -56,7 +56,7 @@ router.post('/puzzle', upload, async (req, res) => {
   }
 
   try {
-    const cw = await importPuzzle(req.file);
+    const cw = await importPuzzle(req.file, { allowIncomplete: req.body?.allowIncomplete === 'true' });
     logInfo(`[external API] Puzzle berria kargatu da: ${cw.filename}`);
 
     return res.status(201).json({
@@ -67,13 +67,16 @@ router.post('/puzzle', upload, async (req, res) => {
         name:   cw.name,
         author: cw.author,
         width:  cw.width,
-        height: cw.height
+        height: cw.height,
+        isComplete: cw.isComplete,
+        missingClueCount: cw.missingClueCount
       }
     });
   } catch (err) {
     if (err instanceof PuzzleImportError || err.code === 11000) {
       return res.status(err.statusCode || 409).json({
         error: true,
+        ...(err instanceof PuzzleReviewRequired ? { requiresConfirmation: true, missingClues: err.missingClues } : {}),
         message: err.message || 'Puzle hau dagoeneko sisteman dago.'
       });
     }

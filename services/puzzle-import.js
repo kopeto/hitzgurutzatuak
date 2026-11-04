@@ -15,6 +15,15 @@ class PuzzleImportError extends Error {
   }
 }
 
+class PuzzleReviewRequired extends PuzzleImportError {
+  constructor(puzzle) {
+    super('Definizioak falta dira.', 422);
+    this.name = 'PuzzleReviewRequired';
+    this.missingClues = puzzle.missingClues;
+    this.puzzleName = normalizedMetadata(puzzle.cw_name, 'Izengabea', 200);
+  }
+}
+
 function isGridValid(grid, width, height) {
   return Array.isArray(grid)
     && grid.length === height
@@ -133,6 +142,7 @@ async function importPuzzle(uploadedFile, options = {}) {
     }
 
     validateCrossword(crossword);
+    if (!crossword.isComplete && options.allowIncomplete !== true) throw new PuzzleReviewRequired(crossword);
 
     const puzzle = new CrosswordModel({
       filename: normalizedMetadata(uploadedFile.originalname, 'puzlea.puz', 180),
@@ -147,6 +157,8 @@ async function importPuzzle(uploadedFile, options = {}) {
       gameType: crossword.gameType || 'crossword',
       format: format,
       spiral: crossword.spiral || null,
+      isComplete: crossword.isComplete,
+      missingClueCount: crossword.missingClues.length,
       fileHash
     });
 
@@ -170,6 +182,7 @@ async function importPuzzle(uploadedFile, options = {}) {
     }
     return puzzle;
   } catch (error) {
+    if (error instanceof PuzzleReviewRequired && options.keepForReview) throw error;
     if (archiveCreated) await removeTemporaryFile(archivedPath);
     await removeTemporaryFile(uploadedFile.path);
     throw error;
@@ -178,6 +191,7 @@ async function importPuzzle(uploadedFile, options = {}) {
 
 module.exports = {
   PuzzleImportError,
+  PuzzleReviewRequired,
   importPuzzle,
   validateCrossword
 };

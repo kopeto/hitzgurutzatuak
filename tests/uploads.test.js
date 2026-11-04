@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 const upload = require('../config/uploadconfig');
 const CrosswordModel = require('../models/crosswords');
 const PuzzleUploadBatch = require('../models/puzzleuploadbatch');
-const { importPuzzle, PuzzleImportError } = require('../services/puzzle-import');
+const { importPuzzle, PuzzleImportError, PuzzleReviewRequired } = require('../services/puzzle-import');
 const puzzlesRouter = require('../routes/puzzles');
 
 const puzHeader = Buffer.alloc(0x34);
@@ -233,6 +233,92 @@ test('failed imports still remove the uploaded file', async t => {
 
   await assert.rejects(importPuzzle({ path: filename, originalname: fixtures[1].filename }), failure);
   await assert.rejects(fs.access(filename), { code: 'ENOENT' });
+});
+
+test('incomplete PUZ, IPUZ and SPL games wait for confirmation before saving or archiving', async t => {
+  const ipuz = JSON.parse(fixtures[1].content);
+  ipuz.clues.Down[0].clue = '';
+  const spl = JSON.parse(fixtures[2].content);
+  spl.clues = ['1-1 First definition', '2-2 '];
+  const incomplete = [
+    { filename: 'incomplete.puz', content: Buffer.concat([puzHeader, Buffer.from('ABCD----Title\0Author\0Copyright\0AB\0\0BD\0CD\0These are notes, not a definition\0')]) },
+    { filename: 'incomplete.ipuz', content: Buffer.from(JSON.stringify(ipuz)) },
+    { filename: 'incomplete.spl', content: Buffer.from(JSON.stringify(spl)) }
+  ];
+  for (const fixture of incomplete) await t.test(fixture.filename, async t => {
+    mockPuzzleDatabase(t);
+    const filenames = trackFiles(t);
+    const directory = path.join(upload.uploadDirectory, '2099-05-01');
+    const temporary = path.join(directory, `.${fixture.filename}.tmp`);
+    const archive = path.join(directory, fixture.filename);
+    filenames.push(temporary, archive);
+    await fs.mkdir(directory, { recursive: true });
+    await fs.writeFile(temporary, fixture.content);
+    const file = { path: temporary, originalname: fixture.filename };
+    await assert.rejects(importPuzzle(file, { keepForReview: true }), error => {
+      assert.ok(error instanceof PuzzleReviewRequired);
+      assert.equal(error.statusCode, 422);
+      assert.equal(error.missingClues.length, 1);
+      return true;
+    });
+    assert.equal(CrosswordModel.prototype.save.mock.callCount(), 0);
+    assert.deepEqual(await fs.readFile(temporary), fixture.content);
+    await assert.rejects(fs.access(archive), { code: 'ENOENT' });
+    const game = await importPuzzle(file, { allowIncomplete: true });
+    assert.equal(game.isComplete, false);
+    assert.equal(game.missingClueCount, 1);
+    if (fixture.filename.endsWith('.puz')) assert.deepEqual([...game.clues], ['AB', '', 'BD', 'CD']);
+    assert.equal(CrosswordModel.prototype.save.mock.callCount(), 1);
+    assert.deepEqual(await fs.readFile(archive), fixture.content);
+    await assert.rejects(fs.access(temporary), { code: 'ENOENT' });
+  });
+});
+
+test('unconfirmed direct imports remove their temporary file; an empty spiral is also incomplete', async t => {
+  mockPuzzleDatabase(t);
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'puzzle-review-'));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const filename = path.join(directory, 'empty.spl');
+  const puzzle = JSON.parse(fixtures[2].content);
+  puzzle.clues = [];
+  await fs.writeFile(filename, JSON.stringify(puzzle));
+  await assert.rejects(importPuzzle({ path: filename, originalname: 'empty.spl' }), PuzzleReviewRequired);
+  assert.equal(CrosswordModel.prototype.save.mock.callCount(), 0);
+  await assert.rejects(fs.access(filename), { code: 'ENOENT' });
+});
+
+test('external uploads return a warning and require an explicit override for missing definitions', async t => {
+  mockPuzzleDatabase(t);
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2099-06-01T12:00:00Z') });
+  const previousKey = process.env.EXTERNAL_API_KEY;
+  process.env.EXTERNAL_API_KEY = 'upload-review-test';
+  t.after(() => {
+    if (previousKey === undefined) delete process.env.EXTERNAL_API_KEY;
+    else process.env.EXTERNAL_API_KEY = previousKey;
+  });
+  const filenames = trackFiles(t);
+  const data = JSON.parse(fixtures[1].content);
+  data.clues.Across[0].clue = '';
+  const fixture = { filename: 'external-review.ipuz', content: Buffer.from(JSON.stringify(data)) };
+  const app = express();
+  app.use('/external', require('../routes/external'));
+  const baseUrl = await serve(t, app);
+  const headers = { Authorization: 'Bearer upload-review-test' };
+  const warning = await fetch(`${baseUrl}/external/puzzle`, { method: 'POST', headers, body: formFor([fixture]) });
+  assert.equal(warning.status, 422);
+  const result = await warning.json();
+  assert.equal(result.requiresConfirmation, true);
+  assert.equal(result.missingClues.length, 1);
+  assert.equal(CrosswordModel.prototype.save.mock.callCount(), 0);
+  const directory = path.join(upload.uploadDirectory, '2099-06-01');
+  assert.deepEqual(await fs.readdir(directory), []);
+  const body = formFor([fixture]);
+  body.append('allowIncomplete', 'true');
+  const accepted = await fetch(`${baseUrl}/external/puzzle`, { method: 'POST', headers, body });
+  assert.equal(accepted.status, 201);
+  assert.equal((await accepted.json()).puzzle.isComplete, false);
+  assert.equal(CrosswordModel.prototype.save.mock.callCount(), 1);
+  filenames.push(path.join(directory, fixture.filename));
 });
 
 test('invalid and duplicate games are not retained', async t => {

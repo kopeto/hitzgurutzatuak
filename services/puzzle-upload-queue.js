@@ -1,7 +1,8 @@
 const path = require('path');
+const fs = require('fs/promises');
 const PuzzleUploadBatch = require('../models/puzzleuploadbatch');
 const upload = require('../config/uploadconfig');
-const { importPuzzle } = require('./puzzle-import');
+const { importPuzzle, PuzzleImportError, PuzzleReviewRequired } = require('./puzzle-import');
 const { logError } = require('../utils');
 
 const queuedBatchIds = new Set();
@@ -15,9 +16,24 @@ function updateBatchStatus(batch) {
     return;
   }
 
+  if (batch.files.some(file => file.status === 'awaiting_review')) {
+    batch.status = 'awaiting_review';
+    batch.completedAt = null;
+    return;
+  }
+
   const hasFailures = batch.files.some(file => file.status === 'failed');
   batch.status = hasFailures ? 'completed_with_errors' : 'completed';
   batch.completedAt = new Date();
+}
+
+function storedFilePath(filename) {
+  if (!filename) throw new PuzzleImportError('Ez da fitxategia aurkitu.');
+  const filePath = path.resolve(upload.uploadDirectory, filename);
+  if (!filePath.startsWith(`${upload.uploadDirectory}${path.sep}`)) {
+    throw new PuzzleImportError('Fitxategiaren bidea ez da baliozkoa.');
+  }
+  return filePath;
 }
 
 async function processBatch(batchId) {
@@ -34,26 +50,29 @@ async function processBatch(batchId) {
     await batch.save();
 
     try {
-      if (!file.storedFilename) throw new Error('Ez da fitxategia aurkitu.');
       // New batches include the upload date; older ones still use a bare filename.
-      const filePath = path.resolve(upload.uploadDirectory, file.storedFilename);
-      if (!filePath.startsWith(`${upload.uploadDirectory}${path.sep}`)) {
-        throw new Error('Fitxategiaren bidea ez da baliozkoa.');
-      }
+      const filePath = storedFilePath(file.storedFilename);
       const uploadedFile = {
         path: filePath,
         originalname: file.filename
       };
-      const puzzle = await importPuzzle(uploadedFile, { groupIds: (batch.groupIds || []).map(String) });
+      const puzzle = await importPuzzle(uploadedFile, {
+        groupIds: (batch.groupIds || []).map(String), keepForReview: true,
+        allowIncomplete: file.allowIncomplete === true
+      });
       file.storedFilename = path.relative(upload.uploadDirectory, uploadedFile.path);
       file.status = 'imported';
       file.puzzleId = puzzle._id;
       file.puzzleName = puzzle.name;
       file.message = '';
     } catch (error) {
-      file.status = 'failed';
+      file.status = error instanceof PuzzleReviewRequired ? 'awaiting_review' : 'failed';
       file.message = error.message || 'Ezin izan da puzlea kargatu.';
-      if (error.name !== 'PuzzleImportError' && error.code !== 11000) logError(error);
+      if (error instanceof PuzzleReviewRequired) {
+        file.missingClues = error.missingClues;
+        file.puzzleName = error.puzzleName;
+      }
+      if (!(error instanceof PuzzleImportError) && error.code !== 11000) logError(error);
     }
 
     updateBatchStatus(batch);
@@ -62,6 +81,35 @@ async function processBatch(batchId) {
 
   updateBatchStatus(batch);
   await batch.save();
+}
+
+async function resolveUploadReview(batchId, fileId, ownerId, action) {
+  const { isId } = require('./game-groups');
+  if (!isId(batchId) || !isId(fileId)) throw new PuzzleImportError('Karga ez da aurkitu.', 404);
+  if (!['import', 'skip'].includes(action)) throw new PuzzleImportError('Aukeratu igo edo ez igo.');
+  // Coordinate decisions with the worker so a stale batch cannot overwrite them.
+  const pending = queueTail.then(async () => {
+    const batch = await PuzzleUploadBatch.findOne({ _id: batchId, ownerId });
+    const file = batch?.files.id(fileId);
+    if (!file) throw new PuzzleImportError('Karga ez da aurkitu.', 404);
+    if (file.status !== 'awaiting_review') throw new PuzzleImportError('Fitxategi hau ez dago erabaki baten zain.', 409);
+    if (action === 'import') {
+      file.allowIncomplete = true;
+      file.status = 'queued';
+    } else {
+      await fs.rm(storedFilePath(file.storedFilename), { force: true });
+      file.storedFilename = null;
+      file.status = 'skipped';
+    }
+    file.message = '';
+    updateBatchStatus(batch);
+    await batch.save();
+    return batch;
+  });
+  queueTail = pending.catch(() => {});
+  const batch = await pending;
+  if (action === 'import') enqueueBatch(batch._id);
+  return batch;
 }
 
 function enqueueBatch(batchId) {
@@ -90,4 +138,4 @@ async function resumePendingPuzzleUploadBatches() {
   }
 }
 
-module.exports = { enqueueBatch, resumePendingPuzzleUploadBatches };
+module.exports = { enqueueBatch, resumePendingPuzzleUploadBatches, resolveUploadReview };
