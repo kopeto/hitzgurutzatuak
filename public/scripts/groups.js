@@ -177,6 +177,7 @@ export function initGroups(state, t, request) {
     row.querySelector('[data-group-game-display]').hidden = editing;
     row.querySelector('[data-group-game-edit-fields]').hidden = !editing;
     row.querySelector('[data-group-game-author]').hidden = editing;
+    row.querySelector('[data-group-game-author-input]').hidden = !editing;
     row.querySelector('[data-group-game-name-input]').value = puzzle.name;
     row.querySelector('[data-group-game-author-input]').value = puzzle.author || '';
     row.querySelector('[data-edit-game]').hidden = editing;
